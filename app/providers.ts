@@ -15,4 +15,9 @@ export const Providers: Provider[] = [
     name: "Anthropic",
     defaultBaseURL: "https://api.anthropic.com/v1",
   },
+  {
+    id: "mistral",
+    name: "Mistral",
+    defaultBaseURL: "https://api.mistral.ai/v1",
+  },
 ];

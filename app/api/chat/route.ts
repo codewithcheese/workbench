@@ -1,6 +1,7 @@
 import { experimental_streamText, StreamingTextResponse } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createMistral } from "@ai-sdk/mistral";
 
 export const dynamic = "force-dynamic";
 
@@ -21,14 +22,20 @@ export async function POST(req: Request) {
   }
 
   let provider;
-  if (providerId === "openai") {
-    provider = createOpenAI({ apiKey, baseURL });
-  } else if (providerId === "anthropic") {
-    provider = createAnthropic({ apiKey });
-  } else {
-    return new Response("Unsupported service", {
-      status: 400,
-    });
+  switch (providerId) {
+    case "openai":
+      provider = createOpenAI({ apiKey, baseURL });
+      break;
+    case "anthropic":
+      provider = createAnthropic({ apiKey });
+      break;
+    case "mistral":
+      provider = createMistral({ apiKey, baseURL });
+      break;
+    default:
+      return new Response(`Unsupported provider ${providerId}`, {
+        status: 400,
+      });
   }
 
   try {

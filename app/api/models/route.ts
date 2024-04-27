@@ -31,6 +31,8 @@ export async function POST(req: Request) {
       return await fetchOpenAIModels(apiKey, baseURL);
     case "anthropic":
       return await fetchAnthropicModels(apiKey, baseURL);
+    case "mistral":
+      return await fetchMistralModels(apiKey, baseURL);
     default:
       return new Response(`Unsupported provider ${providerId}`, {
         status: 400,
@@ -81,6 +83,29 @@ async function fetchAnthropicModels(
     },
   ];
   return new Response(JSON.stringify(models), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+async function fetchMistralModels(
+  apiKey: string,
+  baseUrl = "https://api.mistral.ai/v1"
+) {
+  const resp = await fetch(`${baseUrl}/models`, {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+  });
+  if (!resp.ok) {
+    return new Response(resp.statusText, {
+      status: resp.status,
+    });
+  }
+  const data = await resp.json();
+  return new Response(JSON.stringify(data.data), {
     status: 200,
     headers: {
       "Content-Type": "application/json",
