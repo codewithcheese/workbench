@@ -278,7 +278,10 @@ export function ModelConfig() {
                     <TableBody>
                       {service.models.map((model, index) => (
                         <TableRow
-                          className={model.visible ? "" : "opacity-50"}
+                          className={cn(
+                            "cursor-pointer",
+                            model.visible ? "" : "opacity-50"
+                          )}
                           key={index}
                           onClick={() => toggleVisible(model)}
                         >
