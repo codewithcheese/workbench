@@ -2,32 +2,36 @@
 import { proxy, ref, subscribe } from "valtio";
 import { Message } from "ai";
 
-type Response = { id: string; messages: Message[] };
+export type Response = { id: string; messages: Message[]; error?: string };
 
-type Store = {
+export type Model = {
+  id: string;
+  name: string;
+  visible: boolean;
+};
+
+export type Service = {
+  id: string;
+  name: string;
+  apiKey: string;
+  models: Model[];
+};
+
+export type Store = {
   responses: Response[];
   prompt: string;
-  model: string;
+  selected: { modelId?: string; serviceId?: string };
+  services: Record<string, Service>;
 };
 
-const defaultStore = {
+const defaultStore: Store = {
   prompt: "",
   responses: [],
-  model: "claude-3-haiku-20240307",
+  selected: {},
+  services: {},
 };
 
-const initStore = JSON.parse(localStorage.getItem("store") as string) || {};
-
-export const store = proxy<Store>({
-  ...defaultStore,
-  prompt: initStore.prompt,
-  responses: initStore.responses.map((response: Response) => ({
-    ...response,
-    messages: ref(response.messages),
-  })),
-});
-
-console.log(store.prompt);
+export let store = proxy<Store>(defaultStore);
 
 subscribe(store, (s) => {
   localStorage.setItem("store", JSON.stringify(store));
@@ -35,4 +39,15 @@ subscribe(store, (s) => {
 
 declare module "valtio" {
   function useSnapshot<T extends object>(p: T): T;
+}
+
+export function loadFromLocalStorage() {
+  const initStore = JSON.parse(localStorage.getItem("store") as string);
+  if (initStore) {
+    initStore.responses = initStore.responses.map((res: any) => {
+      res.messages = ref(res.messages);
+      return res;
+    });
+    Object.assign(store, initStore);
+  }
 }

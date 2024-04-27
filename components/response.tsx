@@ -8,26 +8,42 @@ import { store } from "@/app/store";
 import { LoaderCircleIcon, RefreshCwIcon, XIcon } from "lucide-react";
 import { ref, useSnapshot } from "valtio";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
 export function Response({ index }: { index: number }) {
-  const snap = useSnapshot(store);
-  const [modelUsed, setModelUsed] = useState("");
+  const selected = useSnapshot(store.selected);
+  const [modelSelected, setModelSelected] = useState<{
+    serviceId?: string;
+    modelId?: string;
+  }>(selected);
   const [initialMessages] = useState(store.responses[index].messages);
-  const { messages, reload, isLoading, stop } = useChat({
+  const { messages, reload, isLoading, stop, error } = useChat({
     initialMessages,
-    body: { model: snap.model },
+    body: selected,
   });
 
   useEffect(() => {
-    // request response if last message not assistant
-    if (!messages.findLast((m) => m.role === "assistant")) {
+    // request response if last message not assistant and not error
+    const lastMessageIsAssistant = messages.findLast(
+      (m) => m.role === "assistant"
+    );
+    if (!lastMessageIsAssistant && store.responses[index].error === undefined) {
       reload();
     }
   }, []);
 
+  // update model selected when loading new response
   useEffect(() => {
-    setModelUsed(snap.model);
+    setModelSelected(selected);
   }, [isLoading]);
+
+  // set error when response is not ok
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    store.responses[index].error = error.message;
+  }, [error]);
 
   useEffect(() => {
     store.responses[index].messages = ref(messages);
@@ -52,7 +68,9 @@ export function Response({ index }: { index: number }) {
           />
         )}
         <div className="flex-1"></div>
-        <div className="text-xs text-gray-500 pr-2">{modelUsed}</div>
+        <div className="text-xs text-gray-500 pr-2">
+          {modelSelected?.modelId}
+        </div>
         <XIcon
           className="text-gray-500"
           size={16}
@@ -62,6 +80,10 @@ export function Response({ index }: { index: number }) {
         />
       </CardHeader>
       <CardContent className="p-6">
+        {error && <Label className="text-red-500">{error.message}</Label>}
+        {store.responses[index].error && (
+          <Label className="text-red-500">{store.responses[index].error}</Label>
+        )}
         {messages
           .filter((m) => m.role === "assistant")
           .map((message, index) => {

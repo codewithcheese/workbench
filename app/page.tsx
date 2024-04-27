@@ -4,13 +4,18 @@ import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { Header } from "@/components/header";
 import { ref, useSnapshot } from "valtio";
-import { store } from "@/app/store";
-import { useCallback, useMemo } from "react";
+import { loadFromLocalStorage, store } from "@/app/store";
+import { useCallback, useEffect, useMemo } from "react";
 import { Response } from "@/components/response";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function App() {
   const { responses, prompt } = useSnapshot(store);
+
+  useEffect(() => {
+    loadFromLocalStorage();
+  }, []);
 
   function submitPrompt() {
     store.responses.unshift({
@@ -52,16 +57,21 @@ export default function App() {
     <div className="flex min-h-screen  w-full flex-col bg-muted/40">
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-4 sm:pr-4">
         <Header onSubmit={submitPrompt} />
-        <div className="grid grid-cols-2 gap-4 h-full max-h-[calc(100vh-100px)]">
-          <Card>
-            <CardContent className="p-0 overflow-y-auto prose">
-              <CodeMirror
-                value={prompt}
-                onChange={onChange}
-                extensions={extensions}
-              />
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 gap-4 max-h-[calc(100vh-100px)]">
+          <div>
+            <Card>
+              <CardContent className="p-0 overflow-y-auto prose">
+                <CodeMirror
+                  value={prompt}
+                  onChange={onChange}
+                  extensions={extensions}
+                />
+              </CardContent>
+            </Card>
+            <div className="pt-2">
+              <Button variant="outline">Add</Button>
+            </div>
+          </div>
           <div>
             <div className="space-y-2">
               {responses.map((response, index) => (

@@ -16,11 +16,15 @@ import {
 } from "./ui/select";
 import { store } from "@/app/store";
 import { useSnapshot } from "valtio";
+import { ModelConfig } from "@/components/model-config";
 
 type HeaderProps = { onSubmit: () => void };
 
 export function Header({ onSubmit }: HeaderProps) {
-  const { model } = useSnapshot(store);
+  const selected = useSnapshot(store.selected);
+  const services = useSnapshot(store.services);
+  console.log("header", store, selected, services);
+
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
       <nav aria-label="breadcrumb" className="hidden md:flex">
@@ -33,27 +37,50 @@ export function Header({ onSubmit }: HeaderProps) {
         </Breadcrumb>
       </nav>
       <div className="relative ml-auto flex-1 md:grow-0">
-        <Select value={model} onValueChange={(value) => (store.model = value)}>
-          <SelectTrigger className="w-[240px]">
-            <SelectValue placeholder="Select a model" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Models</SelectLabel>
-              <SelectItem value="claude-3-opus-20240229">
-                claude-3-opus-20240229
-              </SelectItem>
-              <SelectItem value="claude-3-sonnet-20240229">
-                claude-3-sonnet-20240229
-              </SelectItem>
-              <SelectItem value="claude-3-haiku-20240307">
-                claude-3-haiku-20240307
-              </SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-row">
+          <Select
+            disabled={!Object.values(services).length}
+            value={selected.serviceId ? JSON.stringify(selected) : undefined}
+            onValueChange={(value) => {
+              if (value) {
+                store.selected = JSON.parse(value);
+              }
+            }}
+          >
+            <SelectTrigger className="w-[240px]">
+              <SelectValue
+                placeholder={
+                  Object.values(services).length
+                    ? "Select a model"
+                    : "No models configured"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.values(services).map((service, index) => (
+                <SelectGroup key={index}>
+                  <SelectLabel>{service.name}</SelectLabel>
+                  {service.models
+                    .filter((m) => m.visible)
+                    .map((model, index) => (
+                      <SelectItem
+                        key={index}
+                        value={JSON.stringify({
+                          serviceId: service.id,
+                          modelId: model.id,
+                        })}
+                      >
+                        {model.id}
+                      </SelectItem>
+                    ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
+          <ModelConfig />
+        </div>
       </div>
-      <Button onClick={onSubmit}>Run</Button>
+      {selected.serviceId && <Button onClick={() => onSubmit()}>Run</Button>}
     </header>
   );
 }
