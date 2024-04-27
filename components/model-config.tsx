@@ -72,6 +72,7 @@ export function ModelConfig() {
     if (!service) {
       return;
     }
+    setError(null);
     try {
       setLoading(true);
       const resp = await fetch("/api/models", {

@@ -33,6 +33,8 @@ export async function POST(req: Request) {
       return await fetchAnthropicModels(apiKey, baseURL);
     case "mistral":
       return await fetchMistralModels(apiKey, baseURL);
+    case "google":
+      return await fetchGoogleModels(apiKey, baseURL);
     default:
       return new Response(`Unsupported provider ${providerId}`, {
         status: 400,
@@ -111,4 +113,32 @@ async function fetchMistralModels(
       "Content-Type": "application/json",
     },
   });
+}
+
+async function fetchGoogleModels(
+  apiKey: string,
+  baseUrl = "https://generativelanguage.googleapis.com/v1beta"
+) {
+  const resp = await fetch(`${baseUrl}/models?key=${apiKey}`);
+  if (!resp.ok) {
+    return new Response(resp.statusText, {
+      status: resp.status,
+    });
+  }
+  const data = await resp.json();
+  console.log(data);
+  return new Response(
+    JSON.stringify(
+      data.models.map((m: any) => ({
+        id: m.name,
+        name: m.displayName,
+      }))
+    ),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
 }

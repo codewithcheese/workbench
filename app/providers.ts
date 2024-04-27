@@ -20,4 +20,9 @@ export const Providers: Provider[] = [
     name: "Mistral",
     defaultBaseURL: "https://api.mistral.ai/v1",
   },
+  {
+    id: "google",
+    name: "Google",
+    defaultBaseURL: "https://generativelanguage.googleapis.com/v1beta",
+  },
 ];

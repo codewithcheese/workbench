@@ -2,6 +2,7 @@ import { experimental_streamText, StreamingTextResponse } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createMistral } from "@ai-sdk/mistral";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,9 @@ export async function POST(req: Request) {
       break;
     case "mistral":
       provider = createMistral({ apiKey, baseURL });
+      break;
+    case "google":
+      provider = createGoogleGenerativeAI({ apiKey, baseURL });
       break;
     default:
       return new Response(`Unsupported provider ${providerId}`, {

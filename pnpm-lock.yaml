@@ -8,6 +8,9 @@ dependencies:
   '@ai-sdk/anthropic':
     specifier: ^0.0.7
     version: 0.0.7(zod@3.22.5)
+  '@ai-sdk/google':
+    specifier: ^0.0.8
+    version: 0.0.8(zod@3.22.5)
   '@ai-sdk/mistral':
     specifier: ^0.0.7
     version: 0.0.7(zod@3.22.5)
@@ -141,6 +144,20 @@ packages:
     dependencies:
       '@ai-sdk/provider': 0.0.2
       '@ai-sdk/provider-utils': 0.0.3(zod@3.22.5)
+      zod: 3.22.5
+    dev: false
+
+  /@ai-sdk/google@0.0.8(zod@3.22.5):
+    resolution: {integrity: sha512-d91h3Lgk2F5ugxQg4H2QCQnMun9F1u9wWG8PeFFPS1wFhBveeVa+xDHBapwKDWk9Q6S19BIllYtmm4LFyrXwhQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
+    dependencies:
+      '@ai-sdk/provider': 0.0.2
+      '@ai-sdk/provider-utils': 0.0.4(zod@3.22.5)
       zod: 3.22.5
     dev: false
 
