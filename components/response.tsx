@@ -51,8 +51,6 @@ export function Response({ index }: { index: number }) {
     store.responses[index].messages = ref(messages);
   }, [messages]);
 
-  console.log("messages", messages);
-
   return (
     <Card>
       <CardHeader className=" space-y-0 flex flex-row bg-muted/50 p-2">

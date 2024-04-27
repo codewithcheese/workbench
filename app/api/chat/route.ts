@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   if (service.compatability === "openai") {
     provider = createOpenAI({ apiKey: apiKey, baseURL: service.baseUrl });
   } else if (service.compatability === "anthropic") {
-    provider = createAnthropic({ apiKey: apiKey, baseURL: service.baseUrl });
+    provider = createAnthropic({ apiKey: apiKey });
   } else {
     return new Response("Unsupported service", {
       status: 400,
