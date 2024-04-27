@@ -74,9 +74,6 @@ export default function App() {
                 />
               </CardContent>
             </Card>
-            <div className="pt-2">
-              <Button variant="outline">Add</Button>
-            </div>
           </div>
           <div>
             <div className="space-y-2">
