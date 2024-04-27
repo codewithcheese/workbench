@@ -27,19 +27,39 @@ export type Service = {
 
 export type Store = {
   responses: Response[];
-  prompt: string;
+  prompt: { blocks: string[] };
   selected: { modelId?: string; service?: Service };
   services: Service[];
 };
 
 const defaultStore: Store = {
-  prompt: "",
+  prompt: { blocks: [""] },
   responses: [],
   selected: {},
   services: [],
 };
 
 export let store = proxy<Store>(defaultStore);
+
+export function submitPrompt() {
+  if (!store.selected.service || !store.selected.modelId) {
+    // TODO: show error
+    return;
+  }
+  store.responses.unshift({
+    id: crypto.randomUUID(),
+    // message controlled by useChat treat as ref in store
+    messages: ref([
+      {
+        id: crypto.randomUUID(),
+        role: "user",
+        content: store.prompt.blocks.join("\n"),
+      },
+    ]),
+    modelId: store.selected.modelId,
+    serviceName: store.selected.service.name,
+  });
+}
 
 export function updateService(id: string, values: Partial<Service>) {
   const service = store.services.find((s) => s.id === id);

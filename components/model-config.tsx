@@ -40,6 +40,8 @@ export function ModelConfig() {
   const services = useSnapshot(store.services);
   const service = services.find((s) => s.id === id);
 
+  console.log("service", service);
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 

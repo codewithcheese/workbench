@@ -14,13 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { store } from "@/app/store";
+import { store, submitPrompt } from "@/app/store";
 import { useSnapshot } from "valtio";
 import { ModelConfig } from "@/components/model-config";
 
-type HeaderProps = { onSubmit: () => void };
-
-export function Header({ onSubmit }: HeaderProps) {
+export function Header() {
   const selected = useSnapshot(store.selected);
   const services = useSnapshot(store.services);
 
@@ -91,7 +89,7 @@ export function Header({ onSubmit }: HeaderProps) {
           <ModelConfig />
         </div>
       </div>
-      {selected.service && <Button onClick={() => onSubmit()}>Run</Button>}
+      {selected.service && <Button onClick={() => submitPrompt()}>Run</Button>}
     </header>
   );
 }
