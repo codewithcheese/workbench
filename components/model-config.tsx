@@ -35,12 +35,12 @@ import { cn } from "@/lib/utils";
 
 export function ModelConfig() {
   const [id, setId] = useState<string | null>(
-    Object.keys(store.services)[0] || null
+    (store.services.length && store.services[0].id) || null
   );
   const services = useSnapshot(store.services);
   const service = services.find((s) => s.id === id);
 
-  console.log("service", service);
+  console.log("service", service, id, Object.keys(store.services));
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -125,7 +125,7 @@ export function ModelConfig() {
           <SettingsIcon size={16} />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] max-h-screen">
+      <DialogContent className="sm:max-w-[425px] max-h-screen overflow-y-scroll">
         <DialogHeader>
           <DialogTitle>Configure AI Models</DialogTitle>
         </DialogHeader>
@@ -282,7 +282,7 @@ export function ModelConfig() {
                           key={index}
                           onClick={() => toggleVisible(model)}
                         >
-                          <TableCell className="p-1 font-medium">
+                          <TableCell className="p-1 pl-4 font-normal">
                             {model.id}
                           </TableCell>
                           <TableCell className="p-1">

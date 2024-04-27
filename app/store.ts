@@ -1,6 +1,7 @@
 "use client";
 import { proxy, ref, subscribe } from "valtio";
 import { Message } from "ai";
+import { useEffect, useState } from "react";
 
 export type Response = {
   id: string;
@@ -74,6 +75,15 @@ subscribe(store, (s) => {
 
 declare module "valtio" {
   function useSnapshot<T extends object>(p: T): T;
+}
+
+export function useLocalStorage() {
+  const [pending, setPending] = useState(true);
+  useEffect(() => {
+    loadFromLocalStorage();
+    setPending(false);
+  }, []);
+  return { pending };
 }
 
 export function loadFromLocalStorage() {
