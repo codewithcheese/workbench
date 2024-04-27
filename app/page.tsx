@@ -18,7 +18,7 @@ export default function App() {
   }, []);
 
   function submitPrompt() {
-    if (!store.selected.serviceId || !store.selected.modelId) {
+    if (!store.selected.service || !store.selected.modelId) {
       // TODO: show error
       return;
     }
@@ -29,7 +29,7 @@ export default function App() {
         { id: crypto.randomUUID(), role: "user", content: prompt },
       ]),
       modelId: store.selected.modelId,
-      serviceId: store.selected.serviceId,
+      serviceName: store.selected.service.name,
     });
   }
 

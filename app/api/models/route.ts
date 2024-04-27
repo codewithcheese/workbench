@@ -1,9 +1,10 @@
-import { SupportedServices } from "@/app/services";
-
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const { id } = await req.json();
+  const { providerId, baseURL } = (await req.json()) as {
+    providerId: string;
+    baseURL: string;
+  };
 
   const apiKey = req.headers.get("X_API_KEY");
 
@@ -13,27 +14,25 @@ export async function POST(req: Request) {
     });
   }
 
-  if (!id) {
+  if (!providerId) {
     return new Response("Missing service", {
       status: 400,
     });
   }
 
-  const service = SupportedServices.find((s) => s.id === id);
-
-  if (!service) {
-    return new Response("Unsupported service", {
+  if (!baseURL) {
+    return new Response("Missing baseURL", {
       status: 400,
     });
   }
 
-  switch (service.compatability) {
+  switch (providerId) {
     case "openai":
-      return await fetchOpenAIModels(apiKey, service.baseUrl);
+      return await fetchOpenAIModels(apiKey, baseURL);
     case "anthropic":
-      return await fetchAnthropicModels(apiKey, service.baseUrl);
+      return await fetchAnthropicModels(apiKey, baseURL);
     default:
-      return new Response("Unsupported service", {
+      return new Response(`Unsupported provider ${providerId}`, {
         status: 400,
       });
   }
@@ -41,9 +40,9 @@ export async function POST(req: Request) {
 
 async function fetchOpenAIModels(
   apiKey: string,
-  baseUrl = "https://api.openai.com/v1"
+  baseURL = "https://api.openai.com/v1"
 ) {
-  const resp = await fetch(`${baseUrl}/models`, {
+  const resp = await fetch(`${baseURL}/models`, {
     headers: {
       Authorization: `Bearer ${apiKey}`,
     },
@@ -66,23 +65,7 @@ async function fetchAnthropicModels(
   apiKey: string,
   baseUrl = "https://api.anthropic.com"
 ) {
-  // const resp = await fetch(`${baseUrl}/v1/models`, {
-  //   headers: {
-  //     Authorization: `Bearer ${apiKey}`,
-  //   },
-  // });
-  // if (!resp.ok) {
-  //   return new Response(resp.statusText, {
-  //     status: resp.status,
-  //   });
-  // }
-  // const data = await resp.json();
-  // return new Response(JSON.stringify(data), {
-  //   status: 200,
-  //   headers: {
-  //     "Content-Type": "application/json",
-  //   },
-  // });
+  // does anthropic have a models endpoint?
   const models = [
     {
       id: "claude-3-opus-20240229",

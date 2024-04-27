@@ -28,37 +28,43 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Toggle } from "@/components/ui/toggle";
 import { useEffect, useState } from "react";
 import { useSnapshot } from "valtio";
-import { Model, store } from "@/app/store";
-import { SupportedServices } from "@/app/services";
+import { Model, store, updateService } from "@/app/store";
+import { Provider, Providers } from "@/app/providers";
 import { RefreshCwIcon, SettingsIcon } from "lucide-react";
-import { twMerge } from "tailwind-merge";
 import { cn } from "@/lib/utils";
 
 export function ModelConfig() {
   const [id, setId] = useState<string | null>(
     Object.keys(store.services)[0] || null
   );
-  const service = id && store.services[id];
-  const snapshot = useSnapshot(store.services);
+  const services = useSnapshot(store.services);
+  const service = services.find((s) => s.id === id);
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   // if snapshot updates and not id is set then set id to first service
   useEffect(() => {
-    if (!id && Object.keys(snapshot).length) {
-      setId(Object.keys(snapshot)[0]);
+    if (!id && services.length) {
+      setId(services[0].id);
     }
-  }, [snapshot]);
+  }, [services]);
 
   useEffect(() => {
     // reset error when service changes
     setError(null);
   }, [id]);
 
-  function addService(id: string, name: string) {
-    if (!(id in store.services)) {
-      store.services[id] = { id, name, apiKey: "", models: [] };
-    }
+  function addService(provider: Provider) {
+    const id = crypto.randomUUID();
+    store.services.push({
+      id,
+      name: provider.name,
+      providerId: provider.id,
+      baseURL: provider.defaultBaseURL,
+      apiKey: "",
+      models: [],
+    });
     setId(id);
   }
 
@@ -74,14 +80,16 @@ export function ModelConfig() {
           X_API_KEY: service.apiKey,
           ContentType: "application/json",
         },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({
+          providerId: service.providerId,
+          baseURL: service.baseURL,
+        }),
       });
       if (!resp.ok) {
         setError(resp.statusText);
         return;
       }
-      const models = await resp.json();
-      service.models = models
+      const models = (await resp.json())
         .map((model: Model) => {
           const existing = service.models.find((m) => m.id === model.id);
           if (existing) {
@@ -90,6 +98,9 @@ export function ModelConfig() {
           return model;
         })
         .sort((a: Model, b: Model) => a.id.localeCompare(b.id));
+      updateService(service.id, {
+        models,
+      });
     } finally {
       setLoading(false);
     }
@@ -99,8 +110,9 @@ export function ModelConfig() {
     if (!service) {
       return;
     }
-    const index = service.models.findIndex((m) => m.id === model.id);
-    service.models[index].visible = !service.models[index].visible;
+    const $service = store.services.find((s) => s.id === id)!;
+    const index = $service.models.findIndex((m) => m.id === model.id);
+    $service.models[index].visible = !$service.models[index].visible;
   }
 
   return (
@@ -121,18 +133,18 @@ export function ModelConfig() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            {SupportedServices.map((service, index) => (
+            {Providers.map((provider, index) => (
               <DropdownMenuItem
                 key={index}
-                onClick={() => addService(service.id, service.name)}
+                onClick={() => addService(provider)}
               >
-                <span>{service.name}</span>
+                <span>{provider.name}</span>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {Object.values(snapshot).length > 0 && (
+        {Object.values(services).length > 0 && (
           <div className="grid gap-4 py-4">
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
@@ -145,7 +157,10 @@ export function ModelConfig() {
                     if (!id) {
                       return;
                     }
-                    delete store.services[id];
+                    store.services.splice(
+                      store.services.findIndex((s) => s.id === id),
+                      1
+                    );
                     setId(null);
                   }}
                 >
@@ -153,9 +168,9 @@ export function ModelConfig() {
                   Delete
                 </Button>
               </div>
-              {Object.values(snapshot).length > 0 && (
+              {Object.values(services).length > 0 && (
                 <Select
-                  value={id ? snapshot[id].id : undefined}
+                  value={service ? service.id : undefined}
                   onValueChange={(id) => setId(id)}
                 >
                   <SelectTrigger>
@@ -164,7 +179,7 @@ export function ModelConfig() {
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Services</SelectLabel>
-                      {Object.values(snapshot).map((service, index) => (
+                      {Object.values(services).map((service, index) => (
                         <SelectItem key={index} value={service.id}>
                           {service.name}
                         </SelectItem>
@@ -176,14 +191,41 @@ export function ModelConfig() {
             </div>
             <Separator />
             <div className="grid gap-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                value={service ? service.name : ""}
+                id="name"
+                placeholder="Enter service name"
+                type="text"
+                onChange={(event) =>
+                  service &&
+                  updateService(service.id, { name: event.target.value })
+                }
+              />
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="apiKey">API Key</Label>
               <Input
-                value={id ? snapshot[id].apiKey : ""}
+                value={service ? service.apiKey : ""}
                 id="apiKey"
                 placeholder="Enter your API key"
                 type="password"
+                onChange={(event) => {
+                  service &&
+                    updateService(service.id, { apiKey: event.target.value });
+                }}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="baseURL">Base URL</Label>
+              <Input
+                value={service ? service.baseURL : ""}
+                id="baseURL"
+                placeholder="Enter API base URL"
+                type="text"
                 onChange={(event) =>
-                  service && (service.apiKey = event.target.value)
+                  service &&
+                  updateService(service.id, { baseURL: event.target.value })
                 }
               />
             </div>
@@ -203,29 +245,35 @@ export function ModelConfig() {
                     <Button
                       className="p-1 text-sm"
                       variant="ghost"
-                      onClick={() =>
-                        service.models.forEach((m) => (m.visible = true))
-                      }
+                      onClick={() => {
+                        const $service = store.services.find(
+                          (s) => s.id === id
+                        )!;
+                        $service.models.forEach((m) => (m.visible = true));
+                      }}
                     >
                       Show All
                     </Button>
                     <Button
                       className="p-1 text-sm"
                       variant="ghost"
-                      onClick={() =>
-                        service.models.forEach((m) => (m.visible = false))
-                      }
+                      onClick={() => {
+                        const $service = store.services.find(
+                          (s) => s.id === id
+                        )!;
+                        $service.models.forEach((m) => (m.visible = false));
+                      }}
                     >
                       Hide All
                     </Button>
                   </div>
                 </div>
               )}
-              {id && snapshot[id].models.length > 0 && (
-                <div className="border rounded-lg w-full min-h-[200px] max-h-[calc(100vh-500px)] overflow-y-auto">
+              {service && service.models.length > 0 && (
+                <div className="border rounded-lg w-full min-h-[200px] max-h-[calc(100vh-700px)] overflow-y-auto">
                   <Table>
                     <TableBody>
-                      {snapshot[id].models.map((model, index) => (
+                      {service.models.map((model, index) => (
                         <TableRow
                           className={model.visible ? "" : "opacity-50"}
                           key={index}

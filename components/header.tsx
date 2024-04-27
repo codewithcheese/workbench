@@ -39,10 +39,21 @@ export function Header({ onSubmit }: HeaderProps) {
         <div className="flex flex-row">
           <Select
             disabled={!Object.values(services).length}
-            value={selected.serviceId ? JSON.stringify(selected) : undefined}
+            value={
+              selected.service
+                ? JSON.stringify({
+                    serviceId: selected.service.id,
+                    modelId: selected.modelId,
+                  })
+                : undefined
+            }
             onValueChange={(value) => {
               if (value) {
-                Object.assign(store.selected, JSON.parse(value));
+                const { serviceId, modelId } = JSON.parse(value);
+                store.selected.service = store.services.find(
+                  (s) => s.id === serviceId
+                );
+                store.selected.modelId = modelId;
                 console.log("Updated selected", store.selected);
               }
             }}
@@ -80,7 +91,7 @@ export function Header({ onSubmit }: HeaderProps) {
           <ModelConfig />
         </div>
       </div>
-      {selected.serviceId && <Button onClick={() => onSubmit()}>Run</Button>}
+      {selected.service && <Button onClick={() => onSubmit()}>Run</Button>}
     </header>
   );
 }

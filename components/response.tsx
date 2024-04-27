@@ -16,14 +16,19 @@ export function Response({ index }: { index: number }) {
   const [initialMessages] = useState(store.responses[index].messages);
   const { messages, reload, isLoading, stop, error } = useChat({
     initialMessages,
-    body: selected,
+    body: {
+      providerId: selected.service?.providerId,
+      modelId: selected.modelId,
+      baseURL: selected.service?.baseURL,
+      apiKey: selected.service?.apiKey,
+    },
   });
 
   function refresh() {
-    if (selected.modelId && selected.serviceId) {
+    if (selected.modelId && selected.service) {
       console.log("Refreshing", selected);
       store.responses[index].modelId = selected.modelId;
-      store.responses[index].serviceId = selected.serviceId;
+      store.responses[index].serviceName = selected.service.name;
     }
     reload();
   }
