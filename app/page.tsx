@@ -18,12 +18,18 @@ export default function App() {
   }, []);
 
   function submitPrompt() {
+    if (!store.selected.serviceId || !store.selected.modelId) {
+      // TODO: show error
+      return;
+    }
     store.responses.unshift({
       id: crypto.randomUUID(),
       // message controlled by useChat treat as ref in store
       messages: ref([
         { id: crypto.randomUUID(), role: "user", content: prompt },
       ]),
+      modelId: store.selected.modelId,
+      serviceId: store.selected.serviceId,
     });
   }
 

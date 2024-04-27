@@ -2,7 +2,13 @@
 import { proxy, ref, subscribe } from "valtio";
 import { Message } from "ai";
 
-export type Response = { id: string; messages: Message[]; error?: string };
+export type Response = {
+  id: string;
+  messages: Message[];
+  modelId: string;
+  serviceId: string;
+  error?: string;
+};
 
 export type Model = {
   id: string;

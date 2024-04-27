@@ -11,16 +11,22 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 
 export function Response({ index }: { index: number }) {
+  const response = useSnapshot(store.responses[index]);
   const selected = useSnapshot(store.selected);
-  const [modelSelected, setModelSelected] = useState<{
-    serviceId?: string;
-    modelId?: string;
-  }>(selected);
   const [initialMessages] = useState(store.responses[index].messages);
   const { messages, reload, isLoading, stop, error } = useChat({
     initialMessages,
     body: selected,
   });
+
+  function refresh() {
+    if (selected.modelId && selected.serviceId) {
+      console.log("Refreshing", selected);
+      store.responses[index].modelId = selected.modelId;
+      store.responses[index].serviceId = selected.serviceId;
+    }
+    reload();
+  }
 
   useEffect(() => {
     // request response if last message not assistant and not error
@@ -28,21 +34,17 @@ export function Response({ index }: { index: number }) {
       (m) => m.role === "assistant"
     );
     if (!lastMessageIsAssistant && store.responses[index].error === undefined) {
-      reload();
+      refresh();
     }
   }, []);
 
-  // update model selected when loading new response
-  useEffect(() => {
-    setModelSelected(selected);
-  }, [isLoading]);
-
   // set error when response is not ok
   useEffect(() => {
-    if (!error) {
-      return;
+    if (error) {
+      store.responses[index].error = error.message;
+    } else {
+      store.responses[index].error = undefined;
     }
-    store.responses[index].error = error.message;
   }, [error]);
 
   useEffect(() => {
@@ -64,13 +66,11 @@ export function Response({ index }: { index: number }) {
           <RefreshCwIcon
             size={16}
             className="text-gray-500"
-            onClick={() => reload()}
+            onClick={() => refresh()}
           />
         )}
         <div className="flex-1"></div>
-        <div className="text-xs text-gray-500 pr-2">
-          {modelSelected?.modelId}
-        </div>
+        <div className="text-xs text-gray-500 pr-2">{response.modelId}</div>
         <XIcon
           className="text-gray-500"
           size={16}
@@ -80,8 +80,7 @@ export function Response({ index }: { index: number }) {
         />
       </CardHeader>
       <CardContent className="p-6">
-        {error && <Label className="text-red-500">{error.message}</Label>}
-        {store.responses[index].error && (
+        {response.error && (
           <Label className="text-red-500">{store.responses[index].error}</Label>
         )}
         {messages

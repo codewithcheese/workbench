@@ -23,7 +23,7 @@ type HeaderProps = { onSubmit: () => void };
 export function Header({ onSubmit }: HeaderProps) {
   const selected = useSnapshot(store.selected);
   const services = useSnapshot(store.services);
-  console.log("header", store, selected, services);
+  console.log("Selected", JSON.stringify(selected));
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -43,7 +43,8 @@ export function Header({ onSubmit }: HeaderProps) {
             value={selected.serviceId ? JSON.stringify(selected) : undefined}
             onValueChange={(value) => {
               if (value) {
-                store.selected = JSON.parse(value);
+                Object.assign(store.selected, JSON.parse(value));
+                console.log("Updated selected", store.selected);
               }
             }}
           >
