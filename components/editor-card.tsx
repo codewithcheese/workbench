@@ -21,7 +21,7 @@ export function EditorCard() {
           {
             key: "Ctrl-Enter",
             run: () => {
-              submitPrompt(prompt.blocks.join("\n"));
+              submitPrompt();
               return true;
             },
           },
