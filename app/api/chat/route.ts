@@ -5,6 +5,7 @@ import { createMistral } from "@ai-sdk/mistral";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 export const dynamic = "force-dynamic";
+export const runtime = "edge";
 
 export async function POST(req: Request) {
   const { messages, providerId, apiKey, baseURL, modelId } =
