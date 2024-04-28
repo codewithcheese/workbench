@@ -125,7 +125,7 @@ export function ModelConfig() {
           <SettingsIcon size={16} />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] max-h-screen overflow-y-scroll">
+      <DialogContent className="sm:max-w-[425px] max-h-screen overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Configure AI Models</DialogTitle>
         </DialogHeader>
