@@ -5,7 +5,7 @@ import { ResponseCard } from "@/components/response-card";
 export function ResponseList() {
   const responses = useSnapshot(store.responses);
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 overflow-y-auto">
       {responses.map((response, index) => (
         <ResponseCard key={response.id} index={index} />
       ))}

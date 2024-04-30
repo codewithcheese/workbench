@@ -30,12 +30,9 @@ export default function App() {
         {services.length > 0 ? (
           <>
             <div className="grid grid-cols-2 gap-4 max-h-[calc(100vh-100px)]">
-              <div>
-                <EditorCard />
-              </div>
-              <div>
-                <ResponseList />
-              </div>
+              <EditorCard />
+
+              <ResponseList />
             </div>
           </>
         ) : (

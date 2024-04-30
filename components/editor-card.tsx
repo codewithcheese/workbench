@@ -36,8 +36,8 @@ export function EditorCard() {
   }, [submitPrompt]);
 
   return (
-    <Card>
-      <CardContent className="p-0 overflow-y-auto prose">
+    <Card className="overflow-y-auto">
+      <CardContent className="p-0  prose">
         <CodeMirror
           value={prompt.blocks[0]}
           onChange={onChange}
