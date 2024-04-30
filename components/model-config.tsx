@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -120,7 +121,7 @@ export function ModelConfig() {
 
   return (
     <Dialog key="1">
-      <DialogTrigger asChild>
+      <DialogTrigger id="model-config-trigger" asChild>
         <Button variant="ghost">
           <SettingsIcon size={16} />
         </Button>
@@ -236,71 +237,79 @@ export function ModelConfig() {
               <RefreshCwIcon
                 className={cn("mr-2 h-4 w-4", loading && "loading-icon")}
               />
-              Refresh Models
+              {service && service.models.length > 0 ? (
+                <>Refresh Models</>
+              ) : (
+                <>Load Models</>
+              )}
             </Button>
             {error && <Label className="text-red-500">{error}</Label>}
-            <Separator />
-            <div className="grid gap-2">
-              {service && (
-                <div className="flex items-center justify-between">
-                  <Label>Models</Label>
-                  <div className="flex justify-end">
-                    <Button
-                      className="p-1 text-sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const $service = store.services.find(
-                          (s) => s.id === id
-                        )!;
-                        $service.models.forEach((m) => (m.visible = true));
-                      }}
-                    >
-                      Show All
-                    </Button>
-                    <Button
-                      className="p-1 text-sm"
-                      variant="ghost"
-                      onClick={() => {
-                        const $service = store.services.find(
-                          (s) => s.id === id
-                        )!;
-                        $service.models.forEach((m) => (m.visible = false));
-                      }}
-                    >
-                      Hide All
-                    </Button>
+            {service && service.models.length > 0 && (
+              <>
+                <Separator />
+                <div className="grid gap-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Models</Label>
+                    <div className="flex justify-end">
+                      <Button
+                        className="p-1 text-sm"
+                        variant="ghost"
+                        onClick={() => {
+                          const $service = store.services.find(
+                            (s) => s.id === id
+                          )!;
+                          $service.models.forEach((m) => (m.visible = true));
+                        }}
+                      >
+                        Show All
+                      </Button>
+                      <Button
+                        className="p-1 text-sm"
+                        variant="ghost"
+                        onClick={() => {
+                          const $service = store.services.find(
+                            (s) => s.id === id
+                          )!;
+                          $service.models.forEach((m) => (m.visible = false));
+                        }}
+                      >
+                        Hide All
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg w-full min-h-[200px] max-h-[calc(100vh-700px)] overflow-y-auto">
+                    <Table>
+                      <TableBody>
+                        {service.models.map((model, index) => (
+                          <TableRow
+                            className={cn(
+                              "cursor-pointer",
+                              model.visible ? "" : "opacity-50"
+                            )}
+                            key={index}
+                            onClick={() => toggleVisible(model)}
+                          >
+                            <TableCell className="p-1 pl-4 font-normal">
+                              {model.id}
+                            </TableCell>
+                            <TableCell className="p-1">
+                              <Toggle aria-label="Toggle Model Visibility" />
+                            </TableCell>
+                            <TableCell className="p-1">
+                              <EyeIcon className="w-4 h-4" />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
-              )}
-              {service && service.models.length > 0 && (
-                <div className="border rounded-lg w-full min-h-[200px] max-h-[calc(100vh-700px)] overflow-y-auto">
-                  <Table>
-                    <TableBody>
-                      {service.models.map((model, index) => (
-                        <TableRow
-                          className={cn(
-                            "cursor-pointer",
-                            model.visible ? "" : "opacity-50"
-                          )}
-                          key={index}
-                          onClick={() => toggleVisible(model)}
-                        >
-                          <TableCell className="p-1 pl-4 font-normal">
-                            {model.id}
-                          </TableCell>
-                          <TableCell className="p-1">
-                            <Toggle aria-label="Toggle Model Visibility" />
-                          </TableCell>
-                          <TableCell className="p-1">
-                            <EyeIcon className="w-4 h-4" />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </div>
+                <DialogClose>
+                  <Button variant="default">Save</Button>
+                </DialogClose>
+              </>
+            )}
           </div>
         )}
       </DialogContent>
