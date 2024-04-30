@@ -99,7 +99,7 @@ export function selectNextAvailableModel() {
 }
 
 subscribe(store, (s) => {
-  localStorage.setItem("store", JSON.stringify(s));
+  localStorage.setItem("store", JSON.stringify(store));
 });
 
 declare module "valtio" {
