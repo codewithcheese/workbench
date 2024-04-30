@@ -1,8 +1,6 @@
-# baseline
+# Workbench
 
-Workbench for developing _baseline prompts_.
-
-**Baseline prompts** are prompts that have been tuned for specific project or purpose.
+Workbench for developing _system prompts_ using iterative refinement.
 
 
 
