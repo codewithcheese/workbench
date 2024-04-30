@@ -29,21 +29,21 @@ export type Service = {
 export type Store = {
   responses: Response[];
   prompt: { blocks: string[] };
-  selected: { modelId?: string; service?: Service };
+  selected: { model?: { modelId: string; service: Service } };
   services: Service[];
 };
 
 const defaultStore: Store = {
   prompt: { blocks: [""] },
   responses: [],
-  selected: {},
+  selected: { model: undefined },
   services: [],
 };
 
 export let store = proxy<Store>(defaultStore);
 
 export function submitPrompt() {
-  if (!store.selected.service || !store.selected.modelId) {
+  if (!store.selected.model) {
     // TODO: show error
     return;
   }
@@ -57,8 +57,8 @@ export function submitPrompt() {
         content: store.prompt.blocks.join("\n"),
       },
     ]),
-    modelId: store.selected.modelId,
-    serviceName: store.selected.service.name,
+    modelId: store.selected.model.modelId,
+    serviceName: store.selected.model.service.name,
   });
 }
 
@@ -69,8 +69,37 @@ export function updateService(id: string, values: Partial<Service>) {
   }
 }
 
+export function isSelectedModelAvailable() {
+  if (!store.selected.model) {
+    // if nothing selected then consider it available
+    return true;
+  }
+  const service = store.services.find(
+    (s) => s.id === store.selected.model!.service.id
+  );
+  if (!service) {
+    return false;
+  }
+  const model = service.models.find(
+    (m) => m.id === store.selected.model!.modelId
+  );
+  return model?.visible;
+}
+
+export function selectNextAvailableModel() {
+  const service = store.services.find((s) => s.models.find((m) => m.visible));
+  if (!service) {
+    return;
+  }
+  const model = service.models.find((m) => m.visible);
+  if (!model) {
+    return;
+  }
+  store.selected.model = { modelId: model.id, service };
+}
+
 subscribe(store, (s) => {
-  localStorage.setItem("store", JSON.stringify(store));
+  localStorage.setItem("store", JSON.stringify(s));
 });
 
 declare module "valtio" {

@@ -18,18 +18,18 @@ const ResponseCard = memo(
     const { messages, reload, isLoading, stop, error } = useChat({
       initialMessages,
       body: {
-        providerId: selected.service?.providerId,
-        modelId: selected.modelId,
-        baseURL: selected.service?.baseURL,
-        apiKey: selected.service?.apiKey,
+        providerId: selected.model?.service.providerId,
+        modelId: selected.model?.modelId,
+        baseURL: selected.model?.service.baseURL,
+        apiKey: selected.model?.service.apiKey,
       },
     });
 
     function refresh() {
-      if (selected.modelId && selected.service) {
+      if (selected.model) {
         console.log("Refreshing", selected);
-        store.responses[index].modelId = selected.modelId;
-        store.responses[index].serviceName = selected.service.name;
+        store.responses[index].modelId = selected.model.modelId;
+        store.responses[index].serviceName = selected.model.service.name;
       }
       reload();
     }
@@ -82,7 +82,7 @@ const ResponseCard = memo(
             className="text-gray-500"
             size={16}
             onClick={() => {
-              store.responses = store.responses.toSpliced(index, 1);
+              store.responses.splice(index, 1);
             }}
           />
         </CardHeader>
