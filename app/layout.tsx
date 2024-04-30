@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Baseline",
+  title: "Workbench",
   description: "Iteratively create and test magical system prompts",
 };
 
