@@ -82,7 +82,7 @@ const ResponseCard = memo(
             className="text-gray-500"
             size={16}
             onClick={() => {
-              store.responses = store.responses.toSpliced(index, 1);
+              store.responses.splice(index, 1);
             }}
           />
         </CardHeader>
