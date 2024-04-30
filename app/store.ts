@@ -69,8 +69,34 @@ export function updateService(id: string, values: Partial<Service>) {
   }
 }
 
+export function isSelectedModelAvailable() {
+  if (!store.selected.service || !store.selected.modelId) {
+    // if nothing selected then consider it available
+    return true;
+  }
+  const service = store.services.find((s) => s.id === store.selected.service!.id);
+  if (!service) {
+    return false;
+  }
+  const model =  service.models.find((m) => m.id === store.selected.modelId);
+  return model?.visible;
+}
+
+export function selectNextAvailableModel() {
+  const service = store.services.find((s) => s.models.find((m) => m.visible));
+  if (!service) {
+    return;
+  }
+  const model = service.models.find((m) => m.visible);
+  if (!model) {
+    return;
+  }
+  store.selected.modelId = model.id;
+  store.selected.service = service;
+}
+
 subscribe(store, (s) => {
-  localStorage.setItem("store", JSON.stringify(store));
+  localStorage.setItem("store", JSON.stringify(s));
 });
 
 declare module "valtio" {
