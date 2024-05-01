@@ -9,6 +9,7 @@ import { store, submitPrompt } from "@/app/store";
 import { useSnapshot } from "valtio";
 import { ModelConfig } from "@/components/model-config";
 import { SelectModel } from "@/components/select-model";
+import { PlayIcon } from "lucide-react";
 
 export function Header() {
   const selected = useSnapshot(store.selected);
@@ -30,7 +31,17 @@ export function Header() {
           <ModelConfig />
         </div>
       </div>
-      {selected.model && <Button onClick={() => submitPrompt()}>Run</Button>}
+      {selected.model && (
+        <Button onClick={() => submitPrompt()}>
+          <PlayIcon size={16} className="mr-2" />
+          Run
+          <div className="w-13 h-6 px-2 py-1 ml-1 bg-white bg-opacity-20 rounded-full hidden md:inline-flex">
+            <div className="text-center text-white text-xs font-light">
+              Ctrl + ⏎
+            </div>
+          </div>
+        </Button>
+      )}
     </header>
   );
 }
