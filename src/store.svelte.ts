@@ -8,7 +8,7 @@ export type Document = {
   name: string;
   description: string;
   content: string;
-  data: any;
+  data?: any;
 };
 
 export type Response = {
