@@ -1,10 +1,5 @@
 <script lang="ts">
-  import {
-    EllipsisVerticalIcon,
-    FileIcon,
-    PlusIcon,
-    PocketKnifeIcon,
-  } from "lucide-svelte";
+  import { EllipsisVerticalIcon, FileIcon, PlusIcon, PocketKnifeIcon } from "lucide-svelte";
   import { db, newProject, removeProject, store } from "@/store.svelte";
   import { Button } from "@/components/ui/button/index";
   import * as DropdownMenu from "@/components/ui/dropdown-menu/index";
@@ -36,10 +31,10 @@
   </Button>
 </div>
 <div class="flex-1">
-  <nav class="grid items-start px-2 text-sm font-medium">
+  <nav class="grid items-start text-sm font-medium">
     <div
       class:bg-accent={$page.url.pathname.startsWith("/document")}
-      class="group flex flex-row items-center px-2"
+      class="group flex flex-row items-center px-4"
     >
       <Button
         href="/document"
@@ -58,16 +53,14 @@
         Documents
       </Button>
     </div>
-    <div class="mt-4 overflow-x-hidden px-2">
-      <h3
-        class="h-9 overflow-hidden text-ellipsis break-all px-2 pb-2 pt-3 text-xs font-medium text-gray-700"
-      >
+    <div class="mt-6 overflow-x-hidden">
+      <h3 class="mb-2 overflow-hidden text-ellipsis break-all px-4 text-xs font-medium">
         Projects
       </h3>
       {#each db.projects as project (project.id)}
         <div
           class:bg-accent={project.id === projectId}
-          class="group flex flex-row items-center overflow-x-hidden"
+          class="group flex flex-row items-center overflow-x-hidden px-4"
         >
           <Button
             variant="ghost"
