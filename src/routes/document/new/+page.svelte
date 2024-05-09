@@ -7,8 +7,10 @@
   import { nanoid } from "nanoid";
   import { goto } from "$app/navigation";
   import Form from "@/routes/document/Form.svelte";
+  import { page } from "$app/stores";
 
-  let name = $state("");
+  let queryParams = $state($page.url.searchParams);
+  let name = $state(queryParams.get("name") ?? "");
   let content = $state("");
   let description = $state("");
 

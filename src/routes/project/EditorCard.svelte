@@ -17,19 +17,40 @@
   import type { CompletionSource } from "@codemirror/autocomplete";
   import { Decoration } from "@codemirror/view";
   import { goto } from "$app/navigation";
-  import { toast } from "svelte-french-toast";
 
   type Props = {
     project: Project;
   };
   let { project }: Props = $props();
 
-  class DocumentLink extends WidgetType {
+  class DocumentLinkWidget extends WidgetType {
+    constructor(public id: string) {
+      super();
+    }
     toDOM() {
       const span = document.createElement("span");
-      span.className = "document-link-icon";
+      span.className = "document-icon";
       span.innerHTML =
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-symlink"><path d="m10 18 3-3-3-3"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 11V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h7"/></svg>';
+      span.onclick = () => {
+        goto(`/document/${this.id}`);
+      };
+      return span;
+    }
+  }
+
+  class DocumentCreateWidget extends WidgetType {
+    constructor(public name: string) {
+      super();
+    }
+    toDOM() {
+      const span = document.createElement("span");
+      span.className = "document-icon";
+      span.innerHTML =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus-2"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M3 15h6"/><path d="M6 12v6"/></svg>';
+      span.onclick = () => {
+        goto(`/document/new?name=${encodeURIComponent(this.name)}`);
+      };
       return span;
     }
   }
@@ -42,13 +63,8 @@
       constructor(view: EditorView) {
         this.view = view;
         this.decorations = this.buildDecorations(view.state);
-        this.handleClick = this.handleClick.bind(this);
-        view.dom.addEventListener("click", this.handleClick);
       }
-
-      destroy() {
-        this.view.dom.removeEventListener("click", this.handleClick);
-      }
+      destroy() {}
       update(update: ViewUpdate) {
         if (update.docChanged) {
           this.decorations = this.buildDecorations(update.state);
@@ -62,7 +78,8 @@
         const docStr = state.doc.toString();
         while ((match = re.exec(docStr)) !== null) {
           // check if document exists
-          const exists = !!db.documents.items.find((d) => d.name === match![1]);
+          const name = match![1];
+          const exists = db.documents.items.find((d) => d.name === match![1]);
           builder.add(
             match.index,
             match.index + match[0].length,
@@ -74,7 +91,7 @@
             match.index + match[0].length,
             match.index + match[0].length,
             Decoration.widget({
-              widget: new DocumentLink(),
+              widget: exists ? new DocumentLinkWidget(exists.id) : new DocumentCreateWidget(name),
               side: 1, // Render after the text
               name: match[1],
               type: "document-link",
@@ -82,29 +99,6 @@
           );
         }
         return builder.finish();
-      }
-
-      handleClick(event: any) {
-        const pos = this.view.posAtCoords({ x: event.clientX, y: event.clientY });
-        if (pos == null) return false;
-        // iterate decorations to find the document link
-        let cursor = this.decorations.iter(pos);
-        while ((cursor.next(), cursor.value !== null)) {
-          if (cursor.value && cursor.from === pos && cursor.to === pos) {
-            const deco = cursor.value;
-            if (deco.spec.type !== "document-link") {
-              continue;
-            }
-            const document = db.documents.items.find((d) => d.name === deco.spec.name);
-            if (document) {
-              goto(`/document/${document.id}`);
-            } else {
-              toast.error(`Document "${deco.spec.name}" not found`);
-            }
-          } else if (cursor.from > pos) {
-            break;
-          }
-        }
       }
     },
     {
@@ -170,9 +164,9 @@
     @apply text-red-700 underline;
   }
 
-  :global(.document-link-icon svg) {
+  :global(.document-icon svg) {
     display: inline !important;
-    @apply h-4 w-4 text-gray-500;
+    @apply h-4 w-4 text-gray-500 hover:text-gray-700;
     cursor: pointer;
   }
 </style>
