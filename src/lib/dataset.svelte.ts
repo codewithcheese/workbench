@@ -51,11 +51,6 @@ export class Dataset<Item extends { id: string }> {
     return this.#data[index];
   }
 
-  update(id: string, item: Partial<Item>) {
-    const index = this.#lookup[id];
-    Object.assign(this.#data[index], item);
-  }
-
   filter(predicate: (item: Item) => boolean) {
     return this.#data.filter(predicate);
   }

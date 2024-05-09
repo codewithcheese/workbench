@@ -67,7 +67,7 @@
         if (!existing) {
           db.models.push({ ...model, serviceId: service.id });
         } else {
-          db.models.update(model.id, model);
+          Object.assign(existing, model);
         }
       }
     } finally {

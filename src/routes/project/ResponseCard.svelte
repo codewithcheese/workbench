@@ -8,6 +8,7 @@
     type Service,
     type Response,
     removeResponse,
+    updateResponsePrompt,
   } from "@/store.svelte";
   import { LoaderCircleIcon, RefreshCwIcon, XIcon } from "lucide-svelte";
   import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -44,9 +45,8 @@
   $: console.log("isLoading", $isLoading);
 
   function refresh() {
-    console.log("Refreshing", response, "selected", store.selected.modelId);
+    updateResponsePrompt(response.id);
     if (store.selected.modelId && store.selected.modelId !== response.modelId) {
-      console.log("updating modelId", response.modelId, store.selected.modelId);
       response.modelId = store.selected.modelId;
     }
     reload();
@@ -98,8 +98,11 @@
 
     <div class="pr-2 text-xs text-gray-500">{response.modelId}</div>
     <div class="flex-1"></div>
-    <Badge onclick={() => (format = "markdown")} variant="outline">Markdown</Badge>
-    <Badge onclick={() => (format = "text")} variant="outline">Text</Badge>
+    <Badge onclick={() => (format = "markdown")} variant="outline" class="hover:bg-gray-200"
+      >Markdown</Badge
+    >
+    <Badge onclick={() => (format = "text")} variant="outline" class="hover:bg-gray-200">Text</Badge
+    >
     <XIcon class="text-gray-500" size={16} onclick={() => removeResponse(response)} />
   </CardHeader>
   <CardContent class="p-6">

@@ -128,6 +128,25 @@ export function submitPrompt(project: Project) {
   }
 }
 
+export function updateResponsePrompt(id: string) {
+  const response = db.responses.get(id);
+  if (!response) {
+    return;
+  }
+  // get first message
+  const message = db.messages.items.find((m) => m.responseId === id);
+  if (!message) {
+    return;
+  }
+  // interpolate documents into prompt
+  const content = interpolateDocuments(
+    db.projects.get(response.projectId).prompt,
+    db.documents.items,
+  );
+  console.log("content", content);
+  message.content = content;
+}
+
 function interpolateDocuments(prompt: string, documents: Document[]): string {
   const templateTagRegex = /\[\[(.*?)]]/g;
   return prompt.replace(templateTagRegex, (_, docName) => {
