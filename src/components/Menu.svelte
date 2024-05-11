@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { EllipsisVerticalIcon, FileIcon, PlusIcon, PocketKnifeIcon } from "lucide-svelte";
+  import {
+    DatabaseBackupIcon,
+    EllipsisVerticalIcon,
+    FileIcon,
+    PlusIcon,
+    PocketKnifeIcon,
+  } from "lucide-svelte";
   import { db, duplicateProject, newProject, type Project, removeProject } from "@/store.svelte";
   import { Button } from "@/components/ui/button/index";
   import * as DropdownMenu from "@/components/ui/dropdown-menu/index";
@@ -8,6 +14,7 @@
   import { cn } from "$lib/cn";
   import { goto } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
+  import { SQLITE_FILENAME } from "@/database/client";
 
   let projectId: string | undefined = $derived.by(() => {
     if ($page.url.pathname.startsWith("/project")) {
@@ -16,6 +23,19 @@
   });
 
   let confirmDelete: Project | null = $state(null);
+
+  async function downloadDatabase() {
+    const { SQLocal } = await import("sqlocal");
+    const { getDatabaseFile } = new SQLocal(SQLITE_FILENAME);
+    const databaseFile = await getDatabaseFile();
+    const fileUrl = URL.createObjectURL(databaseFile);
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.download = "database.sqlite3";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 </script>
 
 <div class="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
@@ -23,6 +43,9 @@
     <PocketKnifeIcon class="h-6 w-6" />
     <span class="">Workbench</span>
   </a>
+  <Button class="h-8 w-8 rounded-full p-1" variant="outline" onclick={() => downloadDatabase()}>
+    <DatabaseBackupIcon class="text-gray-600" />
+  </Button>
   <Button
     class="h-8 w-8 rounded-full p-1"
     variant="outline"

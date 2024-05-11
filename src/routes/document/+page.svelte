@@ -7,6 +7,17 @@
   import { PlusIcon, TrashIcon } from "lucide-svelte";
   import { goto } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
+  import { kysely } from "@/database/client";
+
+  // let { data }: { data: PageData } = $props();
+  //
+  // console.log("data", data);
+
+  (async () => {
+    console.log("Loading documents");
+    const documents = await kysely.selectFrom("document").selectAll().execute();
+    console.log("documents", documents);
+  })();
 
   let confirmDelete: Document | null = $state(null);
 </script>
