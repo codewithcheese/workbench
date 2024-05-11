@@ -9,7 +9,7 @@
       <Menu />
     </div>
   </div>
-  <div class="flex flex-col">
+
     <slot></slot>
   </div>
 </div>
