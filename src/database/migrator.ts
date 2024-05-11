@@ -1,12 +1,22 @@
-import { Migrator } from "kysely";
-import { kysely } from "./client";
+import { Kysely, Migrator, sql } from "kysely";
+import { migrations } from "./migrations/";
+import type { Database } from "@/database/schema";
 
-export const migrator = new Migrator({
-  db: kysely,
-  provider: {
-    async getMigrations() {
-      const { migrations } = await import("./migrations/");
-      return migrations;
+export async function migrate(db: Kysely<Database>) {
+  const migrator = new Migrator({
+    db,
+    provider: {
+      async getMigrations() {
+        return migrations;
+      },
     },
-  },
-});
+  });
+
+  await sql`PRAGMA foreign_keys = ON`.execute(db);
+  const migration = await migrator.migrateToLatest();
+
+  if (migration.error) {
+    console.error(migration.error);
+    throw new Error("Migration failed");
+  }
+}

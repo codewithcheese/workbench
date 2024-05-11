@@ -1,6 +1,6 @@
 import type { Migration } from "kysely";
-import * as migration0 from "./0";
+import { migration00 } from "@/database/migrations/00";
 
 export const migrations: Record<string, Migration> = {
-  migration0: migration0,
+  "00": migration00,
 };
