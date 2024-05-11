@@ -1,6 +1,6 @@
 <script lang="ts">
   import { EllipsisVerticalIcon, FileIcon, PlusIcon, PocketKnifeIcon } from "lucide-svelte";
-  import { db, newProject, removeProject, store } from "@/store.svelte";
+  import { db, newProject, removeProject } from "@/store.svelte";
   import { Button } from "@/components/ui/button/index";
   import * as DropdownMenu from "@/components/ui/dropdown-menu/index";
   import { page } from "$app/stores";
@@ -57,7 +57,7 @@
       <h3 class="mb-2 overflow-hidden text-ellipsis break-all px-4 text-xs font-medium">
         Projects
       </h3>
-      {#each db.projects as project (project.id)}
+      {#each db.projects.items.reverse() as project (project.id)}
         <div
           class:bg-accent={project.id === projectId}
           class="group flex flex-row items-center overflow-x-hidden px-4"
