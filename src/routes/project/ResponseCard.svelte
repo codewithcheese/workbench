@@ -52,25 +52,29 @@
     reload();
   }
 
+  function updateMessages() {
+    const currentMessages = db.messages.filter((m) => m.responseId === response.id);
+    $messages.forEach((newMessage, index) => {
+      const currentMessage = currentMessages[index];
+      if (currentMessage) {
+        if (newMessage.id === currentMessage.id) {
+          // no update required
+        } else {
+          Object.assign(currentMessage, newMessage);
+        }
+      } else {
+        db.messages.push({ ...newMessage, responseId: response.id });
+      }
+    });
+  }
+
   $: {
     if ($isLoading) {
       finalized = false;
     }
     if (!finalized && !$isLoading) {
       finalized = true;
-      // clear previous messages
-      console.log("Replacing messages", $messages);
-      db.messages
-        .filter((m) => m.responseId === response.id)
-        .forEach((m) => {
-          db.messages.remove(m.id);
-        });
-      // add new messages
-      for (const message of $messages) {
-        if (!db.messages.get(message.id)) {
-          db.messages.push({ ...message, responseId: response.id });
-        }
-      }
+      updateMessages();
     }
   }
 

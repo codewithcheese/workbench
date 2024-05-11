@@ -57,7 +57,7 @@
       <h3 class="mb-2 overflow-hidden text-ellipsis break-all px-4 text-xs font-medium">
         Projects
       </h3>
-      {#each db.projects.items.reverse() as project (project.id)}
+      {#each db.projects.items.toReversed() as project (project.id)}
         <div
           class:bg-accent={project.id === projectId}
           class="group flex flex-row items-center overflow-x-hidden px-4"

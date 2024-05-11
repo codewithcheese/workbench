@@ -9,7 +9,9 @@
 </script>
 
 <div class="space-y-2 overflow-y-auto">
-  {#each db.responses.filter((r) => r.projectId === project.id).reverse() as response (response.id)}
+  {#each db.responses
+    .filter((r) => r.projectId === project.id)
+    .toReversed() as response (response.id)}
     {@const model = db.models.get(response.modelId)}
     {@const service = db.services.get(model.serviceId)}
     <ResponseCard {response} {service} />
