@@ -56,7 +56,7 @@
     "marked": "^12.0.1",
     "marked-katex-extension": "^5.0.1",
     "nanoid": "^5.0.7",
-    "sqlocal": "^0.8.0",
+    "sqlocal": "^0.9.0",
     "svelte-codemirror-editor": "^1.3.0",
     "svelte-filepond": "^0.2.2",
     "svelte-french-toast": "^1.2.0",

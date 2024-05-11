@@ -8,13 +8,5 @@ export const SQLITE_FILENAME = "workbench.db";
 const sqlocal = new SQLocalKysely(SQLITE_FILENAME);
 const kysely = new Kysely<Database>({ dialect: sqlocal.dialect });
 
-try {
-  console.log("Migrating database");
-  await migrate(kysely);
-  console.log("Migration complete");
-} catch (err) {
-  console.error(err);
-}
-
 export { kysely };
 export const { getDatabaseFile, overwriteDatabaseFile } = sqlocal;
