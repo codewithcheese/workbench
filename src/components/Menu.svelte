@@ -1,17 +1,21 @@
 <script lang="ts">
   import { EllipsisVerticalIcon, FileIcon, PlusIcon, PocketKnifeIcon } from "lucide-svelte";
-  import { db, newProject, removeProject } from "@/store.svelte";
+  import { db, duplicateProject, newProject, type Project, removeProject } from "@/store.svelte";
   import { Button } from "@/components/ui/button/index";
   import * as DropdownMenu from "@/components/ui/dropdown-menu/index";
+  import * as Dialog from "@/components/ui/dialog/index";
   import { page } from "$app/stores";
   import { cn } from "$lib/cn";
   import { goto } from "$app/navigation";
+  import DeleteDialog from "@/components/DeleteDialog.svelte";
 
   let projectId: string | undefined = $derived.by(() => {
     if ($page.url.pathname.startsWith("/project")) {
       return $page.params.id;
     }
   });
+
+  let confirmDelete: Project | null = $state(null);
 </script>
 
 <div class="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
@@ -84,7 +88,11 @@
               >
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
-              <DropdownMenu.Item onclick={() => removeProject(project)}>Delete</DropdownMenu.Item>
+              <DropdownMenu.Item onclick={() => (confirmDelete = project)}>Delete</DropdownMenu.Item
+              >
+              <DropdownMenu.Item onclick={() => duplicateProject(project)}
+                >Duplicate</DropdownMenu.Item
+              >
             </DropdownMenu.Content>
           </DropdownMenu.Root>
         </div>
@@ -92,3 +100,16 @@
     </div>
   </nav>
 </div>
+{#if confirmDelete}
+  <DeleteDialog
+    name={confirmDelete.name}
+    type="project"
+    onConfirm={() => {
+      confirmDelete && removeProject(confirmDelete);
+    }}
+    onCancel={() => {
+      console.log("cancel");
+      confirmDelete = null;
+    }}
+  />
+{/if}

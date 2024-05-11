@@ -1,11 +1,14 @@
-<script>
+<script lang="ts">
   import Header from "@/routes/document/Header.svelte";
   import * as Table from "@/components/ui/table/index";
   import * as Dialog from "@/components/ui/dialog/index";
-  import { db, removeDocument } from "@/store.svelte";
+  import { db, removeDocument, type Document } from "@/store.svelte";
   import { Button } from "@/components/ui/button/index";
   import { PlusIcon, TrashIcon } from "lucide-svelte";
   import { goto } from "$app/navigation";
+  import DeleteDialog from "@/components/DeleteDialog.svelte";
+
+  let confirmDelete: Document | null = $state(null);
 </script>
 
 <Header />
@@ -53,38 +56,15 @@
               {document.description}
             </Table.Cell>
             <Table.Cell class="p-2">
-              <Dialog.Root>
-                <Dialog.Trigger asChild let:builder>
-                  <Button
-                    builders={[builder]}
-                    variant="ghost"
-                    class="p-1 px-4 text-sm opacity-0 group-hover:opacity-100"
-                  >
-                    <TrashIcon class="h-4 w-4" />
-                  </Button>
-                </Dialog.Trigger>
-                <Dialog.Content class="max-w-[400px]">
-                  <Dialog.Title>Delete document</Dialog.Title>
-                  <Dialog.Description class="space-y-2">
-                    <p>Are you sure you want to delete this document?</p>
-                    <p>
-                      Document to be deleted: <span class="font-semibold">{document.name}</span>
-                    </p>
-                    <p>This action cannot be undone.</p>
-                  </Dialog.Description>
-                  <Dialog.Close>
-                    <Button
-                      class="w-full"
-                      variant="destructive"
-                      onclick={() => {
-                        removeDocument(document);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </Dialog.Close>
-                </Dialog.Content>
-              </Dialog.Root>
+              <Button
+                onclick={() => {
+                  confirmDelete = document;
+                }}
+                variant="ghost"
+                class="p-1 px-4 text-sm opacity-0 group-hover:opacity-100"
+              >
+                <TrashIcon class="h-4 w-4" />
+              </Button>
             </Table.Cell>
           </Table.Row>
         {/each}
@@ -92,3 +72,16 @@
     </Table.Root>
   {/if}
 </main>
+{#if confirmDelete}
+  <DeleteDialog
+    name={confirmDelete.name}
+    type="document"
+    onConfirm={() => {
+      confirmDelete && removeDocument(confirmDelete);
+    }}
+    onCancel={() => {
+      console.log("cancel");
+      confirmDelete = null;
+    }}
+  />
+{/if}

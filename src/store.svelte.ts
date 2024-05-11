@@ -197,6 +197,33 @@ export function removeProject(project: Project) {
   db.projects.remove(project.id);
 }
 
+export function duplicateProject(project: Project) {
+  const responses = db.responses.filter((r) => r.projectId === project.id);
+  const messages = responses.map((r) => db.messages.filter((m) => m.responseId === r.id)).flat();
+  const newId = nanoid(10);
+  db.projects.push({ id: newId, name: `${project.name} copy`, prompt: project.prompt });
+  const responseMap: Record<string, string> = {};
+  responses.forEach((r) => {
+    const id = nanoid(10);
+    responseMap[r.id] = id;
+    db.responses.push({
+      id,
+      projectId: newId,
+      modelId: r.modelId,
+    });
+  });
+  messages.forEach((m) => {
+    const id = nanoid(10);
+    db.messages.push({
+      id,
+      responseId: responseMap[m.responseId],
+      role: m.role,
+      content: m.content,
+    });
+  });
+  goto(`/project/${newId}`);
+}
+
 export function removeResponse(response: Response) {
   db.messages.filter((m) => m.responseId === response.id).forEach((m) => db.messages.remove(m.id));
   db.responses.remove(response.id);
