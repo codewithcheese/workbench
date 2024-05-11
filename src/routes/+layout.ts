@@ -9,5 +9,6 @@ export const ssr = false;
 export const load: LayoutLoad = async ({ params }) => {
   const { PersistenceStore } = await import("@/lib/persistence");
   const store = new PersistenceStore();
+  store.prompt();
   return {};
 };

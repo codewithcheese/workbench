@@ -7,6 +7,7 @@
   import { PlusIcon, TrashIcon } from "lucide-svelte";
   import { goto } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
+
   import { kysely } from "@/database/client";
 
   // let { data }: { data: PageData } = $props();
