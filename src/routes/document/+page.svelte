@@ -12,12 +12,12 @@
   // let { data }: { data: PageData } = $props();
   //
   // console.log("data", data);
-
-  (async () => {
-    console.log("Loading documents");
-    const documents = await kysely.selectFrom("document").selectAll().execute();
-    console.log("documents", documents);
-  })();
+  //
+  // (async () => {
+  //   console.log("Loading documents");
+  //   const documents = await kysely.selectFrom("document").selectAll().execute();
+  //   console.log("documents", documents);
+  // })();
 
   let confirmDelete: Document | null = $state(null);
 </script>
