@@ -18,11 +18,11 @@
   {#if db.services.length > 0}
     <div class="px-4 pt-4"></div>
     <div class="grid grid-cols-2 gap-3 overflow-y-auto px-4">
-      <div class="space-y-2 overflow-y-auto pr-2">
+      <div class="space-y-2 overflow-y-auto pl-1 pr-2 pt-1">
         <Input class="p-2 text-lg" bind:value={project.name} />
         <EditorCard {project} />
       </div>
-      <div class="mr-1 space-y-2 overflow-y-auto pr-2">
+      <div class="mr-1 space-y-2 overflow-y-auto pr-2 pt-1">
         <ResponseList {project} />
       </div>
     </div>
