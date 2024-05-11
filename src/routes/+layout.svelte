@@ -9,8 +9,6 @@
       <Menu />
     </div>
   </div>
-
-    <slot></slot>
-  </div>
+  <slot></slot>
 </div>
 <Toaster />
