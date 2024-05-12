@@ -44,9 +44,9 @@
     <PocketKnifeIcon class="h-6 w-6" />
     <span class="">Workbench</span>
   </a>
-  <Button class="h-8 w-8 rounded-full p-1" variant="outline" onclick={() => downloadDatabase()}>
-    <DatabaseBackupIcon class="text-gray-600" />
-  </Button>
+  <!--  <Button class="h-8 w-8 rounded-full p-1" variant="outline" onclick={() => downloadDatabase()}>-->
+  <!--    <DatabaseBackupIcon class="text-gray-600" />-->
+  <!--  </Button>-->
   <Button
     class="h-8 w-8 rounded-full p-1"
     variant="outline"
