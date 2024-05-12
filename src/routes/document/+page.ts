@@ -1,12 +1,14 @@
-import type { PageLoad } from "./$types";
+import type { View } from "$lib/types";
 
-export const load: PageLoad = async ({ params }) => {
-  // console.log("Loading document", params);
-  // const { kysely } = await import("@/database/client");
-  // const documents = await kysely.selectFrom("document").selectAll().execute();
-  // console.log("Documents", documents);
-  // return {
-  //   documents,
-  // };
-  return {};
-};
+async function documentsView() {
+  const { driz } = await import("@/database/client");
+  return driz.query.documents.findMany();
+}
+
+export type DocumentsView = View<typeof documentsView>;
+
+export async function load() {
+  return {
+    documents: await documentsView(),
+  };
+}

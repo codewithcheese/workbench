@@ -1,6 +1,5 @@
 <script lang="ts">
   import Header from "@/routes/document/Header.svelte";
-  import { db } from "@/store.svelte";
   import { EditorView } from "@codemirror/view";
   import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
   import { languages } from "@codemirror/language-data";
@@ -8,6 +7,8 @@
   import { goto } from "$app/navigation";
   import Form from "@/routes/document/Form.svelte";
   import { page } from "$app/stores";
+  import { driz } from "@/database/client";
+  import { documents } from "@/database/schema";
 
   let queryParams = $state($page.url.searchParams);
   let name = $state(queryParams.get("name") ?? "");
@@ -22,14 +23,13 @@
     }),
   ];
 
-  function submit(e: any) {
+  async function submit(e: any) {
     e.preventDefault();
-    db.documents.push({
+    await driz.insert(documents).values({
       id: nanoid(10),
       name,
-      content,
       description,
-      data: null,
+      content,
     });
     goto(`/document`);
   }

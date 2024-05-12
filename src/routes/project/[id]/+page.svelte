@@ -4,9 +4,8 @@
   import EditorCard from "@/routes/project/EditorCard.svelte";
   import Splash from "@/components/Splash.svelte";
   import { Button } from "@/components/ui/button";
-  import { db, type Project, type Response } from "@/store.svelte";
+  import { db } from "@/store.svelte";
   import { Input } from "@/components/ui/input";
-  import { page } from "$app/stores";
   import type { ProjectView } from "@/routes/project/[id]/+page";
 
   type Props = {

@@ -1,16 +1,33 @@
 <script lang="ts">
   import Header from "@/routes/document/Header.svelte";
-  import { db } from "@/store.svelte";
   import { goto } from "$app/navigation";
   import Form from "@/routes/document/Form.svelte";
-  import { page } from "$app/stores";
   import Splash from "@/components/Splash.svelte";
+  import type { DocumentView } from "@/routes/document/[id]/+page";
+  import { documents } from "@/database/schema";
+  import { driz } from "@/database/client";
+  import { eq } from "drizzle-orm";
+  import { toast } from "svelte-french-toast";
 
-  let document = $derived(db.documents.get($page.params.id));
+  type Props = { data: { document: DocumentView } };
+  let { data }: Props = $props();
+  let document = $derived(data.document);
 
-  function submit(e: any) {
+  async function submit(e: any) {
     e.preventDefault();
-    goto(`/document`);
+    try {
+      await driz
+        .update(documents)
+        .set({
+          name: document.name,
+          description: document.description,
+          content: document.content,
+        })
+        .where(eq(documents.id, document.id));
+      goto(`/document`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Unknown error");
+    }
   }
 </script>
 

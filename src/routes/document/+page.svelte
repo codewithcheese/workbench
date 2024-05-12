@@ -2,25 +2,32 @@
   import Header from "@/routes/document/Header.svelte";
   import * as Table from "@/components/ui/table/index";
   import * as Dialog from "@/components/ui/dialog/index";
-  import { db, removeDocument, type Document } from "@/store.svelte";
+  import { type Document } from "@/store.svelte";
   import { Button } from "@/components/ui/button/index";
   import { PlusIcon, TrashIcon } from "lucide-svelte";
-  import { goto } from "$app/navigation";
+  import { goto, invalidate, invalidateAll } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
+  import type { DocumentsView } from "@/routes/document/+page";
+  import { driz } from "@/database/client";
+  import { eq } from "drizzle-orm";
+  import { documents } from "@/database/schema";
+  import { toast } from "svelte-french-toast";
 
-  // import { kysely } from "@/database/client";
-
-  // let { data }: { data: PageData } = $props();
-  //
-  // console.log("data", data);
-  //
-  // (async () => {
-  //   console.log("Loading documents");
-  //   const documents = await kysely.selectFrom("document").selectAll().execute();
-  //   console.log("documents", documents);
-  // })();
+  type Props = { data: { documents: DocumentsView } };
+  let { data }: Props = $props();
+  let docs = $derived(data.documents);
 
   let confirmDelete: Document | null = $state(null);
+
+  async function deleteDocument(document: Document) {
+    try {
+      await driz.delete(documents).where(eq(documents.id, document.id));
+      await invalidateAll();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Unknown error");
+    }
+    confirmDelete = null;
+  }
 </script>
 
 <Header />
@@ -32,7 +39,7 @@
       Add document
     </Button>
   </div>
-  {#if db.documents.length === 0}
+  {#if docs.length === 0}
     <div class="flex flex-col gap-1">
       <h3 class="text-lg font-semibold tracking-tight">You have no documents</h3>
       <p class="text-sm text-muted-foreground">
@@ -47,7 +54,7 @@
         <Table.Cell></Table.Cell>
       </Table.Header>
       <Table.Body>
-        {#each db.documents as document (document.id)}
+        {#each docs as document (document.id)}
           <Table.Row class="group cursor-pointer text-muted-foreground hover:text-primary">
             <Table.Cell
               onclick={() => {
@@ -88,9 +95,7 @@
   <DeleteDialog
     name={confirmDelete.name}
     type="document"
-    onConfirm={() => {
-      confirmDelete && removeDocument(confirmDelete);
-    }}
+    onConfirm={() => deleteDocument(confirmDelete)}
     onCancel={() => {
       console.log("cancel");
       confirmDelete = null;

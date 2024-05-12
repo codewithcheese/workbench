@@ -3,7 +3,7 @@ import { projects } from "@/database/schema";
 import { type View } from "@/lib/types.js";
 
 async function projectView(id: string) {
-  const { driz, sql } = await import("@/database/client");
+  const { driz } = await import("@/database/client");
   return driz.query.projects.findFirst({
     where: eq(projects.id, id),
     with: {
