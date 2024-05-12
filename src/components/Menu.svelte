@@ -15,6 +15,7 @@
   import { goto } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
   import { SQLITE_FILENAME } from "@/database/client";
+  import PersistenceAlert from "@/components/PersistenceAlert.svelte";
 
   let projectId: string | undefined = $derived.by(() => {
     if ($page.url.pathname.startsWith("/project")) {
@@ -59,6 +60,9 @@
 </div>
 <div class="flex-1">
   <nav class="grid items-start text-sm font-medium">
+    <div class="p-2 pt-0">
+      <PersistenceAlert />
+    </div>
     <div
       class:bg-accent={$page.url.pathname.startsWith("/document")}
       class="group flex flex-row items-center px-4"
