@@ -8,7 +8,7 @@
   import { goto } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
 
-  import { kysely } from "@/database/client";
+  // import { kysely } from "@/database/client";
 
   // let { data }: { data: PageData } = $props();
   //

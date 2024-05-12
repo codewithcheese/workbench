@@ -1,75 +1,75 @@
-export interface Database {
-  document: DocumentTable;
-  response: ResponseTable;
-  responseMessage: ResponseMessageTable;
-  model: ModelTable;
-  service: ServiceTable;
-  project: ProjectTable;
-}
+import { sqliteTable, text, int } from "drizzle-orm/sqlite-core";
+import { relations } from "drizzle-orm";
 
-export interface DocumentTable {
-  id: string;
-  name: string;
-  description: string;
-  content: string;
-  data: any;
-}
+export const migrations = sqliteTable("migrations", {
+  name: text("name").primaryKey(),
+});
 
-export interface ResponseTable {
-  id: string;
-  projectId: string;
-  modelId: string;
-  error: string | null;
-}
+export const documents = sqliteTable("document", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  content: text("content").notNull(),
+  // data: text("data").notNull(),
+});
 
-export interface ResponseMessageTable {
-  id: string;
-  responseId: string;
-  role: string;
-  content: string;
-}
+export const responses = sqliteTable("response", {
+  id: text("id").primaryKey(),
+  projectId: text("projectId").notNull(),
+  modelId: text("modelId").notNull(),
+  error: text("error"),
+});
 
-export interface ModelTable {
-  id: string;
-  serviceId: string;
-  name: string;
-  visible: boolean;
-}
+export const responseMessages = sqliteTable("responseMessage", {
+  id: text("id").primaryKey(),
+  responseId: text("response_id").notNull(),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+});
 
-export interface ServiceTable {
-  id: string;
-  name: string;
-  providerId: string;
-  baseURL: string;
-  apiKey: string;
-}
+export const models = sqliteTable("model", {
+  id: text("id").primaryKey(),
+  serviceId: text("serviceId").notNull(),
+  name: text("name").notNull(),
+  visible: int("visible").notNull(),
+});
 
-export interface ProjectTable {
-  id: string;
-  name: string;
-  prompt: string;
-}
+export const services = sqliteTable("service", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  providerId: text("providerId").notNull(),
+  baseURL: text("baseURL").notNull(),
+  apiKey: text("apiKey").notNull(),
+});
 
-// export type Document = Selectable<DocumentTable>;
-// export type NewDocument = Insertable<DocumentTable>;
-// export type DocumentUpdate = Updateable<DocumentTable>;
-//
-// export type Response = Selectable<ResponseTable>;
-// export type NewResponse = Insertable<ResponseTable>;
-// export type ResponseUpdate = Updateable<ResponseTable>;
-//
-// export type ResponseMessage = Selectable<ResponseMessageTable>;
-// export type NewResponseMessage = Insertable<ResponseMessageTable>;
-// export type ResponseMessageUpdate = Updateable<ResponseMessageTable>;
-//
-// export type Model = Selectable<ModelTable>;
-// export type NewModel = Insertable<ModelTable>;
-// export type ModelUpdate = Updateable<ModelTable>;
-//
-// export type Service = Selectable<ServiceTable>;
-// export type NewService = Insertable<ServiceTable>;
-// export type ServiceUpdate = Updateable<ServiceTable>;
-//
-// export type Project = Selectable<ProjectTable>;
-// export type NewProject = Insertable<ProjectTable>;
-// export type ProjectUpdate = Updateable<ProjectTable>;
+export const projects = sqliteTable("project", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  prompt: text("prompt").notNull(),
+});
+
+export const responsesRelations = relations(responses, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [responses.projectId],
+    references: [projects.id],
+  }),
+  model: one(models, {
+    fields: [responses.modelId],
+    references: [models.id],
+  }),
+  message: many(responseMessages),
+}));
+
+export const modelsRelations = relations(models, ({ one }) => ({
+  service: one(services, {
+    fields: [models.serviceId],
+    references: [services.id],
+  }),
+}));
+
+export const responseMessagesRelations = relations(responseMessages, ({ one }) => ({
+  response: one(responses, {
+    fields: [responseMessages.responseId],
+    references: [responses.id],
+  }),
+}));

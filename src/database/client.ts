@@ -1,12 +1,12 @@
-import { SQLocalKysely } from "sqlocal/kysely";
-import { Kysely } from "kysely";
-import type { Database } from "@/database/schema";
-import { migrate } from "@/database/migrator";
+import { SQLocalDrizzle } from "sqlocal/drizzle";
+import { drizzle } from "drizzle-orm/sqlite-proxy";
+import * as schema from "./schema";
 
 export const SQLITE_FILENAME = "workbench.db";
 
-const sqlocal = new SQLocalKysely(SQLITE_FILENAME);
-const kysely = new Kysely<Database>({ dialect: sqlocal.dialect });
+const { driver, batchDriver, getDatabaseFile, overwriteDatabaseFile } = new SQLocalDrizzle(
+  SQLITE_FILENAME,
+);
+export const driz = drizzle(driver, batchDriver, { schema });
 
-export { kysely };
-export const { getDatabaseFile, overwriteDatabaseFile } = sqlocal;
+export { getDatabaseFile, overwriteDatabaseFile };

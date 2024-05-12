@@ -14,7 +14,6 @@
   import { cn } from "$lib/cn";
   import { goto } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
-  import { SQLITE_FILENAME } from "@/database/client";
   import PersistenceAlert from "@/components/PersistenceAlert.svelte";
 
   let projectId: string | undefined = $derived.by(() => {
@@ -24,19 +23,6 @@
   });
 
   let confirmDelete: Project | null = $state(null);
-
-  async function downloadDatabase() {
-    const { SQLocal } = await import("sqlocal");
-    const { getDatabaseFile } = new SQLocal(SQLITE_FILENAME);
-    const databaseFile = await getDatabaseFile();
-    const fileUrl = URL.createObjectURL(databaseFile);
-    const link = document.createElement("a");
-    link.href = fileUrl;
-    link.download = "database.sqlite3";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
 </script>
 
 <div class="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
