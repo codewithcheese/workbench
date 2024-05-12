@@ -44,6 +44,10 @@ export const projects = sqliteTable("project", {
   prompt: text("prompt").notNull(),
 });
 
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  responses: many(responses),
+}));
+
 export const responsesRelations = relations(responses, ({ one, many }) => ({
   project: one(projects, {
     fields: [responses.projectId],
@@ -53,7 +57,7 @@ export const responsesRelations = relations(responses, ({ one, many }) => ({
     fields: [responses.modelId],
     references: [models.id],
   }),
-  message: many(responseMessages),
+  messages: many(responseMessages),
 }));
 
 export const modelsRelations = relations(models, ({ one }) => ({

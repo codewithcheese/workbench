@@ -15,7 +15,7 @@ export type Response = {
   id: string;
   projectId: string;
   modelId: string;
-  error?: string;
+  error: string | null;
 };
 
 export type ResponseMessage = {
@@ -108,6 +108,7 @@ export function submitPrompt(project: Project) {
       projectId: project.id,
       modelId: model.id,
       serviceId: model.serviceId,
+      error: null,
     };
     // interpolate documents into prompt
     const content = interpolateDocuments(project.prompt, db.documents.items);
@@ -210,6 +211,7 @@ export function duplicateProject(project: Project) {
       id,
       projectId: newId,
       modelId: r.modelId,
+      error: null,
     });
   });
   messages.forEach((m) => {

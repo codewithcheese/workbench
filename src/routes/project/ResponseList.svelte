@@ -1,17 +1,15 @@
 <script lang="ts">
-  import { db, type Project } from "@/store.svelte";
-  import ResponseCard from "@/routes/project/ResponseCard.svelte";
+  import ResponseCard from "./ResponseCard.svelte";
+  import type { ProjectView } from "./[id]/+page";
 
   type Props = {
-    project: Project;
+    responses: ProjectView["responses"];
   };
-  const { project }: Props = $props();
+  let { responses }: Props = $props();
 </script>
 
-{#each db.responses
-  .filter((r) => r.projectId === project.id)
-  .toReversed() as response (response.id)}
-  {@const model = db.models.get(response.modelId)}
-  {@const service = db.services.get(model.serviceId)}
+{#each responses.toReversed() as response (response.id)}
+  {@const model = response.model}
+  {@const service = model.service}
   <ResponseCard {response} {service} />
 {/each}

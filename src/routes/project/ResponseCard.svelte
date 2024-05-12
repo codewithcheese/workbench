@@ -83,7 +83,7 @@
     if ($error) {
       response.error = $error.message;
     } else {
-      response.error = undefined;
+      response.error = null;
     }
   }
 </script>
