@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "8116dadf-15c8-4554-9a19-55fd018fae25",
+  "id": "79b5a91d-ba6f-4a2c-9f08-5a6371089e93",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "document": {
@@ -32,22 +32,6 @@
           "name": "content",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "migrations": {
-      "name": "migrations",
-      "columns": {
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": true,
           "notNull": true,
           "autoincrement": false
         }

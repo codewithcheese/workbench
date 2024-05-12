@@ -1,6 +1,6 @@
 import { SQLITE_FILENAME } from "@/database/client";
 
-async function downloadDatabase() {
+export async function downloadDatabase() {
   const { SQLocal } = await import("sqlocal");
   const { getDatabaseFile } = new SQLocal(SQLITE_FILENAME);
   const databaseFile = await getDatabaseFile();

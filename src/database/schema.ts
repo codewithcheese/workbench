@@ -1,10 +1,6 @@
 import { sqliteTable, text, int } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 
-export const migrations = sqliteTable("migrations", {
-  name: text("name").primaryKey(),
-});
-
 export const documents = sqliteTable("document", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),

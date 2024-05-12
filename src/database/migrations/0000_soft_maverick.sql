@@ -5,10 +5,6 @@ CREATE TABLE `document` (
 	`content` text NOT NULL
 );
 --> statement-breakpoint
--- CREATE TABLE `migrations` (
--- 	`name` text PRIMARY KEY NOT NULL
--- );
---> statement-breakpoint
 CREATE TABLE `model` (
 	`id` text PRIMARY KEY NOT NULL,
 	`serviceId` text NOT NULL,
