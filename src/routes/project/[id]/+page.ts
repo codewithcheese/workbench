@@ -1,11 +1,12 @@
 import { eq } from "drizzle-orm";
-import { projects } from "@/database/schema";
+import { projectTable } from "@/database/schema";
 import { type View } from "@/lib/types.js";
+import { error } from "@sveltejs/kit";
 
-async function projectView(id: string) {
+export async function load({ params }) {
   const { driz } = await import("@/database/client");
-  return driz.query.projects.findFirst({
-    where: eq(projects.id, id),
+  const project = await driz.query.projectTable.findFirst({
+    where: eq(projectTable.id, params.id),
     with: {
       responses: {
         with: {
@@ -19,16 +20,8 @@ async function projectView(id: string) {
       },
     },
   });
-}
-
-export type ProjectView = View<typeof projectView>;
-
-export async function load({ params }) {
-  const { driz, sql } = await import("@/database/client");
-  // @ts-expect-error
-  window.driz = driz;
-  // @ts-expect-error
-  window.sql = sql;
-  const project = await projectView(params.id);
+  if (!project) {
+    return error(404, "Project not found");
+  }
   return { project };
 }

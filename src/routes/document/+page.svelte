@@ -7,21 +7,18 @@
   import { PlusIcon, TrashIcon } from "lucide-svelte";
   import { goto, invalidate, invalidateAll } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
-  import type { DocumentsView } from "@/routes/document/+page";
   import { driz } from "@/database/client";
   import { eq } from "drizzle-orm";
-  import { documents } from "@/database/schema";
+  import { documentTable } from "@/database/schema";
   import { toast } from "svelte-french-toast";
 
-  type Props = { data: { documents: DocumentsView } };
-  let { data }: Props = $props();
-  let docs = $derived(data.documents);
+  let { data } = $props();
 
   let confirmDelete: Document | null = $state(null);
 
   async function deleteDocument(document: Document) {
     try {
-      await driz.delete(documents).where(eq(documents.id, document.id));
+      await driz.delete(documentTable).where(eq(documentTable.id, document.id));
       await invalidateAll();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Unknown error");
@@ -39,7 +36,7 @@
       Add document
     </Button>
   </div>
-  {#if docs.length === 0}
+  {#if data.documents.length === 0}
     <div class="flex flex-col gap-1">
       <h3 class="text-lg font-semibold tracking-tight">You have no documents</h3>
       <p class="text-sm text-muted-foreground">
@@ -54,7 +51,7 @@
         <Table.Cell></Table.Cell>
       </Table.Header>
       <Table.Body>
-        {#each docs as document (document.id)}
+        {#each data.documents as document (document.id)}
           <Table.Row class="group cursor-pointer text-muted-foreground hover:text-primary">
             <Table.Cell
               onclick={() => {

@@ -1,17 +1,15 @@
 import { eq } from "drizzle-orm";
-import { documents } from "@/database/schema";
+import { documentTable } from "@/database/schema";
 import type { View } from "$lib/types";
-
-async function documentView(id: string) {
-  const { driz } = await import("@/database/client");
-  return driz.query.documents.findFirst({
-    where: eq(documents.id, id),
-  });
-}
-
-export type DocumentView = View<typeof documentView>;
+import { error } from "@sveltejs/kit";
 
 export async function load({ params }) {
-  const document = await documentView(params.id);
+  const { driz } = await import("@/database/client");
+  const document = await driz.query.documentTable.findFirst({
+    where: eq(documentTable.id, params.id),
+  });
+  if (!document) {
+    return error(404, "Document not found");
+  }
   return { document };
 }

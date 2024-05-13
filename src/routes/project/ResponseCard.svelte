@@ -40,9 +40,9 @@
     refresh();
   }
 
-  $: console.log("id", response.id, JSON.stringify(response));
+  // $: console.log("id", response.id, JSON.stringify(response));
 
-  $: console.log("isLoading", $isLoading);
+  // $: console.log("isLoading", $isLoading);
 
   function refresh() {
     updateResponsePrompt(response.id);

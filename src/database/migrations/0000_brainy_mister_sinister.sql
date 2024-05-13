@@ -20,6 +20,7 @@ CREATE TABLE `project` (
 --> statement-breakpoint
 CREATE TABLE `responseMessage` (
 	`id` text PRIMARY KEY NOT NULL,
+	`index` integer NOT NULL,
 	`response_id` text NOT NULL,
 	`role` text NOT NULL,
 	`content` text NOT NULL
@@ -39,3 +40,5 @@ CREATE TABLE `service` (
 	`baseURL` text NOT NULL,
 	`apiKey` text NOT NULL
 );
+--> statement-breakpoint
+CREATE UNIQUE INDEX `document_name_unique` ON `document` (`name`);

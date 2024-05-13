@@ -1,7 +1,9 @@
 import { Dataset } from "@/lib/dataset.svelte";
 import { nanoid } from "nanoid";
-import { goto } from "$app/navigation";
+import { goto, invalidateAll } from "$app/navigation";
 import { toast } from "svelte-french-toast";
+import { documentTable, modelTable, responseMessageTable, responseTable } from "@/database/schema";
+import { eq } from "drizzle-orm";
 
 export type Document = {
   id: string;
@@ -97,30 +99,38 @@ $effect.root(() => {
   });
 });
 
-export function submitPrompt(project: Project) {
+export async function submitPrompt(project: Project) {
+  const { driz } = await import("@/database/client");
   try {
     if (!store.selected.modelId) {
       throw new Error("No model selected");
     }
-    const model = db.models.get(store.selected.modelId);
-    const response = {
-      id: nanoid(10),
-      projectId: project.id,
-      modelId: model.id,
-      serviceId: model.serviceId,
-      error: null,
-    };
+    const model = await driz.query.modelTable.findFirst({
+      where: eq(modelTable.id, store.selected.modelId),
+    });
+    if (!model) {
+      throw new Error("Selected model not found");
+    }
+    // const model = db.models.get(store.selected.modelId);
     // interpolate documents into prompt
-    const content = interpolateDocuments(project.prompt, db.documents.items);
+    const content = await interpolateDocuments(project.prompt);
     console.log("content", content);
-    const message: ResponseMessage = {
-      id: nanoid(),
-      responseId: response.id,
-      role: "user",
-      content,
-    };
-    db.messages.push(message);
-    db.responses.push(response);
+    await driz.transaction(async (tx) => {
+      const responseId = nanoid(10);
+      await tx.insert(responseTable).values({
+        id: responseId,
+        projectId: project.id,
+        modelId: model.id,
+        error: null,
+      });
+      await tx.insert(responseMessageTable).values({
+        id: nanoid(),
+        responseId,
+        role: "user",
+        content,
+      });
+    });
+    await invalidateAll();
   } catch (e) {
     if (e instanceof Error) {
       toast.error(e.message);
@@ -129,36 +139,48 @@ export function submitPrompt(project: Project) {
   }
 }
 
-export function updateResponsePrompt(id: string) {
-  const response = db.responses.get(id);
+export async function updateResponsePrompt(id: string) {
+  const { driz } = await import("@/database/client");
+  const response = await driz.query.responseTable.findFirst({
+    where: eq(responseTable.id, id),
+  });
   if (!response) {
     return;
   }
   // get first message
-  const message = db.messages.items.find((m) => m.responseId === id);
+  const message = await driz.query.responseMessageTable.findFirst({
+    where: eq(responseMessageTable.responseId, id),
+  });
   if (!message) {
     return;
   }
   // interpolate documents into prompt
-  const content = interpolateDocuments(
-    db.projects.get(response.projectId).prompt,
-    db.documents.items,
-  );
+  const content = await interpolateDocuments(db.projects.get(response.projectId).prompt);
   console.log("content", content);
   message.content = content;
 }
 
-function interpolateDocuments(prompt: string, documents: Document[]): string {
+async function interpolateDocuments(prompt: string) {
+  const { driz } = await import("@/database/client");
   const templateTagRegex = /\[\[(.*?)]]/g;
-  return prompt.replace(templateTagRegex, (_, docName) => {
+  const matches = prompt.match(templateTagRegex);
+  if (!matches) {
+    return prompt;
+  }
+  let interpolatedPrompt = prompt;
+  for (const match of matches) {
+    const docName = match.slice(2, -2);
     console.log("Replacing", docName);
     // Find the document with the name extracted from the tag
-    const document = documents.find((doc) => doc.name === docName);
+    const document = await driz.query.documentTable.findFirst({
+      where: eq(documentTable.name, docName),
+    });
     if (!document) {
       throw new Error(`Document "${docName}" not found.`);
     }
-    return document.content;
-  });
+    interpolatedPrompt = interpolatedPrompt.replaceAll(match, document.content);
+  }
+  return interpolatedPrompt;
 }
 
 $effect.root(() => {

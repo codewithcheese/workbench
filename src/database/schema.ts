@@ -1,36 +1,37 @@
 import { sqliteTable, text, int } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 
-export const documents = sqliteTable("document", {
+export const documentTable = sqliteTable("document", {
   id: text("id").primaryKey(),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   description: text("description").notNull(),
   content: text("content").notNull(),
   // data: text("data").notNull(),
 });
 
-export const responses = sqliteTable("response", {
+export const responseTable = sqliteTable("response", {
   id: text("id").primaryKey(),
   projectId: text("projectId").notNull(),
   modelId: text("modelId").notNull(),
   error: text("error"),
 });
 
-export const responseMessages = sqliteTable("responseMessage", {
+export const responseMessageTable = sqliteTable("responseMessage", {
   id: text("id").primaryKey(),
+  index: int("index").notNull(),
   responseId: text("response_id").notNull(),
   role: text("role").notNull(),
   content: text("content").notNull(),
 });
 
-export const models = sqliteTable("model", {
+export const modelTable = sqliteTable("model", {
   id: text("id").primaryKey(),
   serviceId: text("serviceId").notNull(),
   name: text("name").notNull(),
   visible: int("visible").notNull(),
 });
 
-export const services = sqliteTable("service", {
+export const serviceTable = sqliteTable("service", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   providerId: text("providerId").notNull(),
@@ -38,38 +39,38 @@ export const services = sqliteTable("service", {
   apiKey: text("apiKey").notNull(),
 });
 
-export const projects = sqliteTable("project", {
+export const projectTable = sqliteTable("project", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   prompt: text("prompt").notNull(),
 });
 
-export const projectsRelations = relations(projects, ({ one, many }) => ({
-  responses: many(responses),
+export const projectRelations = relations(projectTable, ({ one, many }) => ({
+  responses: many(responseTable),
 }));
 
-export const responsesRelations = relations(responses, ({ one, many }) => ({
-  project: one(projects, {
-    fields: [responses.projectId],
-    references: [projects.id],
+export const responseRelations = relations(responseTable, ({ one, many }) => ({
+  project: one(projectTable, {
+    fields: [responseTable.projectId],
+    references: [projectTable.id],
   }),
-  model: one(models, {
-    fields: [responses.modelId],
-    references: [models.id],
+  model: one(modelTable, {
+    fields: [responseTable.modelId],
+    references: [modelTable.id],
   }),
-  messages: many(responseMessages),
+  messages: many(responseMessageTable),
 }));
 
-export const modelsRelations = relations(models, ({ one }) => ({
-  service: one(services, {
-    fields: [models.serviceId],
-    references: [services.id],
+export const modelRelations = relations(modelTable, ({ one }) => ({
+  service: one(serviceTable, {
+    fields: [modelTable.serviceId],
+    references: [serviceTable.id],
   }),
 }));
 
-export const responseMessagesRelations = relations(responseMessages, ({ one }) => ({
-  response: one(responses, {
-    fields: [responseMessages.responseId],
-    references: [responses.id],
+export const responseMessageRelations = relations(responseMessageTable, ({ one }) => ({
+  response: one(responseTable, {
+    fields: [responseMessageTable.responseId],
+    references: [responseTable.id],
   }),
 }));
