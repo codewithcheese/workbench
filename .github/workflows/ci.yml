@@ -1,0 +1,61 @@
+name: CI
+on:
+  pull_request:
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+env:
+  PNPM_CACHE_FOLDER: .pnpm-store
+#  # We only install Chromium manually
+#  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+jobs:
+  Tests:
+    if: contains(github.head_ref, 'changeset-release')
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        include:
+          #          - node-version: 18
+          #            os: windows-latest
+          #          - node-version: 18
+          #            os: macOS-latest
+          #          - node-version: 18
+          #            os: ubuntu-latest
+          - node-version: 20
+            os: ubuntu-latest
+    #          - node-version: 21
+    #            os: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+
+      - uses: pnpm/action-setup@v3
+        name: Install pnpm
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm test
