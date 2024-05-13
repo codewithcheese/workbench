@@ -11,7 +11,7 @@ env:
 
 jobs:
   Tests:
-    if: !contains(github.head_ref, 'changeset-release')
+    if: "!contains(github.head_ref, 'changeset-release')"
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     strategy:
