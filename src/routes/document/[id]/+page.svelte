@@ -2,7 +2,6 @@
   import Header from "@/routes/document/Header.svelte";
   import { goto } from "$app/navigation";
   import Form from "@/routes/document/Form.svelte";
-  import Splash from "@/components/Splash.svelte";
   import { documentTable } from "@/database/schema";
   import { driz } from "@/database/client";
   import { eq } from "drizzle-orm";

@@ -5,7 +5,7 @@
   import { type Document } from "@/store.svelte";
   import { Button } from "@/components/ui/button/index";
   import { PlusIcon, TrashIcon } from "lucide-svelte";
-  import { goto, invalidate, invalidateAll } from "$app/navigation";
+  import { goto, invalidateAll } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
   import { driz } from "@/database/client";
   import { eq } from "drizzle-orm";

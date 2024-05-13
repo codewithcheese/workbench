@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm";
 import { projectTable } from "@/database/schema";
-import { type View } from "@/lib/types.js";
 import { error } from "@sveltejs/kit";
 
 export async function load({ params }) {

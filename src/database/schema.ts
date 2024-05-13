@@ -45,7 +45,7 @@ export const projectTable = sqliteTable("project", {
   prompt: text("prompt").notNull(),
 });
 
-export const projectRelations = relations(projectTable, ({ one, many }) => ({
+export const projectRelations = relations(projectTable, ({ many }) => ({
   responses: many(responseTable),
 }));
 
