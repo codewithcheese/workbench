@@ -1,11 +1,11 @@
 <script lang="ts">
   import Header from "@/routes/project/Header.svelte";
-  import ResponseList from "@/routes/project/ResponseList.svelte";
   import EditorCard from "@/routes/project/EditorCard.svelte";
   import Splash from "@/components/Splash.svelte";
   import { Button } from "@/components/ui/button";
   import { db } from "@/store.svelte";
   import { Input } from "@/components/ui/input";
+  import ResponseCard from "@/routes/project/ResponseCard.svelte";
 
   let { data } = $props();
   let project = $derived(data.project);
@@ -20,7 +20,11 @@
       <EditorCard {project} />
     </div>
     <div class="mr-1 space-y-2 overflow-y-auto pr-2 pt-1">
-      <ResponseList responses={project.responses} />
+      {#each data.project.responses.toReversed() as response (response.id)}
+        {@const model = response.model}
+        {@const service = model.service}
+        <ResponseCard {response} {service} />
+      {/each}
     </div>
   </div>
 {:else}

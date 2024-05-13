@@ -3,9 +3,9 @@
   import { goto } from "$app/navigation";
   import Form from "@/routes/document/Form.svelte";
   import { documentTable } from "@/database/schema";
-  import { driz } from "@/database/client";
   import { eq } from "drizzle-orm";
   import { toast } from "svelte-french-toast";
+  import { useDb } from "@/database/client";
 
   let { data } = $props();
   let document = $derived(data.document);
@@ -13,7 +13,7 @@
   async function submit(e: any) {
     e.preventDefault();
     try {
-      await driz
+      await useDb()
         .update(documentTable)
         .set({
           name: document.name,

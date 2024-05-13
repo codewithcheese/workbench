@@ -7,8 +7,8 @@
   import { goto } from "$app/navigation";
   import Form from "@/routes/document/Form.svelte";
   import { page } from "$app/stores";
-  import { driz } from "@/database/client";
   import { documentTable } from "@/database/schema";
+  import { useDb } from "@/database/client";
 
   let queryParams = $state($page.url.searchParams);
   let name = $state(queryParams.get("name") ?? "");
@@ -25,12 +25,14 @@
 
   async function submit(e: any) {
     e.preventDefault();
-    await driz.insert(documentTable).values({
-      id: nanoid(10),
-      name,
-      description,
-      content,
-    });
+    await useDb()
+      .insert(documentTable)
+      .values({
+        id: nanoid(10),
+        name,
+        description,
+        content,
+      });
     goto(`/document`);
   }
 </script>

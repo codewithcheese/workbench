@@ -2,8 +2,15 @@ import { Dataset } from "@/lib/dataset.svelte";
 import { nanoid } from "nanoid";
 import { goto, invalidateAll } from "$app/navigation";
 import { toast } from "svelte-french-toast";
-import { documentTable, modelTable, responseMessageTable, responseTable } from "@/database/schema";
+import {
+  documentTable,
+  modelTable,
+  projectTable,
+  responseMessageTable,
+  responseTable,
+} from "@/database/schema";
 import { eq } from "drizzle-orm";
+import { useDb } from "@/database/client";
 
 export type Document = {
   id: string;
@@ -100,12 +107,11 @@ $effect.root(() => {
 });
 
 export async function submitPrompt(project: Project) {
-  const { driz } = await import("@/database/client");
   try {
     if (!store.selected.modelId) {
       throw new Error("No model selected");
     }
-    const model = await driz.query.modelTable.findFirst({
+    const model = await useDb().query.modelTable.findFirst({
       where: eq(modelTable.id, store.selected.modelId),
     });
     if (!model) {
@@ -115,7 +121,7 @@ export async function submitPrompt(project: Project) {
     // interpolate documents into prompt
     const content = await interpolateDocuments(project.prompt);
     console.log("content", content);
-    await driz.transaction(async (tx) => {
+    await useDb().transaction(async (tx) => {
       const responseId = nanoid(10);
       await tx.insert(responseTable).values({
         id: responseId,
@@ -125,6 +131,7 @@ export async function submitPrompt(project: Project) {
       });
       await tx.insert(responseMessageTable).values({
         id: nanoid(),
+        index: 0,
         responseId,
         role: "user",
         content,
@@ -140,28 +147,32 @@ export async function submitPrompt(project: Project) {
 }
 
 export async function updateResponsePrompt(id: string) {
-  const { driz } = await import("@/database/client");
-  const response = await driz.query.responseTable.findFirst({
+  const response = await useDb().query.responseTable.findFirst({
     where: eq(responseTable.id, id),
   });
   if (!response) {
     return;
   }
   // get first message
-  const message = await driz.query.responseMessageTable.findFirst({
+  const message = await useDb().query.responseMessageTable.findFirst({
     where: eq(responseMessageTable.responseId, id),
   });
   if (!message) {
     return;
   }
+  const project = await useDb().query.projectTable.findFirst({
+    where: eq(projectTable.id, response.projectId),
+  });
+  if (!project) {
+    return;
+  }
   // interpolate documents into prompt
-  const content = await interpolateDocuments(db.projects.get(response.projectId).prompt);
+  const content = await interpolateDocuments(project.prompt);
   console.log("content", content);
   message.content = content;
 }
 
 async function interpolateDocuments(prompt: string) {
-  const { driz } = await import("@/database/client");
   const templateTagRegex = /\[\[(.*?)]]/g;
   const matches = prompt.match(templateTagRegex);
   if (!matches) {
@@ -172,7 +183,7 @@ async function interpolateDocuments(prompt: string) {
     const docName = match.slice(2, -2);
     console.log("Replacing", docName);
     // Find the document with the name extracted from the tag
-    const document = await driz.query.documentTable.findFirst({
+    const document = await useDb().query.documentTable.findFirst({
       where: eq(documentTable.name, docName),
     });
     if (!document) {
@@ -196,9 +207,13 @@ $effect.root(() => {
   });
 });
 
-export function newProject() {
+export async function newProject() {
   const id = nanoid(10);
-  db.projects.push({ id, name: "Untitled", prompt: "" });
+  await useDb().insert(projectTable).values({
+    id: id,
+    name: "Untitled",
+    prompt: "",
+  });
   return id;
 }
 

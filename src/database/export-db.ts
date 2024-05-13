@@ -1,6 +1,7 @@
-import { getDatabaseFile } from "./client";
+import { useDbFile } from "@/database/client";
 
 export async function exportDb() {
+  const { getDatabaseFile } = useDbFile();
   const databaseFile = await getDatabaseFile();
   const fileUrl = URL.createObjectURL(databaseFile);
 

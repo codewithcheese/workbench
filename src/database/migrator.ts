@@ -1,4 +1,3 @@
-import { driz } from "@/database/client";
 import { sql } from "drizzle-orm/sql";
 import { db } from "@/store.svelte";
 import {
@@ -10,13 +9,14 @@ import {
   serviceTable,
 } from "@/database/schema";
 import journal from "./migrations/meta/_journal.json";
+import { useDb } from "@/database/client";
 
 export async function runMigrations() {
-  const haveMigrationsTable = await driz.get(
+  const haveMigrationsTable = await useDb().get(
     sql.raw("SELECT name FROM sqlite_master WHERE type='table' AND name='migrations';"),
   );
   if (!haveMigrationsTable) {
-    await driz.run(sql.raw("CREATE TABLE `migrations` (`name` text PRIMARY KEY NOT NULL);"));
+    await useDb().run(sql.raw("CREATE TABLE `migrations` (`name` text PRIMARY KEY NOT NULL);"));
   }
   for (const entry of journal.entries) {
     await applyMigration(entry.idx, entry.tag);
@@ -24,7 +24,7 @@ export async function runMigrations() {
 }
 
 async function migrateDatasets() {
-  await driz.transaction(async (tx) => {
+  await useDb().transaction(async (tx) => {
     for (const project of db.projects) {
       console.log("Migrating project", project);
       await tx.insert(projectTable).values({
@@ -91,10 +91,10 @@ async function applyMigration(idx: number, migration: string) {
   // check if migration is already applied
   const checkQuery = `SELECT name FROM migrations WHERE name='${migration}'`;
   console.log("checkQuery", checkQuery);
-  const hasMigration = await driz.get(sql.raw(checkQuery));
+  const hasMigration = await useDb().get(sql.raw(checkQuery));
   console.log("hasMigration", hasMigration);
   if (!hasMigration) {
-    await driz.transaction(async (tx) => {
+    await useDb().transaction(async (tx) => {
       const migrationSql = (await import(`./migrations/${migration}.sql?raw`)).default;
       console.log("Applying migration", migration);
       await tx.run(sql.raw(migrationSql));

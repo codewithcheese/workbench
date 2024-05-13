@@ -7,10 +7,10 @@
   import { PlusIcon, TrashIcon } from "lucide-svelte";
   import { goto, invalidateAll } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
-  import { driz } from "@/database/client";
   import { eq } from "drizzle-orm";
   import { documentTable } from "@/database/schema";
   import { toast } from "svelte-french-toast";
+  import { useDb } from "@/database/client";
 
   let { data } = $props();
 
@@ -18,7 +18,7 @@
 
   async function deleteDocument(document: Document) {
     try {
-      await driz.delete(documentTable).where(eq(documentTable.id, document.id));
+      await useDb().delete(documentTable).where(eq(documentTable.id, document.id));
       await invalidateAll();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Unknown error");

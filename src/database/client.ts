@@ -1,13 +1,20 @@
 import { SQLocalDrizzle } from "sqlocal/drizzle";
-import { drizzle } from "drizzle-orm/sqlite-proxy";
+import { drizzle, SqliteRemoteDatabase } from "drizzle-orm/sqlite-proxy";
 import * as schema from "./schema";
-import { sql } from "drizzle-orm/sql";
 
 export const SQLITE_FILENAME = "workbench.db";
 
-const { driver, batchDriver, getDatabaseFile, overwriteDatabaseFile } = new SQLocalDrizzle(
-  SQLITE_FILENAME,
-);
-export const driz = drizzle(driver, batchDriver, { schema });
+let db: SqliteRemoteDatabase<typeof schema> | undefined = undefined;
 
-export { getDatabaseFile, overwriteDatabaseFile, sql };
+export function useDb() {
+  if (!db) {
+    const { driver, batchDriver } = new SQLocalDrizzle(SQLITE_FILENAME);
+    db = drizzle(driver, batchDriver, { schema });
+  }
+  return db;
+}
+
+export function useDbFile() {
+  const { getDatabaseFile, overwriteDatabaseFile } = new SQLocalDrizzle(SQLITE_FILENAME);
+  return { getDatabaseFile, overwriteDatabaseFile };
+}

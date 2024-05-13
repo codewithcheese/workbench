@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { projectTable } from "@/database/schema";
 import { error } from "@sveltejs/kit";
+import { useDb } from "@/database/client";
 
 export async function load({ params }) {
-  const { driz } = await import("@/database/client");
-  const project = await driz.query.projectTable.findFirst({
+  const project = await useDb().query.projectTable.findFirst({
     where: eq(projectTable.id, params.id),
     with: {
       responses: {
