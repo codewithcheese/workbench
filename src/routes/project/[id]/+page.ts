@@ -4,6 +4,8 @@ import { error } from "@sveltejs/kit";
 import { useDb } from "@/database/client";
 
 export async function load({ params }) {
+  console.log("/project", params.id);
+  console.time("/project/[id]");
   const project = await useDb().query.projectTable.findFirst({
     where: eq(projectTable.id, params.id),
     with: {
@@ -19,6 +21,7 @@ export async function load({ params }) {
       },
     },
   });
+  console.timeEnd("/project/[id]");
   if (!project) {
     return error(404, "Project not found");
   }

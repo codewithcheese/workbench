@@ -23,7 +23,7 @@
       {#each data.project.responses.toReversed() as response (response.id)}
         {@const model = response.model}
         {@const service = model.service}
-        <ResponseCard {response} {service} />
+        <ResponseCard {response} {service} initialMessages={response.messages} />
       {/each}
     </div>
   </div>

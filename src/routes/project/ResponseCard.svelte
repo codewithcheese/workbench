@@ -2,22 +2,30 @@
 
 <script lang="ts">
   import { type Message } from "ai/svelte";
-  import {
-    store,
-    db,
-    type Service,
-    type Response,
-    removeResponse,
-    updateResponsePrompt,
-  } from "@/store.svelte";
   import { LoaderCircleIcon, RefreshCwIcon, XIcon } from "lucide-svelte";
   import { Card, CardContent, CardHeader } from "@/components/ui/card";
   import { Label } from "@/components/ui/label";
   import { useChat } from "@/lib/use-chat";
   import MessageMarkdown from "./MessageMarkdown.svelte";
   import { Badge } from "@/components/ui/badge";
+  import { useDb } from "@/database/client";
+  import { asc, eq, type InferSelectModel } from "drizzle-orm";
+  import {
+    projectTable,
+    responseMessageTable,
+    responseTable,
+    type Response,
+    type ResponseMessage,
+    type Service,
+  } from "@/database/schema";
+  import { interpolateDocuments } from "$lib/prompt";
+  import { toast } from "svelte-french-toast";
+  import { store } from "@/store.svelte";
+  import { invalidateAll } from "$app/navigation";
+  import { sql } from "drizzle-orm/sql";
 
   export let response: Response;
+  export let initialMessages: ResponseMessage[];
   export let service: Service;
 
   // when loading messages mark finalized as false
@@ -26,7 +34,7 @@
   let format = "markdown";
 
   const { messages, reload, isLoading, stop, error } = useChat({
-    initialMessages: db.messages.filter((m) => m.responseId === response.id) as Message[],
+    initialMessages: initialMessages as Message[],
     body: {
       providerId: service.providerId,
       modelId: response.modelId,
@@ -35,37 +43,105 @@
     },
   });
 
+  $: content = $messages.find((m) => m.role === "assistant")?.content || "";
+
   const lastMessageIsAssistant = $messages.findLast((m) => m.role === "assistant");
   if (!lastMessageIsAssistant && response.error === undefined) {
     refresh();
   }
 
+  $: console.log("content", content);
   // $: console.log("id", response.id, JSON.stringify(response));
 
   // $: console.log("isLoading", $isLoading);
 
-  function refresh() {
-    updateResponsePrompt(response.id);
+  async function refresh() {
+    await updateResponsePrompt(response.id);
     if (store.selected.modelId && store.selected.modelId !== response.modelId) {
-      response.modelId = store.selected.modelId;
+      await useDb()
+        .update(responseTable)
+        .set({ modelId: store.selected.modelId })
+        .where(eq(responseTable.id, response.id));
     }
-    reload();
+    await reload();
   }
 
-  function updateMessages() {
-    const currentMessages = db.messages.filter((m) => m.responseId === response.id);
-    $messages.forEach((newMessage, index) => {
-      const currentMessage = currentMessages[index];
-      if (currentMessage) {
-        if (newMessage.id === currentMessage.id) {
-          // no update required
-        } else {
-          Object.assign(currentMessage, newMessage);
+  async function updateResponsePrompt(id: string) {
+    try {
+      const response = await useDb().query.responseTable.findFirst({
+        where: eq(responseTable.id, id),
+      });
+      if (!response) {
+        return toast.error("Response not found");
+      }
+      // get first message
+      const message = await useDb().query.responseMessageTable.findFirst({
+        where: eq(responseMessageTable.responseId, id),
+      });
+      if (!message) {
+        return toast.error("Message not found");
+      }
+      const project = await useDb().query.projectTable.findFirst({
+        where: eq(projectTable.id, response.projectId),
+      });
+      if (!project) {
+        return toast.error("Project not found");
+      }
+      // interpolate documents into prompt
+      const content = await interpolateDocuments(project.prompt);
+      console.log("content", content);
+      await useDb()
+        .update(responseMessageTable)
+        .set({ content })
+        .where(eq(responseMessageTable.id, message.id));
+    } catch (e) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      }
+      console.error(e);
+    }
+  }
+
+  async function updateMessages() {
+    const currentMessages = await useDb().query.responseMessageTable.findMany({
+      where: eq(responseMessageTable.responseId, response.id),
+      orderBy: [asc(responseMessageTable.index)],
+    });
+    let index = 0;
+    await useDb().transaction(async (tx) => {
+      for (const newMessage of $messages) {
+        const currentMessage = currentMessages[index];
+        if (currentMessage && newMessage.id !== currentMessage.id) {
+          // update required
+          await tx.update(responseMessageTable).set({ ...newMessage, index });
+        } else if (!currentMessage) {
+          // new message
+          await tx
+            .insert(responseMessageTable)
+            .values({ ...newMessage, responseId: response.id, index });
         }
-      } else {
-        db.messages.push({ ...newMessage, responseId: response.id });
+        index += 1;
       }
     });
+  }
+
+  async function removeResponse(response: Response) {
+    const db = useDb();
+    console.time("removeMessages");
+    // const deleteQuery = `
+    //   DELETE FROM responseMessage
+    //   WHERE responseId = '${response.id}'
+    // `;
+    // console.log("deleteQuery", deleteQuery);
+    // await useDb().run(sql.raw(deleteQuery));
+    await db.delete(responseMessageTable).where(eq(responseMessageTable.responseId, response.id));
+    console.timeEnd("removeMessages");
+
+    console.time("removeResponse");
+    await db.delete(responseTable).where(eq(responseTable.id, response.id));
+    console.timeEnd("removeResponse");
+
+    await invalidateAll();
   }
 
   $: {
@@ -113,12 +189,12 @@
     {#if response.error}
       <Label class="text-red-500">{response.error}</Label>
     {/if}
-    {#each $messages.filter((m) => m.role === "assistant") as message, index}
-      {#if format === "markdown"}
-        <MessageMarkdown {message} />
-      {:else}
-        {message.content}
-      {/if}
-    {/each}
+
+    <!--{#if format === "markdown"}-->
+    <!--  <MessageMarkdown {message} />-->
+    <!--{:else}-->
+    <!--  -->
+    <!--{/if}-->
+    {content}
   </CardContent>
 </Card>

@@ -5,12 +5,14 @@
   import { PlusIcon } from "lucide-svelte";
   import { Providers, providersById } from "@/providers";
   import { TableHeader } from "@/components/ui/table/index.js";
+  import type { ServiceConfigModel, ServiceView } from "./$model.svelte";
 
   type Props = {
+    model: ServiceConfigModel;
     onAdd: () => void;
-    onSelect: (service: Service) => void;
+    onSelect: (service: ServiceView) => void;
   };
-  let { onAdd, onSelect }: Props = $props();
+  let { model, onAdd, onSelect }: Props = $props();
 </script>
 
 <div class="flex flex-col gap-2">
@@ -20,16 +22,16 @@
       <TableCell class="p-2 font-semibold">Key name</TableCell>
     </TableHeader>
     <TableBody>
-      {#if db.services.length === 0}
+      {#if model.views.length === 0}
         <TableRow class="cursor-pointer">
           <TableCell class="p-2">No accounts configured</TableCell>
         </TableRow>
       {/if}
-      {#each db.services as service (service.id)}
-        {@const provider = providersById[service.providerId]}
-        <TableRow class="cursor-pointer" onclick={() => onSelect(service)}>
+      {#each model.views as view (view.id)}
+        {@const provider = providersById[view.providerId]}
+        <TableRow class="cursor-pointer" onclick={() => onSelect(view)}>
           <TableCell class="p-2">{provider.name}</TableCell>
-          <TableCell class="p-2">{service.name || "-"}</TableCell>
+          <TableCell class="p-2">{view.name || "-"}</TableCell>
         </TableRow>
       {/each}
     </TableBody>

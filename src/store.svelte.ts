@@ -11,6 +11,7 @@ import {
 } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { useDb } from "@/database/client";
+import { interpolateDocuments } from "$lib/prompt";
 
 export type Document = {
   id: string;
@@ -146,54 +147,6 @@ export async function submitPrompt(project: Project) {
   }
 }
 
-export async function updateResponsePrompt(id: string) {
-  const response = await useDb().query.responseTable.findFirst({
-    where: eq(responseTable.id, id),
-  });
-  if (!response) {
-    return;
-  }
-  // get first message
-  const message = await useDb().query.responseMessageTable.findFirst({
-    where: eq(responseMessageTable.responseId, id),
-  });
-  if (!message) {
-    return;
-  }
-  const project = await useDb().query.projectTable.findFirst({
-    where: eq(projectTable.id, response.projectId),
-  });
-  if (!project) {
-    return;
-  }
-  // interpolate documents into prompt
-  const content = await interpolateDocuments(project.prompt);
-  console.log("content", content);
-  message.content = content;
-}
-
-async function interpolateDocuments(prompt: string) {
-  const templateTagRegex = /\[\[(.*?)]]/g;
-  const matches = prompt.match(templateTagRegex);
-  if (!matches) {
-    return prompt;
-  }
-  let interpolatedPrompt = prompt;
-  for (const match of matches) {
-    const docName = match.slice(2, -2);
-    console.log("Replacing", docName);
-    // Find the document with the name extracted from the tag
-    const document = await useDb().query.documentTable.findFirst({
-      where: eq(documentTable.name, docName),
-    });
-    if (!document) {
-      throw new Error(`Document "${docName}" not found.`);
-    }
-    interpolatedPrompt = interpolatedPrompt.replaceAll(match, document.content);
-  }
-  return interpolatedPrompt;
-}
-
 $effect.root(() => {
   $effect(() => {
     // if selected model is not available then select next available model
@@ -261,11 +214,6 @@ export function duplicateProject(project: Project) {
     });
   });
   goto(`/project/${newId}`);
-}
-
-export function removeResponse(response: Response) {
-  db.messages.filter((m) => m.responseId === response.id).forEach((m) => db.messages.remove(m.id));
-  db.responses.remove(response.id);
 }
 
 export function removeDocument(document: Document) {

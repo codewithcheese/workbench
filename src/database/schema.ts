@@ -1,5 +1,9 @@
-import { sqliteTable, text, int } from "drizzle-orm/sqlite-core";
-import { relations } from "drizzle-orm";
+import { sqliteTable, text, int, primaryKey } from "drizzle-orm/sqlite-core";
+import { type InferSelectModel, relations } from "drizzle-orm";
+
+/**
+ * Tables
+ */
 
 export const documentTable = sqliteTable("document", {
   id: text("id").primaryKey(),
@@ -19,17 +23,23 @@ export const responseTable = sqliteTable("response", {
 export const responseMessageTable = sqliteTable("responseMessage", {
   id: text("id").primaryKey(),
   index: int("index").notNull(),
-  responseId: text("response_id").notNull(),
+  responseId: text("responseId").notNull(),
   role: text("role").notNull(),
   content: text("content").notNull(),
 });
 
-export const modelTable = sqliteTable("model", {
-  id: text("id").primaryKey(),
-  serviceId: text("serviceId").notNull(),
-  name: text("name").notNull(),
-  visible: int("visible").notNull(),
-});
+export const modelTable = sqliteTable(
+  "model",
+  {
+    id: text("id").notNull(),
+    serviceId: text("serviceId").notNull(),
+    name: text("name").notNull(),
+    visible: int("visible").notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.id, table.serviceId] }),
+  }),
+);
 
 export const serviceTable = sqliteTable("service", {
   id: text("id").primaryKey(),
@@ -44,6 +54,21 @@ export const projectTable = sqliteTable("project", {
   name: text("name").notNull(),
   prompt: text("prompt").notNull(),
 });
+
+/**
+ * Types
+ */
+
+export type Document = InferSelectModel<typeof documentTable>;
+export type Response = InferSelectModel<typeof responseTable>;
+export type ResponseMessage = InferSelectModel<typeof responseMessageTable>;
+export type Model = InferSelectModel<typeof modelTable>;
+export type Service = InferSelectModel<typeof serviceTable>;
+export type Project = InferSelectModel<typeof projectTable>;
+
+/**
+ * Relations
+ */
 
 export const projectRelations = relations(projectTable, ({ many }) => ({
   responses: many(responseTable),
@@ -66,6 +91,10 @@ export const modelRelations = relations(modelTable, ({ one }) => ({
     fields: [modelTable.serviceId],
     references: [serviceTable.id],
   }),
+}));
+
+export const serviceRelations = relations(serviceTable, ({ many }) => ({
+  models: many(modelTable),
 }));
 
 export const responseMessageRelations = relations(responseMessageTable, ({ one }) => ({

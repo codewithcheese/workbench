@@ -20,7 +20,7 @@ async function exposeDrizzle() {
     for (const record of rows) {
       // drop table
       // @ts-ignore
-      await driz.run(sql.raw(`DROP TABLE ${record[0]};`));
+      await db.run(sql.raw(`DROP TABLE ${record[0]};`));
     }
   };
   // @ts-expect-error

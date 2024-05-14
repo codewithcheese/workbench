@@ -6,10 +6,11 @@ CREATE TABLE `document` (
 );
 --> statement-breakpoint
 CREATE TABLE `model` (
-	`id` text PRIMARY KEY NOT NULL,
+	`id` text NOT NULL,
 	`serviceId` text NOT NULL,
 	`name` text NOT NULL,
-	`visible` integer NOT NULL
+	`visible` integer NOT NULL,
+	PRIMARY KEY(`id`, `serviceId`)
 );
 --> statement-breakpoint
 CREATE TABLE `project` (
@@ -21,7 +22,7 @@ CREATE TABLE `project` (
 CREATE TABLE `responseMessage` (
 	`id` text PRIMARY KEY NOT NULL,
 	`index` integer NOT NULL,
-	`response_id` text NOT NULL,
+	`responseId` text NOT NULL,
 	`role` text NOT NULL,
 	`content` text NOT NULL
 );

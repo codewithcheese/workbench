@@ -7,10 +7,10 @@
   } from "@/components/ui/breadcrumb";
   import { Button } from "@/components/ui/button";
   import { type Model, type Project, store, submitPrompt } from "@/store.svelte";
-  import ModelConfig from "@/components/model-config/ModelConfig.svelte";
   import SelectModel from "@/routes/project/SelectModel.svelte";
-  import { PlayIcon } from "lucide-svelte";
+  import { PlayIcon, SettingsIcon } from "lucide-svelte";
   import Sheet from "@/components/Sheet.svelte";
+  import { goto } from "$app/navigation";
 
   type Props = {
     project: Project;
@@ -34,7 +34,9 @@
   <div class="relative ml-auto flex-1 md:grow-0">
     <div class="flex flex-row">
       <SelectModel />
-      <ModelConfig />
+      <Button variant="ghost" onclick={() => goto(`/project/${project.id}/config`)}>
+        <SettingsIcon size={16} />
+      </Button>
     </div>
   </div>
 

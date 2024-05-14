@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "3bd2eb7e-6569-4e22-bc23-eb1c625216d7",
+  "id": "3a1b10ee-4cfb-4b79-8604-36351bca0b1f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "document": {
@@ -55,7 +55,7 @@
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -83,7 +83,15 @@
       },
       "indexes": {},
       "foreignKeys": {},
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "model_id_serviceId_pk": {
+          "columns": [
+            "id",
+            "serviceId"
+          ],
+          "name": "model_id_serviceId_pk"
+        }
+      },
       "uniqueConstraints": {}
     },
     "project": {
@@ -133,8 +141,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "response_id": {
-          "name": "response_id",
+        "responseId": {
+          "name": "responseId",
           "type": "text",
           "primaryKey": false,
           "notNull": true,

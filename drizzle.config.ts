@@ -7,4 +7,7 @@ export default {
   out: "./src/database/migrations",
   verbose: true,
   strict: true,
+  dbCredentials: {
+    url: "workbench.db",
+  },
 } satisfies Config;

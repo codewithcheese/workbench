@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from "$lib/utils.js";
+  import * as Select from "@/components/ui/select";
   import { DialogClose } from "@/components/ui/dialog/index";
   import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table/index";
   import { Toggle } from "@/components/ui/toggle/index";
@@ -8,70 +9,57 @@
   import { Separator } from "@/components/ui/separator/index";
   import { Label } from "@/components/ui/label/index";
   import { Input } from "@/components/ui/input/index";
-  import { db, type Model, type Service } from "@/store.svelte";
   import { type Provider, Providers, providersById } from "@/providers";
-  import * as Select from "@/components/ui/select";
+  import { ServiceConfigModel, type ServiceView } from "./$model.svelte";
+  import _ from "lodash";
 
   type Props = {
-    service: Service;
+    model: ServiceConfigModel;
+    view: ServiceView;
     onBack: () => void;
-    onDelete: (service: Service) => void;
+    onDelete: (id: string) => void;
   };
-  let { service, onBack, onDelete }: Props = $props();
-  let models: Model[] = $derived(
-    db.models.filter((m) => m.serviceId === service.id).sort((a, b) => a.id.localeCompare(b.id)),
-  );
+  let { model, view, onBack, onDelete }: Props = $props();
+
   let error: string | null = $state(null);
-  let loading: boolean = $state(false);
+  let modelsLoading: boolean = $state(false);
   let showOptions: boolean = $state(false);
-  let provider: Provider = $derived(providersById[service.providerId]);
+  let provider: Provider = $derived(providersById[view.providerId]);
+
+  $effect(() => {
+    model.updateService(view);
+  });
+
+  $effect(() => {
+    model.updateModels(view);
+  });
 
   async function fetchModels() {
-    if (!service) {
+    if (!view) {
       return;
     }
     error = null;
     try {
-      loading = true;
+      modelsLoading = true;
       const resp = await fetch("/api/models", {
         method: "POST",
         headers: {
-          X_API_KEY: service.apiKey,
+          X_API_KEY: view.apiKey,
           ContentType: "application/json",
         },
         body: JSON.stringify({
-          providerId: service.providerId,
-          baseURL: service.baseURL,
+          providerId: view.providerId,
+          baseURL: view.baseURL,
         }),
       });
       if (!resp.ok) {
         error = resp.statusText;
         return;
       }
-      const models = (await resp.json()) as any[];
-
-      // remove models that don't exist in the response
-      for (const model of db.models.items) {
-        if (model.serviceId === service.id) {
-          const retained = models.find((m) => m.id === model.id);
-          if (!retained) {
-            // update model with retained values
-            db.models.remove(model.id);
-          }
-        }
-      }
-
-      // add or update models that exist in the response
-      for (const model of models) {
-        const existing = db.models.get(model.id);
-        if (!existing) {
-          db.models.push({ ...model, serviceId: service.id });
-        } else {
-          Object.assign(existing, model);
-        }
-      }
+      const newModels = (await resp.json()) as any[];
+      await model.replaceModels(view, newModels);
     } finally {
-      loading = false;
+      modelsLoading = false;
     }
   }
 </script>
@@ -84,20 +72,20 @@
         Back
       </Button>
 
-      <Button size="sm" variant="ghost" onclick={() => onDelete(service)}>
+      <Button size="sm" variant="ghost" onclick={() => onDelete(view.id)}>
         <TrashIcon class="mr-2 h-4 w-4" />
         Delete
       </Button>
     </div>
   </div>
-  {#if service}
+  {#if view}
     <div class="grid gap-2">
       <Label for="name">Provider</Label>
       <Select.Root
-        selected={{ value: service.providerId, label: provider.name }}
+        selected={{ value: view.providerId, label: provider.name }}
         onSelectedChange={(selected) => {
           if (selected) {
-            service.providerId = selected.value;
+            view.providerId = selected.value;
           }
         }}
       >
@@ -113,12 +101,12 @@
     </div>
     <div class="grid gap-2">
       <Label for="name">Key name</Label>
-      <Input bind:value={service.name} id="name" placeholder="Enter key name" type="text" />
+      <Input bind:value={view.name} id="name" placeholder="Enter key name" type="text" />
     </div>
     <div class="grid gap-2">
       <Label for="apiKey">API Key</Label>
       <Input
-        bind:value={service.apiKey}
+        bind:value={view.apiKey}
         id="apiKey"
         placeholder="Enter your API key"
         type="password"
@@ -133,7 +121,7 @@
       <div class="grid gap-2">
         <Label for="baseURL">Base URL</Label>
         <Input
-          bind:value={service.baseURL}
+          bind:value={view.baseURL}
           id="baseURL"
           placeholder="Enter API base URL"
           type="text"
@@ -148,8 +136,8 @@
     {/if}
 
     <Button variant="outline" onclick={() => fetchModels()}>
-      <RefreshCwIcon class={cn("mr-2 h-4 w-4", loading && "loading-icon")} />
-      {#if service && models.length > 0}
+      <RefreshCwIcon class={cn("mr-2 h-4 w-4", modelsLoading && "loading-icon")} />
+      {#if view.models.length > 0}
         Refresh Models
       {:else}
         Load Models
@@ -157,7 +145,7 @@
     </Button>
   {/if}
   {#if error}<Label class="text-red-500">{error}</Label>{/if}
-  {#if service && models.length > 0}
+  {#if view.models.length > 0}
     <Separator />
     <div class="grid gap-2">
       <div class="flex items-center justify-between">
@@ -166,8 +154,8 @@
           <Button
             class="p-1 text-sm"
             variant="ghost"
-            onclick={() => {
-              models.forEach((m) => (m.visible = true));
+            onclick={async () => {
+              await model.toggleAllVisible(view, 1);
             }}
           >
             Show All
@@ -175,8 +163,8 @@
           <Button
             class="p-1 text-sm"
             variant="ghost"
-            onclick={() => {
-              models.forEach((m) => (m.visible = false));
+            onclick={async () => {
+              await model.toggleAllVisible(view, 0);
             }}
           >
             Hide All
@@ -187,12 +175,12 @@
       <div class="max-h-[calc(100vh-700px)] min-h-[200px] w-full overflow-y-auto rounded-lg border">
         <Table>
           <TableBody>
-            {#each models as model (model.id)}
+            {#each view.models as viewModel (viewModel.id)}
               <TableRow
-                class={cn("cursor-pointer", model.visible ? "" : "opacity-50")}
-                onclick={() => (model.visible = !model.visible)}
+                class={cn("cursor-pointer", viewModel.visible ? "" : "opacity-50")}
+                onclick={() => model.toggleVisible(view, viewModel)}
               >
-                <TableCell class="p-1 pl-4 font-normal">{model.id}</TableCell>
+                <TableCell class="p-1 pl-4 font-normal">{viewModel.id}</TableCell>
                 <TableCell class="p-1">
                   <Toggle aria-label="Toggle Model Visibility" />
                 </TableCell>
