@@ -10,16 +10,15 @@
   import { Label } from "@/components/ui/label/index";
   import { Input } from "@/components/ui/input/index";
   import { type Provider, Providers, providersById } from "@/providers";
-  import { ServiceConfigModel, type ServiceView } from "./$model.svelte";
-  import _ from "lodash";
+  import type { Services, ServiceView } from "@/stores/services.svelte";
 
   type Props = {
-    model: ServiceConfigModel;
+    services: Services;
     view: ServiceView;
     onBack: () => void;
     onDelete: (id: string) => void;
   };
-  let { model, view, onBack, onDelete }: Props = $props();
+  let { services, view, onBack, onDelete }: Props = $props();
 
   let error: string | null = $state(null);
   let modelsLoading: boolean = $state(false);
@@ -27,11 +26,11 @@
   let provider: Provider = $derived(providersById[view.providerId]);
 
   $effect(() => {
-    model.updateService(view);
+    services.updateService(view);
   });
 
   $effect(() => {
-    model.updateModels(view);
+    services.updateModels(view);
   });
 
   async function fetchModels() {
@@ -57,7 +56,7 @@
         return;
       }
       const newModels = (await resp.json()) as any[];
-      await model.replaceModels(view, newModels);
+      await services.replaceModels(view, newModels);
     } finally {
       modelsLoading = false;
     }
@@ -155,7 +154,7 @@
             class="p-1 text-sm"
             variant="ghost"
             onclick={async () => {
-              await model.toggleAllVisible(view, 1);
+              await services.toggleAllVisible(view, 1);
             }}
           >
             Show All
@@ -164,7 +163,7 @@
             class="p-1 text-sm"
             variant="ghost"
             onclick={async () => {
-              await model.toggleAllVisible(view, 0);
+              await services.toggleAllVisible(view, 0);
             }}
           >
             Hide All
@@ -178,7 +177,7 @@
             {#each view.models as viewModel (viewModel.id)}
               <TableRow
                 class={cn("cursor-pointer", viewModel.visible ? "" : "opacity-50")}
-                onclick={() => model.toggleVisible(view, viewModel)}
+                onclick={() => services.toggleVisible(view, viewModel)}
               >
                 <TableCell class="p-1 pl-4 font-normal">{viewModel.id}</TableCell>
                 <TableCell class="p-1">

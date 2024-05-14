@@ -1,14 +1,8 @@
 import { Dataset } from "@/lib/dataset.svelte";
 import { nanoid } from "nanoid";
-import { goto, invalidateAll } from "$app/navigation";
+import { invalidateAll } from "$app/navigation";
 import { toast } from "svelte-french-toast";
-import {
-  documentTable,
-  modelTable,
-  projectTable,
-  responseMessageTable,
-  responseTable,
-} from "@/database/schema";
+import { modelTable, responseMessageTable, responseTable } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { useDb } from "@/database/client";
 import { interpolateDocuments } from "$lib/prompt";
@@ -159,62 +153,6 @@ $effect.root(() => {
     }
   });
 });
-
-export async function newProject() {
-  const id = nanoid(10);
-  await useDb().insert(projectTable).values({
-    id: id,
-    name: "Untitled",
-    prompt: "",
-  });
-  return id;
-}
-
-export function removeProject(project: Project) {
-  // remove responses
-  const responses = db.responses.filter((r) => r.projectId === project.id);
-  const messages = responses.map((r) => db.messages.filter((m) => m.responseId === r.id)).flat();
-  messages.forEach((m) => db.messages.remove(m.id));
-  responses.forEach((r) => db.responses.remove(r.id));
-  // set store projectId to first project, if no projects then create new project
-  const index = db.projects.items.findIndex((f) => f.id === project.id);
-  let nextId;
-  if (db.projects.items.length < 2) {
-    nextId = newProject();
-  } else {
-    nextId = index === 0 ? db.projects.items[1].id : db.projects.items[index - 1].id;
-  }
-  goto(`/project/${nextId}`);
-  db.projects.remove(project.id);
-}
-
-export function duplicateProject(project: Project) {
-  const responses = db.responses.filter((r) => r.projectId === project.id);
-  const messages = responses.map((r) => db.messages.filter((m) => m.responseId === r.id)).flat();
-  const newId = nanoid(10);
-  db.projects.push({ id: newId, name: `${project.name} copy`, prompt: project.prompt });
-  const responseMap: Record<string, string> = {};
-  responses.forEach((r) => {
-    const id = nanoid(10);
-    responseMap[r.id] = id;
-    db.responses.push({
-      id,
-      projectId: newId,
-      modelId: r.modelId,
-      error: null,
-    });
-  });
-  messages.forEach((m) => {
-    const id = nanoid(10);
-    db.messages.push({
-      id,
-      responseId: responseMap[m.responseId],
-      role: m.role,
-      content: m.content,
-    });
-  });
-  goto(`/project/${newId}`);
-}
 
 export function removeDocument(document: Document) {
   db.documents.remove(document.id);

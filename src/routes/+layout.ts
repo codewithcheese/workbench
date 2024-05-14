@@ -3,6 +3,7 @@ import "@fontsource-variable/inter";
 import type { LayoutLoad } from "./$types";
 import { useDb } from "@/database/client";
 import { sql } from "drizzle-orm/sql";
+import { projects } from "@/stores/projects.svelte";
 
 export const ssr = false;
 let migrated = false;
@@ -51,5 +52,8 @@ export const load: LayoutLoad = async ({}) => {
   } catch (err) {
     console.error(err);
   }
-  return {};
+  await projects.load();
+  return {
+    projects,
+  };
 };

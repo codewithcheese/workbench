@@ -6,13 +6,12 @@
   import { DialogHeader } from "@/components/ui/dialog/index.js";
   import { goto, onNavigate } from "$app/navigation";
   import { page } from "$app/stores";
-  import type { PageData } from "./$types";
   import { toast } from "svelte-french-toast";
-  import type { ServiceView } from "@/routes/project/[id]/config/$model.svelte";
+  import type { ServiceView } from "@/stores/services.svelte";
 
-  let { data }: { data: PageData } = $props();
-  let model = $derived(data.model);
-  $inspect(model);
+  let { data } = $props();
+  let services = $derived(data.services);
+  $inspect(services);
 
   const open = true;
 
@@ -44,7 +43,7 @@
       <CreateAccount
         onSelect={async (provider) => {
           try {
-            const view = await model.addService(provider);
+            const view = await services.addService(provider);
             route = { name: "update", view };
           } catch (e) {
             toast.error(e instanceof Error ? e.message : "Unknown error");
@@ -53,17 +52,17 @@
       />
     {:else if route.name === "select"}
       <SelectAccount
-        {model}
+        {services}
         onAdd={() => (route = { name: "create" })}
         onSelect={(view) => (route = { name: "update", view })}
       />
     {:else if route.name === "update"}
       <UpdateAccount
-        {model}
+        {services}
         view={route.view}
         onBack={() => (route = { name: "select" })}
         onDelete={(id) => {
-          model.deleteService(id);
+          services.deleteService(id);
           route = { name: "select" };
         }}
       />

@@ -1,16 +1,15 @@
 import { useDb } from "@/database/client";
-import { and, asc, count, eq, notInArray } from "drizzle-orm";
+import { and, asc, eq, notInArray } from "drizzle-orm";
 import { serviceTable, type Service, modelTable, type Model } from "@/database/schema";
 import type { Provider } from "@/providers";
-import { toast } from "svelte-french-toast";
 
 export type ServiceView = Service & { models: Model[] };
 
-export class ServiceConfigModel {
-  views: ServiceView[] = $state([]);
+export class Services {
+  items: ServiceView[] = $state([]);
 
   async load() {
-    this.views = await useDb().query.serviceTable.findMany({
+    this.items = await useDb().query.serviceTable.findMany({
       with: {
         models: true,
       },
@@ -33,7 +32,7 @@ export class ServiceConfigModel {
     if (result.length < 1) {
       throw Error("Failed to add service");
     }
-    return this.views.find((r) => r.id === result[0].id)!;
+    return this.items.find((r) => r.id === result[0].id)!;
   }
 
   async deleteService(id: string) {
@@ -101,3 +100,5 @@ export class ServiceConfigModel {
     await this.updateModels(view);
   }
 }
+
+export const services: Services = new Services();

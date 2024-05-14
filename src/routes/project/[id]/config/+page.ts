@@ -1,9 +1,8 @@
-import { ServiceConfigModel } from "./$model.svelte";
+import { services } from "@/stores/services.svelte";
 
 export async function load() {
-  const model = new ServiceConfigModel();
-  await model.load();
+  await services.load();
   return {
-    model,
+    services,
   };
 }

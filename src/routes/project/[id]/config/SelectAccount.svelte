@@ -1,18 +1,17 @@
 <script lang="ts">
-  import { db, type Service } from "@/store.svelte";
   import { Button } from "@/components/ui/button";
   import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
   import { PlusIcon } from "lucide-svelte";
-  import { Providers, providersById } from "@/providers";
+  import { providersById } from "@/providers";
   import { TableHeader } from "@/components/ui/table/index.js";
-  import type { ServiceConfigModel, ServiceView } from "./$model.svelte";
+  import type { Services, ServiceView } from "@/stores/services.svelte";
 
   type Props = {
-    model: ServiceConfigModel;
+    services: Services;
     onAdd: () => void;
     onSelect: (service: ServiceView) => void;
   };
-  let { model, onAdd, onSelect }: Props = $props();
+  let { services, onAdd, onSelect }: Props = $props();
 </script>
 
 <div class="flex flex-col gap-2">
@@ -22,12 +21,12 @@
       <TableCell class="p-2 font-semibold">Key name</TableCell>
     </TableHeader>
     <TableBody>
-      {#if model.views.length === 0}
+      {#if services.items.length === 0}
         <TableRow class="cursor-pointer">
           <TableCell class="p-2">No accounts configured</TableCell>
         </TableRow>
       {/if}
-      {#each model.views as view (view.id)}
+      {#each services.items as view (view.id)}
         {@const provider = providersById[view.providerId]}
         <TableRow class="cursor-pointer" onclick={() => onSelect(view)}>
           <TableCell class="p-2">{provider.name}</TableCell>

@@ -1,12 +1,5 @@
 <script lang="ts">
-  import {
-    DatabaseBackupIcon,
-    EllipsisVerticalIcon,
-    FileIcon,
-    PlusIcon,
-    PocketKnifeIcon,
-  } from "lucide-svelte";
-  import { db, duplicateProject, newProject, type Project, removeProject } from "@/store.svelte";
+  import { EllipsisVerticalIcon, FileIcon, PlusIcon, PocketKnifeIcon } from "lucide-svelte";
   import { Button } from "@/components/ui/button/index";
   import * as DropdownMenu from "@/components/ui/dropdown-menu/index";
   import * as Dialog from "@/components/ui/dialog/index";
@@ -15,6 +8,10 @@
   import { goto } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
   import PersistenceAlert from "@/components/PersistenceAlert.svelte";
+  import { type Project } from "@/database/schema";
+  import type { Projects } from "@/stores/projects.svelte";
+
+  let { projects }: { projects: Projects } = $props();
 
   let projectId: string | undefined = $derived.by(() => {
     if ($page.url.pathname.startsWith("/project")) {
@@ -22,7 +19,7 @@
     }
   });
 
-  let confirmDelete: Project | null = $state(null);
+  let projectToDelete: Project | null = $state(null);
 </script>
 
 <div class="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
@@ -36,8 +33,8 @@
   <Button
     class="h-8 w-8 rounded-full p-1"
     variant="outline"
-    onclick={() => {
-      const id = newProject();
+    onclick={async () => {
+      const id = await projects.newProject();
       goto(`/project/${id}`);
     }}
   >
@@ -74,7 +71,7 @@
       <h3 class="mb-2 overflow-hidden text-ellipsis break-all px-4 text-xs font-medium">
         Projects
       </h3>
-      {#each db.projects.items.toReversed() as project (project.id)}
+      {#each projects.items.toReversed() as project (project.id)}
         <div
           class:bg-accent={project.id === projectId}
           class="group flex flex-row items-center overflow-x-hidden px-4"
@@ -101,10 +98,14 @@
               >
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
-              <DropdownMenu.Item onclick={() => (confirmDelete = project)}>Delete</DropdownMenu.Item
+              <DropdownMenu.Item onclick={() => (projectToDelete = project)}
+                >Delete</DropdownMenu.Item
               >
-              <DropdownMenu.Item onclick={() => duplicateProject(project)}
-                >Duplicate</DropdownMenu.Item
+              <DropdownMenu.Item
+                onclick={async () => {
+                  const newId = await projects.duplicateProject(project.id);
+                  await goto(`/project/${newId}`);
+                }}>Duplicate</DropdownMenu.Item
               >
             </DropdownMenu.Content>
           </DropdownMenu.Root>
@@ -113,16 +114,18 @@
     </div>
   </nav>
 </div>
-{#if confirmDelete}
+{#if projectToDelete}
   <DeleteDialog
-    name={confirmDelete.name}
+    name={projectToDelete.name}
     type="project"
-    onConfirm={() => {
-      confirmDelete && removeProject(confirmDelete);
+    onConfirm={async () => {
+      if (projectToDelete) {
+        const nextId = await projects.removeProject(projectToDelete);
+        await goto(`/project/${nextId}`);
+      }
     }}
     onCancel={() => {
-      console.log("cancel");
-      confirmDelete = null;
+      projectToDelete = null;
     }}
   />
 {/if}
