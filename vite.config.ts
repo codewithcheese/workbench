@@ -1,12 +1,18 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vitest/config";
+import { svelteTesting } from "@testing-library/svelte/vite";
 
 export default defineConfig({
   test: {
+    environment: "jsdom",
+    setupFiles: ["./vitest-setup.ts"],
     browser: {
-      enabled: true,
+      enabled: false,
       headless: true,
       name: "chrome",
+    },
+    alias: {
+      "@testing-library/svelte": "@testing-library/svelte/svelte5",
     },
   },
   optimizeDeps: {
@@ -14,6 +20,7 @@ export default defineConfig({
   },
   plugins: [
     sveltekit(),
+    svelteTesting(),
     {
       name: "configure-response-headers",
       configureServer: (server) => {

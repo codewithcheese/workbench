@@ -4,12 +4,13 @@
   import { PlusIcon } from "lucide-svelte";
   import { providersById } from "@/providers";
   import { TableHeader } from "@/components/ui/table/index.js";
-  import type { Services, ServiceView } from "@/stores/services.svelte";
+  import type { ServiceView } from "@/database/loaders";
+  // import type { Services, ServiceView } from "@/stores/services.svelte";
 
   type Props = {
-    services: Services;
+    services: ServiceView[];
     onAdd: () => void;
-    onSelect: (service: ServiceView) => void;
+    onSelect: (id: string) => void;
   };
   let { services, onAdd, onSelect }: Props = $props();
 </script>
@@ -21,16 +22,16 @@
       <TableCell class="p-2 font-semibold">Key name</TableCell>
     </TableHeader>
     <TableBody>
-      {#if services.items.length === 0}
+      {#if services.length === 0}
         <TableRow class="cursor-pointer">
           <TableCell class="p-2">No accounts configured</TableCell>
         </TableRow>
       {/if}
-      {#each services.items as view (view.id)}
-        {@const provider = providersById[view.providerId]}
-        <TableRow class="cursor-pointer" onclick={() => onSelect(view)}>
+      {#each services as service (service.id)}
+        {@const provider = providersById[service.providerId]}
+        <TableRow class="cursor-pointer" onclick={() => onSelect(service.id)}>
           <TableCell class="p-2">{provider.name}</TableCell>
-          <TableCell class="p-2">{view.name || "-"}</TableCell>
+          <TableCell class="p-2">{service.name || "-"}</TableCell>
         </TableRow>
       {/each}
     </TableBody>

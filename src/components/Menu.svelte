@@ -120,7 +120,7 @@
     type="project"
     onConfirm={async () => {
       if (projectToDelete) {
-        const nextId = await projects.removeProject(projectToDelete);
+        const nextId = await projects.removeProject(projectToDelete.id);
         await goto(`/project/${nextId}`);
       }
     }}

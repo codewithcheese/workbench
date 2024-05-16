@@ -4,6 +4,7 @@ import type { LayoutLoad } from "./$types";
 import { useDb } from "@/database/client";
 import { sql } from "drizzle-orm/sql";
 import { projects } from "@/stores/projects.svelte";
+import { onNavigate } from "$app/navigation";
 
 export const ssr = false;
 let migrated = false;

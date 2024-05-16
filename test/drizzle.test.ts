@@ -140,7 +140,7 @@ describe("drizzle driver", () => {
       ]),
     ]);
 
-    const data = await db.query.groceries.findMany({
+    const query = db.query.groceries.findMany({
       columns: {
         name: true,
       },
@@ -152,6 +152,8 @@ describe("drizzle driver", () => {
         },
       },
     });
+
+    const data = await query;
 
     expect(data).toEqual([
       {

@@ -10,10 +10,17 @@
   import { Label } from "@/components/ui/label/index";
   import { Input } from "@/components/ui/input/index";
   import { type Provider, Providers, providersById } from "@/providers";
-  import type { Services, ServiceView } from "@/stores/services.svelte";
+  import type { ServiceView } from "@/database/loaders";
+  import {
+    replaceModels,
+    toggleAllVisible,
+    toggleVisible,
+    updateModels,
+    updateService,
+  } from "@/database/mutations";
 
   type Props = {
-    services: Services;
+    services: ServiceView[];
     view: ServiceView;
     onBack: () => void;
     onDelete: (id: string) => void;
@@ -26,11 +33,11 @@
   let provider: Provider = $derived(providersById[view.providerId]);
 
   $effect(() => {
-    services.updateService(view);
+    updateService(view);
   });
 
   $effect(() => {
-    services.updateModels(view);
+    updateModels(view);
   });
 
   async function fetchModels() {
@@ -56,7 +63,7 @@
         return;
       }
       const newModels = (await resp.json()) as any[];
-      await services.replaceModels(view, newModels);
+      await replaceModels(view, newModels);
     } finally {
       modelsLoading = false;
     }
@@ -154,7 +161,7 @@
             class="p-1 text-sm"
             variant="ghost"
             onclick={async () => {
-              await services.toggleAllVisible(view, 1);
+              await toggleAllVisible(view, 1);
             }}
           >
             Show All
@@ -163,7 +170,7 @@
             class="p-1 text-sm"
             variant="ghost"
             onclick={async () => {
-              await services.toggleAllVisible(view, 0);
+              await toggleAllVisible(view, 0);
             }}
           >
             Hide All
@@ -174,12 +181,12 @@
       <div class="max-h-[calc(100vh-700px)] min-h-[200px] w-full overflow-y-auto rounded-lg border">
         <Table>
           <TableBody>
-            {#each view.models as viewModel (viewModel.id)}
+            {#each view.models as model (model.id)}
               <TableRow
-                class={cn("cursor-pointer", viewModel.visible ? "" : "opacity-50")}
-                onclick={() => services.toggleVisible(view, viewModel)}
+                class={cn("cursor-pointer", model.visible ? "" : "opacity-50")}
+                onclick={() => toggleVisible(view, model)}
               >
-                <TableCell class="p-1 pl-4 font-normal">{viewModel.id}</TableCell>
+                <TableCell class="p-1 pl-4 font-normal">{model.id}</TableCell>
                 <TableCell class="p-1">
                   <Toggle aria-label="Toggle Model Visibility" />
                 </TableCell>

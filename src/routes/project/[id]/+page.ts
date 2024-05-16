@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { projectTable } from "@/database/schema";
 import { error } from "@sveltejs/kit";
 import { useDb } from "@/database/client";
+import { projects } from "@/stores/projects.svelte";
 
 export async function load({ params }) {
   console.log("/project", params.id);

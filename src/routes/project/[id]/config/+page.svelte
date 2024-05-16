@@ -7,7 +7,9 @@
   import { goto, onNavigate } from "$app/navigation";
   import { page } from "$app/stores";
   import { toast } from "svelte-french-toast";
-  import type { ServiceView } from "@/stores/services.svelte";
+  // import type { ServiceView } from "@/stores/services.svelte";
+  import { addService, deleteService } from "@/database/mutations";
+  import { fetch } from "@sveltejs/kit";
 
   let { data } = $props();
   let services = $derived(data.services);
@@ -15,7 +17,7 @@
 
   const open = true;
 
-  type Route = { name: "create" } | { name: "select" } | { name: "update"; view: ServiceView };
+  type Route = { name: "create" } | { name: "select" } | { name: "update"; id: string };
 
   let route: Route = $state({ name: "select" });
 </script>
@@ -43,8 +45,8 @@
       <CreateAccount
         onSelect={async (provider) => {
           try {
-            const view = await services.addService(provider);
-            route = { name: "update", view };
+            const service = await addService(provider);
+            route = { name: "update", id: service.id };
           } catch (e) {
             toast.error(e instanceof Error ? e.message : "Unknown error");
           }
@@ -54,15 +56,15 @@
       <SelectAccount
         {services}
         onAdd={() => (route = { name: "create" })}
-        onSelect={(view) => (route = { name: "update", view })}
+        onSelect={(id) => (route = { name: "update", id })}
       />
     {:else if route.name === "update"}
       <UpdateAccount
         {services}
-        view={route.view}
+        id={route.id}
         onBack={() => (route = { name: "select" })}
         onDelete={(id) => {
-          services.deleteService(id);
+          deleteService(id);
           route = { name: "select" };
         }}
       />

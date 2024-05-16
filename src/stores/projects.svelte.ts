@@ -1,16 +1,41 @@
 import { useDb } from "@/database/client";
 import { and, asc, count, desc, eq, not, notInArray } from "drizzle-orm";
-import { projectTable, responseMessageTable, responseTable } from "@/database/schema";
-import type { Project } from "@/store.svelte";
+import { type Project, projectTable, responseMessageTable, responseTable } from "@/database/schema";
 import { nanoid } from "nanoid";
 
-export type ProjectView = Project;
+export class ProjectStore {
+  id: string;
+  name: string = $state("");
+  prompt: string = $state("");
+
+  constructor(project: Project) {
+    this.id = project.id;
+    this.name = project.name;
+    this.prompt = project.prompt;
+  }
+}
 
 export class Projects {
-  items: ProjectView[] = $state([]);
+  items: ProjectStore[] = $state([]);
 
   async load() {
-    this.items = await useDb().query.projectTable.findMany({});
+    const projects = await useDb().query.projectTable.findMany({});
+    this.items = projects.map((p) => new ProjectStore(p));
+  }
+
+  async getProject(id: string) {
+    let projectStore = this.items.find((p) => p.id === id);
+    if (!projectStore) {
+      const project = await useDb().query.projectTable.findFirst({
+        where: eq(projectTable.id, id),
+      });
+      if (!project) {
+        throw new Error("Project not found");
+      }
+      projectStore = new ProjectStore(project);
+      this.items.push(projectStore);
+    }
+    return projectStore;
   }
 
   async newProject() {
@@ -24,17 +49,17 @@ export class Projects {
     return id;
   }
 
-  async removeProject(project: Project) {
+  async removeProject(id: string) {
     // remove responses
     await useDb().transaction(async (tx) => {
-      await tx.delete(responseMessageTable).where(eq(responseMessageTable.responseId, project.id));
-      await tx.delete(responseTable).where(eq(responseTable.id, project.id));
+      await tx.delete(responseMessageTable).where(eq(responseMessageTable.responseId, id));
+      await tx.delete(responseTable).where(eq(responseTable.id, id));
     });
     // delete project
-    await useDb().delete(projectTable).where(eq(projectTable.id, project.id));
+    await useDb().delete(projectTable).where(eq(projectTable.id, id));
     // find next project
     const nextProject = await useDb().query.projectTable.findFirst({
-      where: not(eq(projectTable.id, project.id)),
+      where: not(eq(projectTable.id, id)),
     });
     let nextId: string;
     if (nextProject) {
