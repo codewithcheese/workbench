@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as schema from "@/database/schema";
-  import { Cache } from "@/database/cache";
+  import { Cache } from "@/database/cache.svelte";
   const cache = new Cache(schema);
 
   let { name } = $props();
