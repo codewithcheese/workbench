@@ -21,8 +21,10 @@
 
   type Props = {
     project: Project;
+    prompt: string;
+    onChange: () => void;
   };
-  let { project }: Props = $props();
+  let { project, prompt = $bindable(""), onChange }: Props = $props();
 
   class DocumentLinkWidget extends WidgetType {
     constructor(public id: string) {
@@ -153,7 +155,7 @@
 <div>
   <Card class="overflow-y-auto">
     <CardContent class="p-0">
-      <CodeMirror class="w-full" bind:value={project.prompt} {extensions} />
+      <CodeMirror class="w-full" bind:value={prompt} {extensions} on:change={onChange} />
     </CardContent>
   </Card>
 </div>

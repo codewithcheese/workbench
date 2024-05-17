@@ -1,8 +1,6 @@
 <script lang="ts">
-  import Header from "@/routes/document/Header.svelte";
   import * as Table from "@/components/ui/table/index";
   import * as Dialog from "@/components/ui/dialog/index";
-  import { type Document } from "@/store.svelte";
   import { Button } from "@/components/ui/button/index";
   import { PlusIcon, TrashIcon } from "lucide-svelte";
   import { goto, invalidateAll } from "$app/navigation";
@@ -27,7 +25,6 @@
   }
 </script>
 
-<Header />
 <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
   <div class="flex items-center">
     <h1 class="flex-1 text-lg font-semibold md:text-2xl">Documents</h1>

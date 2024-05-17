@@ -10,6 +10,7 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { invalidateAll } from "$app/navigation";
 import { toast } from "svelte-french-toast";
+import { invalidateModel } from "@/database/registry";
 
 export type ServicesView = Awaited<ReturnType<typeof loadServices>>;
 
@@ -19,6 +20,17 @@ export function loadServices() {
       models: true,
     },
   });
+}
+
+export async function updateProject(project: Project) {
+  console.log("updateProject", project);
+  const result = await useDb()
+    .update(projectTable)
+    .set({ ...project })
+    .where(eq(projectTable.id, project.id))
+    .returning();
+  console.log(result);
+  await invalidateModel("project", project);
 }
 
 export async function updateResponsePrompt(id: string) {

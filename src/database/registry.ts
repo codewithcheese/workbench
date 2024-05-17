@@ -6,6 +6,7 @@ import {
   One,
   type Table,
 } from "drizzle-orm";
+import { invalidate } from "$app/navigation";
 
 type Model = Record<string, any>;
 type DependsFn = (...deps: `${string}:${string}`[]) => void;
@@ -32,4 +33,8 @@ function registerModels(tableName: string, records: Model[], depends: DependsFn)
 export function register(table: Table, view: Model | Model[], depends: DependsFn) {
   const tableName = getTableName(table);
   registerModels(tableName, Array.isArray(view) ? view : [view], depends);
+}
+
+export function invalidateModel(tableName: string, model: Model) {
+  return invalidate(`model:${tableName}:${model.id}`);
 }
