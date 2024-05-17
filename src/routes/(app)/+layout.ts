@@ -52,6 +52,7 @@ export async function load({ depends }) {
   }
   const projects = await useDb().query.projectTable.findMany({});
   register(projectTable, projects, depends);
+  depends("view:projects");
   return {
     projects,
   };

@@ -18,6 +18,7 @@
   import { goto } from "$app/navigation";
   import type { Project } from "@/database";
   import { submitPrompt } from "./$data";
+  import { store } from "$lib/store.svelte";
 
   type Props = {
     project: Project;
@@ -131,7 +132,7 @@
         {
           key: "Ctrl-Enter",
           run: () => {
-            submitPrompt(project);
+            submitPrompt(project, store.selected.modelId);
             return true;
           },
         },

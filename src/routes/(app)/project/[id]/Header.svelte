@@ -6,7 +6,7 @@
   import { goto } from "$app/navigation";
   import type { Model, Project, Service } from "@/database";
   import { store } from "$lib/store.svelte";
-  import type { ServicesView } from "./$data";
+  import { type ServicesView, submitPrompt } from "./$data";
 
   type Props = {
     project: Project;
@@ -38,7 +38,7 @@
   </div>
 
   {#if store.selected.modelId}
-    <Button onclick={() => submitPrompt(project)}>
+    <Button onclick={() => submitPrompt(project, store.selected.modelId)}>
       <PlayIcon size={16} class="mr-2" />
       Run
       <div

@@ -2,6 +2,7 @@ import { useDb } from "@/database/client";
 import { asc, eq, not } from "drizzle-orm";
 import { projectTable, responseMessageTable, responseTable } from "@/database/schema";
 import { nanoid } from "nanoid";
+import { invalidate } from "$app/navigation";
 
 export async function newProject() {
   const id = nanoid(10);
@@ -10,6 +11,7 @@ export async function newProject() {
     name: "Untitled",
     prompt: "",
   });
+  await invalidate("view:projects");
   return id;
 }
 
@@ -33,6 +35,7 @@ export async function removeProject(id: string) {
     // no next project, create new project
     nextId = await newProject();
   }
+  await invalidate("view:projects");
   return nextId;
 }
 
@@ -81,5 +84,6 @@ export async function duplicateProject(id: string) {
       }
     }
   });
+  await invalidate("view:projects");
   return newId;
 }

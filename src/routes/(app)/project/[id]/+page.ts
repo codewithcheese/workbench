@@ -27,5 +27,7 @@ export async function load({ params, depends }) {
   const services = await loadServices();
   register(serviceTable, services, depends);
 
+  depends("view:project");
+
   return { project, services };
 }

@@ -5,10 +5,11 @@ import {
   documentTable,
   useDb,
   projectTable,
+  type Project,
 } from "@/database";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { invalidateAll } from "$app/navigation";
+import { invalidate, invalidateAll } from "$app/navigation";
 import { toast } from "svelte-french-toast";
 import { invalidateModel } from "@/database/registry";
 
@@ -91,13 +92,13 @@ export async function interpolateDocuments(prompt: string) {
   return interpolatedPrompt;
 }
 
-export async function submitPrompt(project: Project) {
+export async function submitPrompt(project: Project, modelId: string | null) {
   try {
-    if (!store.selected.modelId) {
+    if (!modelId) {
       throw new Error("No model selected");
     }
     const model = await useDb().query.modelTable.findFirst({
-      where: eq(modelTable.id, store.selected.modelId),
+      where: eq(modelTable.id, modelId),
     });
     if (!model) {
       throw new Error("Selected model not found");
@@ -122,7 +123,7 @@ export async function submitPrompt(project: Project) {
         content,
       });
     });
-    await invalidateAll();
+    await invalidate("view:project");
   } catch (e) {
     if (e instanceof Error) {
       toast.error(e.message);
