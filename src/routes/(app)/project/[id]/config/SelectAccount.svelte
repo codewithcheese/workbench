@@ -2,7 +2,7 @@
   import { Button } from "@/components/ui/button";
   import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
   import { PlusIcon } from "lucide-svelte";
-  import { providersById } from "@/providers";
+  import { providersById } from "$lib/providers";
   import { TableHeader } from "@/components/ui/table/index.js";
   import type { ServiceView } from "@/database/loaders";
   // import type { Services, ServiceView } from "@/stores/services.svelte";

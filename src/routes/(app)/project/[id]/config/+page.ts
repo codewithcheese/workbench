@@ -1,5 +1,3 @@
-// import { services } from "@/stores/services.svelte";
-// import { useDb } from "@/database/client";
 import { loadServiceView } from "@/database/loaders";
 
 export async function load({ depends, route }) {

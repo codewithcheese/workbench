@@ -4,12 +4,11 @@
   import SelectAccount from "./SelectAccount.svelte";
   import UpdateAccount from "./UpdateAccount.svelte";
   import { DialogHeader } from "@/components/ui/dialog/index.js";
-  import { goto, onNavigate } from "$app/navigation";
+  import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import { toast } from "svelte-french-toast";
   // import type { ServiceView } from "@/stores/services.svelte";
   import { addService, deleteService } from "@/database/mutations";
-  import { fetch } from "@sveltejs/kit";
 
   let { data } = $props();
   let services = $derived(data.services);

@@ -1,12 +1,9 @@
 import { eq } from "drizzle-orm";
-import { projectTable } from "@/database/schema";
+import { projectTable, register, serviceTable, useDb } from "@/database";
 import { error } from "@sveltejs/kit";
-import { useDb } from "@/database/client";
-import { projects } from "@/stores/projects.svelte";
+import { loadServices } from "./$data";
 
-export async function load({ params }) {
-  console.log("/project", params.id);
-  console.time("/project/[id]");
+export async function load({ params, depends }) {
   const project = await useDb().query.projectTable.findFirst({
     where: eq(projectTable.id, params.id),
     with: {
@@ -22,9 +19,13 @@ export async function load({ params }) {
       },
     },
   });
-  console.timeEnd("/project/[id]");
   if (!project) {
     return error(404, "Project not found");
   }
-  return { project };
+  register(projectTable, project, depends);
+
+  const services = await loadServices();
+  register(serviceTable, services, depends);
+
+  return { project, services };
 }

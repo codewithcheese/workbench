@@ -1,10 +1,7 @@
-import "../app.css";
+import "../../app.css";
 import "@fontsource-variable/inter";
-import type { LayoutLoad } from "./$types";
-import { useDb } from "@/database/client";
+import { projectTable, register, useDb } from "@/database";
 import { sql } from "drizzle-orm/sql";
-import { projects } from "@/stores/projects.svelte";
-import { onNavigate } from "$app/navigation";
 
 export const ssr = false;
 let migrated = false;
@@ -39,7 +36,7 @@ async function exposeDrizzle() {
   };
 }
 
-export const load: LayoutLoad = async ({}) => {
+export async function load({ depends }) {
   await exposeDrizzle();
   try {
     // only run migrations once
@@ -53,8 +50,9 @@ export const load: LayoutLoad = async ({}) => {
   } catch (err) {
     console.error(err);
   }
-  await projects.load();
+  const projects = await useDb().query.projectTable.findMany({});
+  register(projectTable, projects, depends);
   return {
     projects,
   };
-};
+}

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { type Provider, Providers } from "@/providers";
+  import { type Provider, Providers } from "$lib/providers";
   import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table/index";
 
   type Props = {

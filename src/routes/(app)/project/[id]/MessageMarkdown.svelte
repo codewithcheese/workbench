@@ -1,7 +1,7 @@
 <script lang="ts">
   import { marked, type MarkedOptions } from "marked";
   import markedKatex from "marked-katex-extension";
-  import CodeBlock from "@/routes/project/CodeBlock.svelte";
+  import CodeBlock from "./CodeBlock.svelte";
 
   type Props = {
     message: { role: string; content: string };

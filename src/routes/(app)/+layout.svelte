@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Menu from "@/components/Menu.svelte";
+  import Menu from "./Menu.svelte";
   import { Toaster } from "svelte-french-toast";
 
   let { data } = $props();
@@ -11,6 +11,6 @@
       <Menu projects={data.projects} />
     </div>
   </div>
-  <slot></slot>
+  <slot />
 </div>
 <Toaster />

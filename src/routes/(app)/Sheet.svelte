@@ -1,8 +1,11 @@
 <script lang="ts">
   import * as Sheet from "@/components/ui/sheet";
   import { Button } from "@/components/ui/button";
-  import { BadgeIcon, MenuIcon, Package, Package2, PocketKnifeIcon } from "lucide-svelte";
-  import Menu from "@/components/Menu.svelte";
+  import { MenuIcon } from "lucide-svelte";
+  import Menu from "./Menu.svelte";
+  import type { Project } from "@/database";
+
+  let { projects }: { projects: Project[] } = $props();
 </script>
 
 <Sheet.Root>
@@ -13,6 +16,6 @@
     </Button>
   </Sheet.Trigger>
   <Sheet.Content side="left" class="flex flex-col">
-    <Menu />
+    <Menu {projects} />
   </Sheet.Content>
 </Sheet.Root>

@@ -6,23 +6,21 @@
   import { Card, CardContent, CardHeader } from "@/components/ui/card";
   import { Label } from "@/components/ui/label";
   import { useChat } from "@/lib/use-chat";
-  import MessageMarkdown from "./MessageMarkdown.svelte";
   import { Badge } from "@/components/ui/badge";
   import { useDb } from "@/database/client";
-  import { asc, eq, type InferSelectModel } from "drizzle-orm";
+  import { asc, eq } from "drizzle-orm";
   import {
     projectTable,
-    responseMessageTable,
-    responseTable,
     type Response,
     type ResponseMessage,
+    responseMessageTable,
+    responseTable,
     type Service,
   } from "@/database/schema";
-  import { interpolateDocuments } from "$lib/prompt";
   import { toast } from "svelte-french-toast";
-  import { store } from "@/store.svelte";
+  import { store } from "@/lib/store.svelte";
   import { invalidateAll } from "$app/navigation";
-  import { sql } from "drizzle-orm/sql";
+  import { updateResponsePrompt } from "./$data";
 
   export let response: Response;
   export let initialMessages: ResponseMessage[];
@@ -64,42 +62,6 @@
         .where(eq(responseTable.id, response.id));
     }
     await reload();
-  }
-
-  async function updateResponsePrompt(id: string) {
-    try {
-      const response = await useDb().query.responseTable.findFirst({
-        where: eq(responseTable.id, id),
-      });
-      if (!response) {
-        return toast.error("Response not found");
-      }
-      // get first message
-      const message = await useDb().query.responseMessageTable.findFirst({
-        where: eq(responseMessageTable.responseId, id),
-      });
-      if (!message) {
-        return toast.error("Message not found");
-      }
-      const project = await useDb().query.projectTable.findFirst({
-        where: eq(projectTable.id, response.projectId),
-      });
-      if (!project) {
-        return toast.error("Project not found");
-      }
-      // interpolate documents into prompt
-      const content = await interpolateDocuments(project.prompt);
-      console.log("content", content);
-      await useDb()
-        .update(responseMessageTable)
-        .set({ content })
-        .where(eq(responseMessageTable.id, message.id));
-    } catch (e) {
-      if (e instanceof Error) {
-        toast.error(e.message);
-      }
-      console.error(e);
-    }
   }
 
   async function updateMessages() {

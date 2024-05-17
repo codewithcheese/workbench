@@ -1,5 +1,4 @@
 import { sql } from "drizzle-orm/sql";
-import { db } from "@/store.svelte";
 import {
   documentTable,
   modelTable,
@@ -10,6 +9,7 @@ import {
 } from "@/database/schema";
 import journal from "./migrations/meta/_journal.json";
 import { useDb } from "@/database/client";
+import { db } from "$lib/store.svelte";
 
 export async function runMigrations() {
   const haveMigrationsTable = await useDb().get(

@@ -8,8 +8,11 @@
     SelectTrigger,
     SelectValue,
   } from "@/components/ui/select";
-  import { store, db } from "@/store.svelte";
-  import { providersById } from "@/providers";
+  import { store } from "@/lib/store.svelte";
+  import { providersById } from "@/lib/providers";
+  import type { ServicesView } from "./$data";
+
+  let { services }: { services: ServicesView } = $props();
 
   const selected = $derived(
     store.selected.modelId
@@ -17,7 +20,7 @@
       : undefined,
   );
 
-  const visibleModels = $derived(db.models.filter((m) => m.visible));
+  const visibleModels = services.map((s) => s.models.filter((m) => m.visible)).flat();
 </script>
 
 <Select
@@ -34,11 +37,11 @@
     <SelectValue placeholder={visibleModels.length ? "Select a model" : "No models configured"} />
   </SelectTrigger>
   <SelectContent>
-    {#each db.services as service, index}
+    {#each services as service (service.id)}
       {@const provider = providersById[service.providerId]}
       <SelectGroup>
         <SelectLabel>{provider.name} {service.name ? `(${service.name})` : ""}</SelectLabel>
-        {#each db.models.filter((m) => m.serviceId === service.id && m.visible) as model, index}
+        {#each service.models as model (model.id)}
           <SelectItem value={model.id}>
             {model.id}
           </SelectItem>

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { Card, CardContent } from "@/components/ui/card";
   import CodeMirror from "svelte-codemirror-editor";
-  import { db, type Project, submitPrompt } from "@/store.svelte";
   import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
   import { languages } from "@codemirror/language-data";
   import {
@@ -17,6 +16,8 @@
   import type { CompletionSource } from "@codemirror/autocomplete";
   import { Decoration } from "@codemirror/view";
   import { goto } from "$app/navigation";
+  import type { Project } from "@/database";
+  import { submitPrompt } from "./$data";
 
   type Props = {
     project: Project;

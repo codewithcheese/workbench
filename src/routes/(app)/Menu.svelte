@@ -8,10 +8,10 @@
   import { goto } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
   import PersistenceAlert from "@/components/PersistenceAlert.svelte";
-  import { type Project } from "@/database/schema";
-  import type { Projects } from "@/stores/projects.svelte";
+  import { type Project } from "@/database";
+  import { duplicateProject, newProject, removeProject } from "./$data";
 
-  let { projects }: { projects: Projects } = $props();
+  let { projects }: { projects: Project[] } = $props();
 
   let projectId: string | undefined = $derived.by(() => {
     if ($page.url.pathname.startsWith("/project")) {
@@ -34,7 +34,7 @@
     class="h-8 w-8 rounded-full p-1"
     variant="outline"
     onclick={async () => {
-      const id = await projects.newProject();
+      const id = await newProject();
       goto(`/project/${id}`);
     }}
   >
@@ -71,7 +71,7 @@
       <h3 class="mb-2 overflow-hidden text-ellipsis break-all px-4 text-xs font-medium">
         Projects
       </h3>
-      {#each projects.items.toReversed() as project (project.id)}
+      {#each projects.toReversed() as project (project.id)}
         <div
           class:bg-accent={project.id === projectId}
           class="group flex flex-row items-center overflow-x-hidden px-4"
@@ -103,7 +103,7 @@
               >
               <DropdownMenu.Item
                 onclick={async () => {
-                  const newId = await projects.duplicateProject(project.id);
+                  const newId = await duplicateProject(project.id);
                   await goto(`/project/${newId}`);
                 }}>Duplicate</DropdownMenu.Item
               >
@@ -120,7 +120,7 @@
     type="project"
     onConfirm={async () => {
       if (projectToDelete) {
-        const nextId = await projects.removeProject(projectToDelete.id);
+        const nextId = await removeProject(projectToDelete.id);
         await goto(`/project/${nextId}`);
       }
     }}

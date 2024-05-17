@@ -9,7 +9,7 @@
   import { Separator } from "@/components/ui/separator/index";
   import { Label } from "@/components/ui/label/index";
   import { Input } from "@/components/ui/input/index";
-  import { type Provider, Providers, providersById } from "@/providers";
+  import { type Provider, Providers, providersById } from "$lib/providers";
   import type { ServiceView } from "@/database/loaders";
   import {
     replaceModels,

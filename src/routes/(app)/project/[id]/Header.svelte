@@ -1,27 +1,24 @@
 <script lang="ts">
-  import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-  } from "@/components/ui/breadcrumb";
   import { Button } from "@/components/ui/button";
-  import { type Model, type Project, store, submitPrompt } from "@/store.svelte";
-  import SelectModel from "@/routes/project/SelectModel.svelte";
+  import SelectModel from "./SelectModel.svelte";
   import { PlayIcon, SettingsIcon } from "lucide-svelte";
-  import Sheet from "@/components/Sheet.svelte";
+  import Sheet from "../../Sheet.svelte";
   import { goto } from "$app/navigation";
+  import type { Model, Project, Service } from "@/database";
+  import { store } from "$lib/store.svelte";
+  import type { ServicesView } from "./$data";
 
   type Props = {
     project: Project;
+    services: ServicesView;
   };
-  let { project }: Props = $props();
+  let { project, services }: Props = $props();
 </script>
 
 <header
   class="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:pt-2"
 >
-  <Sheet />
+  <!--  <Sheet />-->
   <nav aria-label="breadcrumb" class="hidden md:flex">
     <!--    <Breadcrumb>-->
     <!--      <BreadcrumbList>-->
@@ -33,7 +30,7 @@
   </nav>
   <div class="relative ml-auto flex-1 md:grow-0">
     <div class="flex flex-row">
-      <SelectModel />
+      <SelectModel {services} />
       <Button variant="ghost" onclick={() => goto(`/project/${project.id}/config`)}>
         <SettingsIcon size={16} />
       </Button>

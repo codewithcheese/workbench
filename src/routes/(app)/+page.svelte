@@ -1,11 +1,10 @@
 <script lang="ts">
+  let { data } = $props();
 
-    import {goto} from '$app/navigation';
-    import {db} from '@/store.svelte';
+  import { goto } from "$app/navigation";
 
-    if (db.projects.items.length) {
-      const project = db.projects.items[0];
-      goto(`/project/${project.id}`);
-    }
-
+  if (data.projects.length) {
+    const project = data.projects[data.projects.length - 1];
+    goto(`/project/${project.id}`);
+  }
 </script>

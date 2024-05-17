@@ -1,11 +1,5 @@
 import { Dataset } from "@/lib/dataset.svelte";
 import { nanoid } from "nanoid";
-import { invalidateAll } from "$app/navigation";
-import { toast } from "svelte-french-toast";
-import { modelTable, responseMessageTable, responseTable } from "@/database/schema";
-import { eq } from "drizzle-orm";
-import { useDb } from "@/database/client";
-import { interpolateDocuments } from "$lib/prompt";
 
 export type Document = {
   id: string;
@@ -100,46 +94,6 @@ $effect.root(() => {
     localStorage.setItem("store", JSON.stringify(store));
   });
 });
-
-export async function submitPrompt(project: Project) {
-  try {
-    if (!store.selected.modelId) {
-      throw new Error("No model selected");
-    }
-    const model = await useDb().query.modelTable.findFirst({
-      where: eq(modelTable.id, store.selected.modelId),
-    });
-    if (!model) {
-      throw new Error("Selected model not found");
-    }
-    // const model = db.models.get(store.selected.modelId);
-    // interpolate documents into prompt
-    const content = await interpolateDocuments(project.prompt);
-    console.log("content", content);
-    await useDb().transaction(async (tx) => {
-      const responseId = nanoid(10);
-      await tx.insert(responseTable).values({
-        id: responseId,
-        projectId: project.id,
-        modelId: model.id,
-        error: null,
-      });
-      await tx.insert(responseMessageTable).values({
-        id: nanoid(),
-        index: 0,
-        responseId,
-        role: "user",
-        content,
-      });
-    });
-    await invalidateAll();
-  } catch (e) {
-    if (e instanceof Error) {
-      toast.error(e.message);
-    }
-    console.error(e);
-  }
-}
 
 $effect.root(() => {
   $effect(() => {

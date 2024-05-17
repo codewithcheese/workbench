@@ -20,7 +20,7 @@ type ViewMap = {
   relations: Record<string, { type: "one" | "many"; views: ViewMap[] }>;
 };
 
-export class CachedView<T extends Record<string, any>> implements T {
+export class CachedView<T extends Record<string, any>> {
   // viewMap: ViewMap;
   constructor(viewMap: ViewMap) {
     for (const key of Object.keys(viewMap.model)) {
@@ -44,6 +44,8 @@ export class CachedView<T extends Record<string, any>> implements T {
     }
     return this as unknown as T & { toJSON: () => any; viewMap: ViewMap };
   }
+
+  [x: string]: any;
 }
 
 /**
