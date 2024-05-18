@@ -126,7 +126,7 @@ export async function submitPrompt(project: Project, modelId: string | null) {
         content,
       });
     });
-    await invalidate("view:project");
+    await invalidate("view:responses");
   } catch (e) {
     if (e instanceof Error) {
       toast.error(e.message);

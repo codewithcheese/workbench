@@ -132,7 +132,7 @@
         {
           key: "Ctrl-Enter",
           run: () => {
-            submitPrompt(project, store.selected.modelId);
+            submitPrompt(project, store.selected.modelId).catch(console.error);
             return true;
           },
         },
