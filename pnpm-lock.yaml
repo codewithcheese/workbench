@@ -68,12 +68,6 @@ dependencies:
   filepond:
     specifier: ^4.31.1
     version: 4.31.1
-  filepond-plugin-image-exif-orientation:
-    specifier: ^1.0.11
-    version: 1.0.11(filepond@4.31.1)
-  filepond-plugin-image-preview:
-    specifier: ^4.6.12
-    version: 4.6.12(filepond@4.31.1)
   highlight.js:
     specifier: ^11.7.0
     version: 11.9.0
@@ -3812,22 +3806,6 @@ packages:
 
   /file-uri-to-path@1.0.0:
     resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
-
-  /filepond-plugin-image-exif-orientation@1.0.11(filepond@4.31.1):
-    resolution: {integrity: sha512-hLBc12Fk6Zkj3L8mSAn+elugHOqT5rLUbgVXQQIQjMe0FsGjtpoxqeVR6jt4IWHGat2L9sFAgU2TGmd1mqosCg==}
-    peerDependencies:
-      filepond: '>=3.x <5.x'
-    dependencies:
-      filepond: 4.31.1
-    dev: false
-
-  /filepond-plugin-image-preview@4.6.12(filepond@4.31.1):
-    resolution: {integrity: sha512-Y8ETX5QVV0mbPB0586UH8AUmG9tZg8PuN5bdEAIlZVJFTct5ebViJ7+Am94/VhTPjLqZjBf1zmDq5JU6XRsZKw==}
-    peerDependencies:
-      filepond: '>=4.x <5.x'
-    dependencies:
-      filepond: 4.31.1
-    dev: false
 
   /filepond@4.31.1:
     resolution: {integrity: sha512-yWYK91Ky72L2AG7BlI8Cb0UjvJz+DjuYdLN1JbkJg8qmoiZ9AU5b5MuOkHmExk/9jQ5R7tRT+H+b8wDiFEJlxQ==}

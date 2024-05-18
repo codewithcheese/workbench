@@ -14,8 +14,8 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240502.0",
     "@melt-ui/pp": "^0.3.1",
-    "@playwright/test": "^1.28.1",
     "@melt-ui/svelte": "^0.77.0",
+    "@playwright/test": "^1.28.1",
     "@sveltejs/adapter-auto": "^3.0.0",
     "@sveltejs/adapter-cloudflare": "^4.4.0",
     "@sveltejs/kit": "^2.0.0",
@@ -61,8 +61,6 @@
     "drizzle-kit": "^0.21.2",
     "drizzle-orm": "^0.30.10",
     "filepond": "^4.31.1",
-    "filepond-plugin-image-exif-orientation": "^1.0.11",
-    "filepond-plugin-image-preview": "^4.6.12",
     "highlight.js": "^11.7.0",
     "kysely": "^0.27.3",
     "lodash": "^4.17.21",
