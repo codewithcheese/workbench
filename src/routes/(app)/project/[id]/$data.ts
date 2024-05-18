@@ -1,15 +1,15 @@
 import {
+  documentTable,
   modelTable,
+  type Project,
+  projectTable,
   responseMessageTable,
   responseTable,
-  documentTable,
   useDb,
-  projectTable,
-  type Project,
 } from "@/database";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { invalidate, invalidateAll } from "$app/navigation";
+import { invalidate } from "$app/navigation";
 import { toast } from "svelte-french-toast";
 import { invalidateModel } from "@/database/model";
 

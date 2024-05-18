@@ -12,7 +12,7 @@
   import { modelTable, type ResponseMessage, responseTable, type Service } from "@/database/schema";
   import { store } from "@/lib/store.svelte";
   import { updateResponsePrompt } from "../$data";
-  import { removeResponse, type ResponsesView, updateMessages } from "./$data";
+  import { removeResponse, type ResponsesView, updateMessages } from "./$data.svelte";
   import { invalidateModel } from "@/database";
 
   export let response: ResponsesView[number];

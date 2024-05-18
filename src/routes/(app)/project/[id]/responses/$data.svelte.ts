@@ -1,6 +1,7 @@
 import { type ResponseMessage, responseMessageTable, responseTable, useDb } from "@/database";
 import { asc, eq } from "drizzle-orm";
 import { invalidate, invalidateAll } from "$app/navigation";
+import { type Message } from "ai";
 
 export type ResponsesView = Awaited<ReturnType<typeof loadResponses>>;
 
@@ -18,21 +19,36 @@ export function loadResponses(projectId: string) {
   });
 }
 
-export async function updateMessages(responseId: string, newMessages: ResponseMessage[]) {
+export async function updateMessages(responseId: string, newMessages: Message[]) {
+  console.log(
+    "updateMessages",
+    responseId,
+    newMessages.map((m) => $state.snapshot(m)),
+  );
+  newMessages = newMessages.map((m) => $state.snapshot(m));
   const currentMessages = await useDb().query.responseMessageTable.findMany({
     where: eq(responseMessageTable.responseId, responseId),
     orderBy: [asc(responseMessageTable.index)],
   });
-  let index = 0;
+
   await useDb().transaction(async (tx) => {
+    let index = 0;
     for (const newMessage of newMessages) {
       const currentMessage = currentMessages[index];
       if (currentMessage && newMessage.id !== currentMessage.id) {
         // update required
-        await tx.update(responseMessageTable).set({ ...newMessage, index });
+        await tx
+          .update(responseMessageTable)
+          .set({ ...newMessage, createdAt: newMessage.createdAt?.toISOString(), index })
+          .where(eq(responseMessageTable.id, currentMessage.id));
       } else if (!currentMessage) {
         // new message
-        await tx.insert(responseMessageTable).values({ ...newMessage, responseId, index });
+        await tx.insert(responseMessageTable).values({
+          ...newMessage,
+          createdAt: newMessage.createdAt?.toISOString(),
+          responseId,
+          index,
+        });
       }
       index += 1;
     }
