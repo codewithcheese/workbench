@@ -106,7 +106,14 @@
     >
     <Badge onclick={() => (format = "text")} variant="outline" class="hover:bg-gray-200">Text</Badge
     >
-    <XIcon class="text-gray-500" size={16} onclick={() => removeResponse(response.id)} />
+    <XIcon
+      class="text-gray-500"
+      size={16}
+      onclick={() => {
+        stop();
+        removeResponse(response.id);
+      }}
+    />
   </CardHeader>
   <CardContent class="p-6">
     {#if response.error}
