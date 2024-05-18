@@ -8,7 +8,7 @@ import {
   type ResponseMessage,
   type Service,
 } from "@/database/schema";
-import { registerModel } from "../src/database/model";
+import { registerModel } from "../src/database";
 
 describe("cache", () => {
   it("should use relations to extract models", async () => {
@@ -25,12 +25,14 @@ describe("cache", () => {
       id: "id-project",
       name: "Untitled",
       prompt: "",
+      createdAt: new Date().toISOString(),
       responses: [
         {
           id: "id-response",
           projectId: "id-project",
           modelId: "id-model",
           error: null,
+          createdAt: new Date().toISOString(),
           messages: [
             {
               id: "id-message",
@@ -38,6 +40,7 @@ describe("cache", () => {
               responseId: "id-response",
               role: "user",
               content: "",
+              createdAt: new Date().toISOString(),
             },
             {
               id: "id-message2",
@@ -45,6 +48,7 @@ describe("cache", () => {
               responseId: "id-response",
               role: "user",
               content: "",
+              createdAt: new Date().toISOString(),
             },
           ],
           model: {
@@ -52,12 +56,14 @@ describe("cache", () => {
             serviceId: "id-service",
             name: "",
             visible: 1,
+            createdAt: new Date().toISOString(),
             service: {
               id: "id-service",
               name: "",
               providerId: "",
               baseURL: "",
               apiKey: "",
+              createdAt: new Date().toISOString(),
             },
           },
         },
