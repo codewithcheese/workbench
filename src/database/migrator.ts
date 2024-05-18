@@ -25,7 +25,31 @@ export async function runMigrations() {
 }
 
 async function migrateDatasets() {
+  const modelMap: Record<string, string> = {};
+
   await useDb().transaction(async (tx) => {
+    for (const service of db.services) {
+      console.log("migrating service", service);
+      await tx.insert(serviceTable).values({
+        id: service.id,
+        name: service.name,
+        providerId: service.providerId,
+        baseURL: service.baseURL,
+        apiKey: service.apiKey,
+      });
+      for (const model of db.models.items.filter((m) => m.serviceId === service.id)) {
+        console.log("migrating model", model);
+        const newId = nanoid(10);
+        await tx.insert(modelTable).values({
+          id: newId,
+          serviceId: service.id,
+          name: model.id,
+          visible: model.visible ? 1 : 0,
+        });
+        modelMap[model.id] = newId;
+      }
+    }
+
     for (const project of db.projects) {
       console.log("Migrating project", project);
       await tx.insert(projectTable).values({
@@ -38,7 +62,7 @@ async function migrateDatasets() {
         await tx.insert(responseTable).values({
           id: response.id,
           projectId: response.projectId,
-          modelId: response.modelId,
+          modelId: modelMap[response.modelId],
           error: response.error,
         });
         let index = 0;
@@ -53,26 +77,6 @@ async function migrateDatasets() {
           });
           index += 1;
         }
-      }
-    }
-
-    for (const service of db.services) {
-      console.log("migrating service", service);
-      await tx.insert(serviceTable).values({
-        id: service.id,
-        name: service.name,
-        providerId: service.providerId,
-        baseURL: service.baseURL,
-        apiKey: service.apiKey,
-      });
-      for (const model of db.models.items.filter((m) => m.serviceId === service.id)) {
-        console.log("migrating model", model);
-        await tx.insert(modelTable).values({
-          id: nanoid(10),
-          serviceId: service.id,
-          name: model.id,
-          visible: model.visible ? 1 : 0,
-        });
       }
     }
 
