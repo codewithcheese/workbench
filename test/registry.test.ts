@@ -8,7 +8,7 @@ import {
   type ResponseMessage,
   type Service,
 } from "@/database/schema";
-import { registerModel } from "@/database/registry";
+import { registerModel } from "../src/database/model";
 
 describe("cache", () => {
   it("should use relations to extract models", async () => {

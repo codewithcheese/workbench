@@ -11,7 +11,7 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { invalidate, invalidateAll } from "$app/navigation";
 import { toast } from "svelte-french-toast";
-import { invalidateModel } from "@/database/registry";
+import { invalidateModel } from "@/database/model";
 
 export type ServicesView = Awaited<ReturnType<typeof loadServices>>;
 
