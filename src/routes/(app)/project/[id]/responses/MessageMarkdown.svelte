@@ -4,9 +4,9 @@
   import CodeBlock from "./CodeBlock.svelte";
 
   type Props = {
-    message: { role: string; content: string };
+    content: string;
   };
-  let { message }: Props = $props();
+  let { content }: Props = $props();
 
   let contentEl: HTMLElement | undefined = $state();
 
@@ -60,7 +60,7 @@
     return md.replaceAll("&lt;", "<");
   }
 
-  let tokens = $derived(marked.lexer(sanitizeMd(message.content)));
+  let tokens = $derived(marked.lexer(sanitizeMd(content)));
 </script>
 
 <div

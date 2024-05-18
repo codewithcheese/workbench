@@ -13,6 +13,7 @@
   import { updateResponsePrompt } from "../$data";
   import { removeResponse, type ResponsesView, updateMessages } from "./$data.svelte";
   import { invalidateModel } from "@/database";
+  import MessageMarkdown from "./MessageMarkdown.svelte";
 
   export let response: ResponsesView[number];
   export let initialMessages: ResponseMessage[];
@@ -93,10 +94,14 @@
       <LoaderCircleIcon
         onclick={stop}
         size={16}
-        class="loading-icon text-gray-500 hover:bg-accent"
+        class="loading-icon cursor-pointer text-gray-500 hover:bg-accent"
       />
     {:else}
-      <RefreshCwIcon onclick={refresh} size={16} class="text-gray-500 hover:bg-accent" />
+      <RefreshCwIcon
+        onclick={refresh}
+        size={16}
+        class="cursor-pointer text-gray-500 hover:bg-accent"
+      />
     {/if}
 
     <div class="pr-2 text-xs text-gray-500">{response.model.name}</div>
@@ -120,11 +125,10 @@
       <Label class="text-red-500">{response.error}</Label>
     {/if}
 
-    <!--{#if format === "markdown"}-->
-    <!--  <MessageMarkdown {message} />-->
-    <!--{:else}-->
-    <!--  -->
-    <!--{/if}-->
-    {content}
+    {#if format === "markdown"}
+      <MessageMarkdown {content} />
+    {:else}
+      {content}
+    {/if}
   </CardContent>
 </Card>
