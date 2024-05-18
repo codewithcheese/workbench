@@ -88,40 +88,40 @@ export let store: Store = $state(
       },
 );
 
-// persist store to localStorage
-$effect.root(() => {
-  $effect(() => {
-    localStorage.setItem("store", JSON.stringify(store));
-  });
-});
-
-$effect.root(() => {
-  $effect(() => {
-    // if selected model is not available then select next available model
-    if (!isSelectedModelAvailable()) {
-      selectNextAvailableModel();
-    }
-    // if no model selected then select first available model
-    if (!store.selected.modelId) {
-      selectNextAvailableModel();
-    }
-  });
-});
-
-export function isSelectedModelAvailable() {
-  if (!store.selected.modelId) {
-    // if nothing selected then consider it available
-    return true;
-  }
-  const model = db.models.get(store.selected.modelId);
-  return model?.visible;
-}
-
-export function selectNextAvailableModel() {
-  const model = db.models.items.find((m) => m.visible);
-  if (!model) {
-    store.selected.modelId = null;
-  } else {
-    store.selected.modelId = model.id;
-  }
-}
+// // persist store to localStorage
+// $effect.root(() => {
+//   $effect(() => {
+//     localStorage.setItem("store", JSON.stringify(store));
+//   });
+// });
+//
+// $effect.root(() => {
+//   $effect(() => {
+//     // if selected model is not available then select next available model
+//     if (!isSelectedModelAvailable()) {
+//       selectNextAvailableModel();
+//     }
+//     // if no model selected then select first available model
+//     if (!store.selected.modelId) {
+//       selectNextAvailableModel();
+//     }
+//   });
+// });
+//
+// export function isSelectedModelAvailable() {
+//   if (!store.selected.modelId) {
+//     // if nothing selected then consider it available
+//     return true;
+//   }
+//   const model = db.models.get(store.selected.modelId);
+//   return model?.visible;
+// }
+//
+// export function selectNextAvailableModel() {
+//   const model = db.models.items.find((m) => m.visible);
+//   if (!model) {
+//     store.selected.modelId = null;
+//   } else {
+//     store.selected.modelId = model.id;
+//   }
+// }

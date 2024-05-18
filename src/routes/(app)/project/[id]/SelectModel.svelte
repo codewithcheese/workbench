@@ -14,13 +14,25 @@
 
   let { services }: { services: ServicesView } = $props();
 
-  const selected = $derived(
-    store.selected.modelId
-      ? { value: store.selected.modelId, label: store.selected.modelId }
+  let visibleModels = $derived(services.map((s) => s.models.filter((m) => m.visible)).flat());
+
+  let modelsById = $derived(
+    services
+      .map((s) => s.models)
+      .flat()
+      .reduce<Record<string, any>>((acc, model) => {
+        acc[model.id] = model;
+        return acc;
+      }, {}),
+  );
+
+  let selected = $derived(
+    store.selected.modelId && modelsById[store.selected.modelId]
+      ? { value: store.selected.modelId, label: modelsById[store.selected.modelId].name }
       : undefined,
   );
 
-  const visibleModels = services.map((s) => s.models.filter((m) => m.visible)).flat();
+  $inspect(store.selected.modelId, selected);
 </script>
 
 <Select
@@ -42,9 +54,11 @@
       <SelectGroup>
         <SelectLabel>{provider.name} {service.name ? `(${service.name})` : ""}</SelectLabel>
         {#each service.models as model (model.id)}
-          <SelectItem value={model.id}>
-            {model.id}
-          </SelectItem>
+          {#if model.visible}
+            <SelectItem value={model.id}>
+              {model.name}
+            </SelectItem>
+          {/if}
         {/each}
       </SelectGroup>
     {/each}
