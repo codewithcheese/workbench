@@ -1,11 +1,10 @@
 <svelte:options runes={false} />
 
 <script lang="ts">
-  import { type Message } from "ai/svelte";
+  import { type Message, useChat } from "ai/svelte";
   import { LoaderCircleIcon, RefreshCwIcon, XIcon } from "lucide-svelte";
   import { Card, CardContent, CardHeader } from "@/components/ui/card";
   import { Label } from "@/components/ui/label";
-  import { useChat } from "@/lib/use-chat";
   import { Badge } from "@/components/ui/badge";
   import { useDb } from "@/database/client";
   import { eq } from "drizzle-orm";
@@ -19,8 +18,6 @@
   export let initialMessages: ResponseMessage[];
   export let service: Service;
 
-  $: console.log("initialMessages", initialMessages);
-
   // when loading messages mark finalized as false
   // when loading complete update messages and set finalized to true
   let finalized = true;
@@ -31,7 +28,7 @@
     initialMessages: initialMessages as Message[],
     body: {
       providerId: service.providerId,
-      modelId: response.model.name,
+      modelName: response.model.name,
       baseURL: service.baseURL,
       apiKey: service.apiKey,
     },
@@ -40,13 +37,13 @@
   $: content = $messages.find((m) => m.role === "assistant")?.content || "";
 
   const lastMessageIsAssistant = $messages.findLast((m) => m.role === "assistant");
-  if (!lastMessageIsAssistant && response.error === undefined) {
+  console.log("lastMessageIsAssistant", lastMessageIsAssistant, response.error);
+  if (!lastMessageIsAssistant && response.error == null) {
     refresh();
   }
 
-  $: console.log("content", content);
+  // $: console.log("content", content);
   // $: console.log("id", response.id, JSON.stringify(response));
-
   // $: console.log("isLoading", $isLoading);
 
   async function refresh() {
@@ -56,6 +53,7 @@
       const model = await useDb().query.modelTable.findFirst({
         where: eq(modelTable.id, store.selected.modelId),
       });
+      console.log("update model", model);
       if (model) {
         await useDb()
           .update(responseTable)
@@ -64,7 +62,8 @@
       }
     }
     await invalidateModel(responseTable, response);
-    console.log("reloading messages");
+    // @ts-expect-error hack to update messages
+    $messages = initialMessages;
     await reload();
   }
 
@@ -74,7 +73,6 @@
     }
     if (!finalized && !$isLoading) {
       finalized = true;
-      // @ts-expect-error messages type issue
       updateMessages(response.id, $messages);
     }
   }

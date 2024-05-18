@@ -85,7 +85,7 @@ export async function replaceModels(service: Service, newModels: any[]) {
         .insert(modelTable)
         .values({ ...model, name: model.name, visible: 1, serviceId: service.id })
         .onConflictDoUpdate({
-          target: [modelTable.id, modelTable.serviceId],
+          target: [modelTable.name, modelTable.serviceId],
           set: model,
         });
     }

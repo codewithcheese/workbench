@@ -6,15 +6,15 @@ import { createMistral } from "@ai-sdk/mistral";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 export const POST = (async ({ request }) => {
-  const { messages, providerId, apiKey, baseURL, modelId } = (await request.json()) as {
+  const { messages, providerId, apiKey, baseURL, modelName } = (await request.json()) as {
     messages: any[];
     providerId: string;
     baseURL: string;
     apiKey: string;
-    modelId: string;
+    modelName: string;
   };
 
-  if (!providerId || !baseURL || !modelId) {
+  if (!providerId || !baseURL || !modelName) {
     return new Response(`Malformed request`, {
       status: 400,
     });
@@ -42,7 +42,7 @@ export const POST = (async ({ request }) => {
 
   try {
     const result = await streamText({
-      model: provider.chat(modelId),
+      model: provider.chat(modelName),
       messages,
     });
     return new StreamingTextResponse(result.toAIStream());
