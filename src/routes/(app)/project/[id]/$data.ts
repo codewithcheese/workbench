@@ -36,6 +36,7 @@ export async function updateProject(project: Project) {
 
 export async function updateResponsePrompt(id: string) {
   try {
+    console.time("updateResponsePrompt");
     const response = await useDb().query.responseTable.findFirst({
       where: eq(responseTable.id, id),
     });
@@ -57,7 +58,7 @@ export async function updateResponsePrompt(id: string) {
     }
     // interpolate documents into prompt
     const content = await interpolateDocuments(project.prompt);
-    console.log("content", content);
+    console.log("updated prompt", content);
     await useDb()
       .update(responseMessageTable)
       .set({ content })
@@ -67,6 +68,8 @@ export async function updateResponsePrompt(id: string) {
       toast.error(e.message);
     }
     console.error(e);
+  } finally {
+    console.timeEnd("updateResponsePrompt");
   }
 }
 

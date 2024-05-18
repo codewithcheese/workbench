@@ -40,7 +40,6 @@ export type Service = {
 
 export type Store = {
   selected: {
-    projectId: string;
     modelId: string | null;
   };
 };
@@ -82,18 +81,17 @@ export let store: Store = $state(
     ? JSON.parse(storeJson)
     : {
         selected: {
-          projectId: db.projects.items[0]!.id,
           modelId: null,
         },
       },
 );
 
 // // persist store to localStorage
-// $effect.root(() => {
-//   $effect(() => {
-//     localStorage.setItem("store", JSON.stringify(store));
-//   });
-// });
+$effect.root(() => {
+  $effect(() => {
+    localStorage.setItem("store", JSON.stringify(store));
+  });
+});
 //
 // $effect.root(() => {
 //   $effect(() => {

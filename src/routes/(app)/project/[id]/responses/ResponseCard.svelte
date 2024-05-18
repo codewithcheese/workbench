@@ -9,14 +9,17 @@
   import { Badge } from "@/components/ui/badge";
   import { useDb } from "@/database/client";
   import { eq } from "drizzle-orm";
-  import { type ResponseMessage, responseTable, type Service } from "@/database/schema";
+  import { modelTable, type ResponseMessage, responseTable, type Service } from "@/database/schema";
   import { store } from "@/lib/store.svelte";
   import { updateResponsePrompt } from "../$data";
   import { removeResponse, type ResponsesView, updateMessages } from "./$data";
+  import { invalidateModel } from "@/database";
 
   export let response: ResponsesView[number];
   export let initialMessages: ResponseMessage[];
   export let service: Service;
+
+  $: console.log("initialMessages", initialMessages);
 
   // when loading messages mark finalized as false
   // when loading complete update messages and set finalized to true
@@ -49,11 +52,19 @@
   async function refresh() {
     await updateResponsePrompt(response.id);
     if (store.selected.modelId && store.selected.modelId !== response.modelId) {
-      await useDb()
-        .update(responseTable)
-        .set({ modelId: store.selected.modelId })
-        .where(eq(responseTable.id, response.id));
+      // update modelId in response if selected model is valid
+      const model = await useDb().query.modelTable.findFirst({
+        where: eq(modelTable.id, store.selected.modelId),
+      });
+      if (model) {
+        await useDb()
+          .update(responseTable)
+          .set({ modelId: model.id })
+          .where(eq(responseTable.id, response.id));
+      }
     }
+    await invalidateModel(responseTable, response);
+    console.log("reloading messages");
     await reload();
   }
 

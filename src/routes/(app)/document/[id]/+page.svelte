@@ -1,7 +1,6 @@
 <script lang="ts">
-  import Header from "@/routes/document/Header.svelte";
   import { goto } from "$app/navigation";
-  import Form from "@/routes/document/Form.svelte";
+  import Form from "../Form.svelte";
   import { documentTable } from "@/database/schema";
   import { eq } from "drizzle-orm";
   import { toast } from "svelte-french-toast";
@@ -21,14 +20,13 @@
           content: document.content,
         })
         .where(eq(documentTable.id, document.id));
-      goto(`/document`);
+      await goto(`/document`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Unknown error");
     }
   }
 </script>
 
-<Header />
 <main class="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
   <div class="flex items-center">
     <h1 class="flex-1 text-lg font-semibold md:text-xl">Edit document</h1>

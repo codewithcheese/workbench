@@ -6,9 +6,10 @@
   import { goto, invalidateAll } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
   import { eq } from "drizzle-orm";
-  import { documentTable } from "@/database/schema";
+  import { documentTable, type Document } from "@/database/schema";
   import { toast } from "svelte-french-toast";
   import { useDb } from "@/database/client";
+  import { invalidateModel } from "@/database";
 
   let { data } = $props();
 
@@ -17,7 +18,7 @@
   async function deleteDocument(document: Document) {
     try {
       await useDb().delete(documentTable).where(eq(documentTable.id, document.id));
-      await invalidateAll();
+      await invalidateModel(documentTable, document);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Unknown error");
     }
@@ -89,7 +90,7 @@
   <DeleteDialog
     name={confirmDelete.name}
     type="document"
-    onConfirm={() => deleteDocument(confirmDelete)}
+    onConfirm={() => confirmDelete && deleteDocument(confirmDelete)}
     onCancel={() => {
       console.log("cancel");
       confirmDelete = null;
