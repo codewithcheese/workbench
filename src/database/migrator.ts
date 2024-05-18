@@ -10,6 +10,7 @@ import {
 import journal from "./migrations/meta/_journal.json";
 import { useDb } from "@/database/client";
 import { db } from "$lib/store.svelte";
+import { nanoid } from "nanoid";
 
 export async function runMigrations() {
   const haveMigrationsTable = await useDb().get(
@@ -67,9 +68,9 @@ async function migrateDatasets() {
       for (const model of db.models.items.filter((m) => m.serviceId === service.id)) {
         console.log("migrating model", model);
         await tx.insert(modelTable).values({
-          id: model.id,
+          id: nanoid(10),
           serviceId: service.id,
-          name: model.name || "",
+          name: model.id,
           visible: model.visible ? 1 : 0,
         });
       }

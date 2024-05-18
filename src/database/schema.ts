@@ -1,5 +1,6 @@
-import { sqliteTable, text, int, primaryKey } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, int, primaryKey, index } from "drizzle-orm/sqlite-core";
 import { type InferSelectModel, relations } from "drizzle-orm";
+import { sql } from "drizzle-orm/sql";
 
 /**
  * Tables
@@ -11,33 +12,57 @@ export const documentTable = sqliteTable("document", {
   description: text("description").notNull(),
   content: text("content").notNull(),
   // data: text("data").notNull(),
+  createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const responseTable = sqliteTable("response", {
-  id: text("id").primaryKey(),
-  projectId: text("projectId").notNull(),
-  modelId: text("modelId").notNull(),
-  error: text("error"),
-});
+export const responseTable = sqliteTable(
+  "response",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("projectId")
+      .notNull()
+      .references(() => projectTable.id),
+    modelId: text("modelId")
+      .notNull()
+      .references(() => modelTable.id),
+    error: text("error"),
+    createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
+  },
+  (table) => ({
+    projectIdIdx: index("projectId_idx").on(table.projectId),
+  }),
+);
 
-export const responseMessageTable = sqliteTable("responseMessage", {
-  id: text("id").primaryKey(),
-  index: int("index").notNull(),
-  responseId: text("responseId").notNull(),
-  role: text("role").notNull(),
-  content: text("content").notNull(),
-});
+export const responseMessageTable = sqliteTable(
+  "responseMessage",
+  {
+    id: text("id").primaryKey(),
+    index: int("index").notNull(),
+    responseId: text("responseId")
+      .notNull()
+      .references(() => responseTable.id),
+    role: text("role").notNull(),
+    content: text("content").notNull(),
+    createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
+  },
+  (table) => ({
+    responseIdIdx: index("responseId_idx").on(table.responseId),
+  }),
+);
 
 export const modelTable = sqliteTable(
   "model",
   {
-    id: text("id").notNull(),
-    serviceId: text("serviceId").notNull(),
+    id: text("id").notNull().primaryKey(),
+    serviceId: text("serviceId")
+      .notNull()
+      .references(() => serviceTable.id),
     name: text("name").notNull(),
     visible: int("visible").notNull(),
+    createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.id, table.serviceId] }),
+    serviceIdx: index("serviceId_idx").on(table.serviceId),
   }),
 );
 
@@ -47,12 +72,14 @@ export const serviceTable = sqliteTable("service", {
   providerId: text("providerId").notNull(),
   baseURL: text("baseURL").notNull(),
   apiKey: text("apiKey").notNull(),
+  createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 export const projectTable = sqliteTable("project", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   prompt: text("prompt").notNull(),
+  createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 /**
