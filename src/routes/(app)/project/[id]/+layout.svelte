@@ -2,7 +2,6 @@
   import Header from "./Header.svelte";
   import EditorCard from "./EditorCard.svelte";
   import { Input } from "@/components/ui/input";
-  import ResponseCard from "./ResponseCard.svelte";
   import { updateProject } from "./$data";
   import _ from "lodash";
 
@@ -40,11 +39,7 @@
     <EditorCard bind:prompt project={data.project} {onChange} />
   </div>
   <div class="mr-1 space-y-2 overflow-y-auto pr-2 pt-1">
-    {#each data.project.responses.toReversed() as response (response.id)}
-      {@const model = response.model}
-      {@const service = model.service}
-      <ResponseCard {response} {service} initialMessages={response.messages} />
-    {/each}
+    <slot />
   </div>
 </div>
 <!--{:else}-->

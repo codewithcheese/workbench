@@ -8,21 +8,13 @@
   import { useChat } from "@/lib/use-chat";
   import { Badge } from "@/components/ui/badge";
   import { useDb } from "@/database/client";
-  import { asc, eq } from "drizzle-orm";
-  import {
-    projectTable,
-    type Response,
-    type ResponseMessage,
-    responseMessageTable,
-    responseTable,
-    type Service,
-  } from "@/database/schema";
-  import { toast } from "svelte-french-toast";
+  import { eq } from "drizzle-orm";
+  import { type ResponseMessage, responseTable, type Service } from "@/database/schema";
   import { store } from "@/lib/store.svelte";
-  import { invalidateAll } from "$app/navigation";
-  import { updateResponsePrompt } from "./$data";
+  import { updateResponsePrompt } from "../$data";
+  import { removeResponse, type ResponsesView, updateMessages } from "./$data";
 
-  export let response: Response;
+  export let response: ResponsesView[number];
   export let initialMessages: ResponseMessage[];
   export let service: Service;
 
@@ -32,10 +24,11 @@
   let format = "markdown";
 
   const { messages, reload, isLoading, stop, error } = useChat({
+    // @ts-expect-error createdAt type mismatch
     initialMessages: initialMessages as Message[],
     body: {
       providerId: service.providerId,
-      modelId: response.modelId,
+      modelId: response.model.name,
       baseURL: service.baseURL,
       apiKey: service.apiKey,
     },
@@ -64,55 +57,14 @@
     await reload();
   }
 
-  async function updateMessages() {
-    const currentMessages = await useDb().query.responseMessageTable.findMany({
-      where: eq(responseMessageTable.responseId, response.id),
-      orderBy: [asc(responseMessageTable.index)],
-    });
-    let index = 0;
-    await useDb().transaction(async (tx) => {
-      for (const newMessage of $messages) {
-        const currentMessage = currentMessages[index];
-        if (currentMessage && newMessage.id !== currentMessage.id) {
-          // update required
-          await tx.update(responseMessageTable).set({ ...newMessage, index });
-        } else if (!currentMessage) {
-          // new message
-          await tx
-            .insert(responseMessageTable)
-            .values({ ...newMessage, responseId: response.id, index });
-        }
-        index += 1;
-      }
-    });
-  }
-
-  async function removeResponse(response: Response) {
-    const db = useDb();
-    console.time("removeMessages");
-    // const deleteQuery = `
-    //   DELETE FROM responseMessage
-    //   WHERE responseId = '${response.id}'
-    // `;
-    // console.log("deleteQuery", deleteQuery);
-    // await useDb().run(sql.raw(deleteQuery));
-    await db.delete(responseMessageTable).where(eq(responseMessageTable.responseId, response.id));
-    console.timeEnd("removeMessages");
-
-    console.time("removeResponse");
-    await db.delete(responseTable).where(eq(responseTable.id, response.id));
-    console.timeEnd("removeResponse");
-
-    await invalidateAll();
-  }
-
   $: {
     if ($isLoading) {
       finalized = false;
     }
     if (!finalized && !$isLoading) {
       finalized = true;
-      updateMessages();
+      // @ts-expect-error messages type issue
+      updateMessages(response.id, $messages);
     }
   }
 
@@ -138,14 +90,14 @@
       <RefreshCwIcon onclick={refresh} size={16} class="text-gray-500 hover:bg-accent" />
     {/if}
 
-    <div class="pr-2 text-xs text-gray-500">{response.modelId}</div>
+    <div class="pr-2 text-xs text-gray-500">{response.model.name}</div>
     <div class="flex-1"></div>
     <Badge onclick={() => (format = "markdown")} variant="outline" class="hover:bg-gray-200"
       >Markdown</Badge
     >
     <Badge onclick={() => (format = "text")} variant="outline" class="hover:bg-gray-200">Text</Badge
     >
-    <XIcon class="text-gray-500" size={16} onclick={() => removeResponse(response)} />
+    <XIcon class="text-gray-500" size={16} onclick={() => removeResponse(response.id)} />
   </CardHeader>
   <CardContent class="p-6">
     {#if response.error}
