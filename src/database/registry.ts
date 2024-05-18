@@ -30,11 +30,11 @@ function registerModels(tableName: string, records: Model[], depends: DependsFn)
   }
 }
 
-export function register(table: Table, view: Model | Model[], depends: DependsFn) {
+export function registerModel(table: Table, view: Model | Model[], depends: DependsFn) {
   const tableName = getTableName(table);
   registerModels(tableName, Array.isArray(view) ? view : [view], depends);
 }
 
-export function invalidateModel(tableName: string, model: Model) {
-  return invalidate(`model:${tableName}:${model.id}`);
+export function invalidateModel(table: Table, model: Model) {
+  return invalidate(`model:${getTableName(table)}:${model.id}`);
 }

@@ -4,17 +4,6 @@ import { eq } from "drizzle-orm";
 
 type DependsFn = (...deps: `${string}:${string}`[]) => void;
 
-export type ServiceView = Service & { models: Model[] };
-
-export async function loadServiceView(route: { id: string }, depends: DependsFn) {
-  depends("view:services");
-  return useDb().query.serviceTable.findMany({
-    with: {
-      models: true,
-    },
-  });
-}
-
 export async function loadProjectView(id: string, route: { id: string }, depends: DependsFn) {
   const project = await useDb().query.projectTable.findFirst({
     where: eq(projectTable.id, id),

@@ -8,7 +8,7 @@ import {
   type ResponseMessage,
   type Service,
 } from "@/database/schema";
-import { register } from "@/database/registry";
+import { registerModel } from "@/database/registry";
 
 describe("cache", () => {
   it("should use relations to extract models", async () => {
@@ -64,7 +64,7 @@ describe("cache", () => {
       ],
     };
     const dependencies = new Set<string>();
-    register(projectTable, view, (...deps) => {
+    registerModel(projectTable, view, (...deps) => {
       deps.forEach((d) => dependencies.add(d));
     });
     expect(dependencies).toEqual(

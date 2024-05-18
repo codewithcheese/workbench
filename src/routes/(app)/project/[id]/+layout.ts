@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { projectTable, register, serviceTable, useDb } from "@/database";
+import { projectTable, registerModel, serviceTable, useDb } from "@/database";
 import { error } from "@sveltejs/kit";
 import { loadServices } from "./$data";
 
@@ -22,10 +22,10 @@ export async function load({ params, depends }) {
   if (!project) {
     return error(404, "Project not found");
   }
-  register(projectTable, project, depends);
+  registerModel(projectTable, project, depends);
 
   const services = await loadServices();
-  register(serviceTable, services, depends);
+  registerModel(serviceTable, services, depends);
 
   depends("view:project");
 

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "130126db-2efc-497c-a426-ddeccce51d1f",
+  "id": "e48d9370-c57b-4cce-95ab-c80a492bbe34",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "document": {
@@ -104,6 +104,14 @@
             "serviceId"
           ],
           "isUnique": false
+        },
+        "serviceName_unique": {
+          "name": "serviceName_unique",
+          "columns": [
+            "serviceId",
+            "name"
+          ],
+          "isUnique": true
         }
       },
       "foreignKeys": {

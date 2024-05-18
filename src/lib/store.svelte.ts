@@ -108,10 +108,6 @@ $effect.root(() => {
   });
 });
 
-export function removeDocument(document: Document) {
-  db.documents.remove(document.id);
-}
-
 export function isSelectedModelAvailable() {
   if (!store.selected.modelId) {
     // if nothing selected then consider it available

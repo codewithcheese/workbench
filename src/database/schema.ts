@@ -1,4 +1,4 @@
-import { sqliteTable, text, int, primaryKey, index } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, int, primaryKey, index, unique } from "drizzle-orm/sqlite-core";
 import { type InferSelectModel, relations } from "drizzle-orm";
 import { sql } from "drizzle-orm/sql";
 
@@ -62,6 +62,7 @@ export const modelTable = sqliteTable(
     createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
   },
   (table) => ({
+    serviceNameUnique: unique("serviceName_unique").on(table.serviceId, table.name),
     serviceIdx: index("serviceId_idx").on(table.serviceId),
   }),
 );

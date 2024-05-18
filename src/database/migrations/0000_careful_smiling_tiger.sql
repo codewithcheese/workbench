@@ -53,5 +53,6 @@ CREATE TABLE `service` (
 --> statement-breakpoint
 CREATE UNIQUE INDEX `document_name_unique` ON `document` (`name`);--> statement-breakpoint
 CREATE INDEX `serviceId_idx` ON `model` (`serviceId`);--> statement-breakpoint
+CREATE UNIQUE INDEX `serviceName_unique` ON `model` (`serviceId`,`name`);--> statement-breakpoint
 CREATE INDEX `responseId_idx` ON `responseMessage` (`responseId`);--> statement-breakpoint
 CREATE INDEX `projectId_idx` ON `response` (`projectId`);

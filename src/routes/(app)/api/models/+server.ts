@@ -54,7 +54,7 @@ async function fetchOpenAIModels(apiKey: string, baseURL = "https://api.openai.c
     });
   }
   const data = (await resp.json()) as { data: any[] };
-  return new Response(JSON.stringify(data.data), {
+  return new Response(JSON.stringify(data.data.map((m) => ({ ...m, name: m.id }))), {
     status: 200,
     headers: {
       "Content-Type": "application/json",
@@ -66,16 +66,13 @@ async function fetchAnthropicModels(apiKey: string, baseUrl = "https://api.anthr
   // does anthropic have a models endpoint?
   const models = [
     {
-      id: "claude-3-opus-20240229",
-      name: "Claude 3 Opus",
+      name: "claude-3-opus-20240229",
     },
     {
-      id: "claude-3-sonnet-20240229",
-      name: "Claude 3 Sonnet",
+      name: "claude-3-sonnet-20240229",
     },
     {
-      id: "claude-3-haiku-20240307",
-      name: "Claude 3 Haiku",
+      name: "claude-3-haiku-20240307",
     },
   ];
   return new Response(JSON.stringify(models), {
@@ -98,7 +95,7 @@ async function fetchMistralModels(apiKey: string, baseUrl = "https://api.mistral
     });
   }
   const data = (await resp.json()) as { data: any[] };
-  return new Response(JSON.stringify(data.data), {
+  return new Response(JSON.stringify(data.data.map((m) => ({ ...m, name: m.id }))), {
     status: 200,
     headers: {
       "Content-Type": "application/json",
@@ -121,8 +118,7 @@ async function fetchGoogleModels(
   return new Response(
     JSON.stringify(
       data.models.map((m: any) => ({
-        id: m.name,
-        name: m.displayName,
+        name: m.name,
       })),
     ),
     {

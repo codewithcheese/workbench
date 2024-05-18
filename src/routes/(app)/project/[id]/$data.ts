@@ -31,7 +31,7 @@ export async function updateProject(project: Project) {
     .where(eq(projectTable.id, project.id))
     .returning();
   console.log(result);
-  await invalidateModel("project", project);
+  await invalidateModel(projectTable, project);
 }
 
 export async function updateResponsePrompt(id: string) {
