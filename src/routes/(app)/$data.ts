@@ -1,5 +1,5 @@
 import { useDb } from "@/database/client";
-import { asc, eq, not } from "drizzle-orm";
+import { asc, desc, eq, not } from "drizzle-orm";
 import { projectTable, responseMessageTable, responseTable } from "@/database/schema";
 import { nanoid } from "nanoid";
 import { invalidate } from "$app/navigation";
@@ -26,6 +26,7 @@ export async function removeProject(id: string) {
   // find next project
   const nextProject = await useDb().query.projectTable.findFirst({
     where: not(eq(projectTable.id, id)),
+    orderBy: [desc(projectTable.createdAt)],
   });
   let nextId: string;
   if (nextProject) {
