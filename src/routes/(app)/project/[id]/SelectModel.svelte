@@ -11,6 +11,8 @@
   import { store } from "@/lib/store.svelte";
   import { providersById } from "@/lib/providers";
   import type { ServicesView } from "./$data";
+  import { modelTable, useDb } from "@/database";
+  import { asc, desc, eq } from "drizzle-orm";
 
   let { services }: { services: ServicesView } = $props();
 
@@ -26,11 +28,52 @@
       }, {}),
   );
 
+  $inspect(visibleModels);
+
   let selected = $derived(
     store.selected.modelId && modelsById[store.selected.modelId]
       ? { value: store.selected.modelId, label: modelsById[store.selected.modelId].name }
       : undefined,
   );
+
+  $effect(() => {
+    visibleModels;
+    (async () => {
+      // if selected model is not available then select next available model
+      if (!(await isSelectedModelAvailable())) {
+        await selectNextAvailableModel();
+      }
+      // if no model selected then select first available model
+      if (!store.selected.modelId) {
+        await selectNextAvailableModel();
+      }
+    })();
+  });
+
+  async function isSelectedModelAvailable() {
+    if (!store.selected.modelId) {
+      // if nothing selected then consider it available
+      return true;
+    }
+    const model = await useDb().query.modelTable.findFirst({
+      where: eq(modelTable.id, store.selected.modelId),
+    });
+    console.log("isSelectedModelAvailable", model, !!(model && model.visible));
+    return !!(model && model.visible);
+  }
+
+  async function selectNextAvailableModel() {
+    const model = await useDb().query.modelTable.findFirst({
+      where: eq(modelTable.visible, 1),
+      orderBy: asc(modelTable.createdAt),
+    });
+    console.log("selectNextAvailableModel", model);
+    if (!model) {
+      store.selected.modelId = null;
+    } else {
+      store.selected.modelId = model.id;
+    }
+  }
 
   $inspect(store.selected.modelId, selected);
 </script>

@@ -1,6 +1,7 @@
 import { Dataset } from "@/lib/dataset.svelte";
 import { nanoid } from "nanoid";
 
+// todo: remove these types and datasets once migration deployed
 export type Document = {
   id: string;
   name: string;
@@ -92,34 +93,3 @@ $effect.root(() => {
     localStorage.setItem("store", JSON.stringify(store));
   });
 });
-//
-// $effect.root(() => {
-//   $effect(() => {
-//     // if selected model is not available then select next available model
-//     if (!isSelectedModelAvailable()) {
-//       selectNextAvailableModel();
-//     }
-//     // if no model selected then select first available model
-//     if (!store.selected.modelId) {
-//       selectNextAvailableModel();
-//     }
-//   });
-// });
-//
-// export function isSelectedModelAvailable() {
-//   if (!store.selected.modelId) {
-//     // if nothing selected then consider it available
-//     return true;
-//   }
-//   const model = db.models.get(store.selected.modelId);
-//   return model?.visible;
-// }
-//
-// export function selectNextAvailableModel() {
-//   const model = db.models.items.find((m) => m.visible);
-//   if (!model) {
-//     store.selected.modelId = null;
-//   } else {
-//     store.selected.modelId = model.id;
-//   }
-// }
