@@ -28,8 +28,6 @@
       }, {}),
   );
 
-  $inspect(visibleModels);
-
   let selected = $derived(
     store.selected.modelId && modelsById[store.selected.modelId]
       ? { value: store.selected.modelId, label: modelsById[store.selected.modelId].name }
@@ -58,7 +56,6 @@
     const model = await useDb().query.modelTable.findFirst({
       where: eq(modelTable.id, store.selected.modelId),
     });
-    console.log("isSelectedModelAvailable", model, !!(model && model.visible));
     return !!(model && model.visible);
   }
 
@@ -67,15 +64,12 @@
       where: eq(modelTable.visible, 1),
       orderBy: asc(modelTable.createdAt),
     });
-    console.log("selectNextAvailableModel", model);
     if (!model) {
       store.selected.modelId = null;
     } else {
       store.selected.modelId = model.id;
     }
   }
-
-  $inspect(store.selected.modelId, selected);
 </script>
 
 <Select

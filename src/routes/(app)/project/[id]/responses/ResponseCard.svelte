@@ -24,21 +24,35 @@
   let finalized = true;
   let format = "markdown";
 
-  const { messages, reload, isLoading, stop, error } = useChat({
+  let body = {
+    providerId: service.providerId,
+    modelName: response.model.name,
+    baseURL: service.baseURL,
+    apiKey: service.apiKey,
+  };
+
+  $: body = {
+    providerId: service.providerId,
+    modelName: response.model.name,
+    baseURL: service.baseURL,
+    apiKey: service.apiKey,
+  };
+
+  let { messages, reload, isLoading, stop, error } = useChat({
     // @ts-expect-error createdAt type mismatch
-    initialMessages: initialMessages as Message[],
-    body: {
-      providerId: service.providerId,
-      modelName: response.model.name,
-      baseURL: service.baseURL,
-      apiKey: service.apiKey,
-    },
+    initialMessages,
+    body,
   });
+
+  $: ({ messages, reload, isLoading, stop, error } = useChat({
+    // @ts-expect-error createdAt type mismatch
+    initialMessages,
+    body,
+  }));
 
   $: content = $messages.find((m) => m.role === "assistant")?.content || "";
 
   const lastMessageIsAssistant = $messages.findLast((m) => m.role === "assistant");
-  console.log("lastMessageIsAssistant", lastMessageIsAssistant, response.error);
   if (!lastMessageIsAssistant && response.error == null) {
     refresh();
   }
@@ -53,8 +67,10 @@
       // update modelId in response if selected model is valid
       const model = await useDb().query.modelTable.findFirst({
         where: eq(modelTable.id, store.selected.modelId),
+        with: {
+          service: true,
+        },
       });
-      console.log("update model", model);
       if (model) {
         await useDb()
           .update(responseTable)

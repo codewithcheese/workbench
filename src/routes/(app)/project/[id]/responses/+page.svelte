@@ -2,7 +2,6 @@
   import ResponseCard from "./ResponseCard.svelte";
 
   let { data } = $props();
-  $inspect(data);
 </script>
 
 {#each data.responses.toReversed() as response (response.id)}

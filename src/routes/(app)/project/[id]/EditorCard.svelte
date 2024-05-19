@@ -85,7 +85,6 @@
         const docStr = state.doc.toString();
         while ((match = re.exec(docStr)) !== null) {
           // check if document exists
-          console.log("match", match);
           const name = match![0].slice(2);
           const exists = await useDb().query.documentTable.findFirst({
             where: eq(documentTable.name, name),
@@ -119,7 +118,6 @@
 
   const documentCompletion: CompletionSource = async (context) => {
     const word = context.matchBefore(/\[\[([^\]]|](?!]))*/);
-    console.log("word", word, context);
     if (word && word.from < word.to) {
       const docs = await useDb().query.documentTable.findMany({
         where: like(documentTable.name, `${word.text.slice(2)}%`),
@@ -127,7 +125,6 @@
       const mentions = docs.map((d) => ({ label: d.name, type: "document" }));
       return {
         from: word.from + 2,
-
         options: mentions.map((mention) => ({
           label: mention.label,
           apply: `${mention.label}`,
