@@ -16,9 +16,10 @@
   import type { CompletionSource } from "@codemirror/autocomplete";
   import { Decoration } from "@codemirror/view";
   import { goto } from "$app/navigation";
-  import type { Project } from "@/database";
+  import { documentTable, type Project, useDb } from "@/database";
   import { submitPrompt } from "./$data";
   import { store } from "$lib/store.svelte";
+  import { eq, like } from "drizzle-orm";
 
   type Props = {
     project: Project;
@@ -26,6 +27,8 @@
     onChange: () => void;
   };
   let { project, prompt = $bindable(""), onChange }: Props = $props();
+
+  let docMentionRegex = /\[\[([^\]]|](?!]))*/g;
 
   class DocumentLinkWidget extends WidgetType {
     constructor(public id: string) {
@@ -62,38 +65,42 @@
   const documentHighlighter = ViewPlugin.fromClass(
     class {
       view: EditorView;
-      decorations: DecorationSet;
+      decorations: DecorationSet = new RangeSetBuilder<Decoration>().finish();
 
       constructor(view: EditorView) {
         this.view = view;
-        this.decorations = this.buildDecorations(view.state);
+        this.buildDecorations(view.state);
       }
       destroy() {}
       update(update: ViewUpdate) {
         if (update.docChanged) {
-          this.decorations = this.buildDecorations(update.state);
+          this.buildDecorations(update.state);
         }
       }
 
-      buildDecorations(state: EditorState): DecorationSet {
+      async buildDecorations(state: EditorState) {
         let builder = new RangeSetBuilder<Decoration>();
-        const re = /\[\[([\w\s]+)]]/g;
+        const re = docMentionRegex;
         let match: RegExpExecArray | null;
         const docStr = state.doc.toString();
         while ((match = re.exec(docStr)) !== null) {
           // check if document exists
-          const name = match![1];
-          const exists = db.documents.items.find((d) => d.name === match![1]);
+          console.log("match", match);
+          const name = match![0].slice(2);
+          const exists = await useDb().query.documentTable.findFirst({
+            where: eq(documentTable.name, name),
+          });
+          // const exists = db.documents.items.find((d) => d.name === match![1]);
           builder.add(
             match.index,
-            match.index + match[0].length,
+            match.index + match[0].length + 2,
             Decoration.mark({
               attributes: { class: exists ? "document-mention" : "document-missing" },
             }),
           );
           builder.add(
-            match.index + match[0].length,
-            match.index + match[0].length,
+            match.index + match[0].length + 2,
+            match.index + match[0].length + 2,
             Decoration.widget({
               widget: exists ? new DocumentLinkWidget(exists.id) : new DocumentCreateWidget(name),
               side: 1, // Render after the text
@@ -102,7 +109,7 @@
             }),
           );
         }
-        return builder.finish();
+        this.decorations = builder.finish();
       }
     },
     {
@@ -110,12 +117,17 @@
     },
   );
 
-  const documentCompletion: CompletionSource = (context) => {
+  const documentCompletion: CompletionSource = async (context) => {
     const word = context.matchBefore(/\[\[([^\]]|](?!]))*/);
+    console.log("word", word, context);
     if (word && word.from < word.to) {
-      const mentions = db.documents.items.map((d) => ({ label: d.name, type: "document" }));
+      const docs = await useDb().query.documentTable.findMany({
+        where: like(documentTable.name, `${word.text.slice(2)}%`),
+      });
+      const mentions = docs.map((d) => ({ label: d.name, type: "document" }));
       return {
         from: word.from + 2,
+
         options: mentions.map((mention) => ({
           label: mention.label,
           apply: `${mention.label}`,
