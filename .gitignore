@@ -12,3 +12,8 @@ vite.config.ts.timestamp-*
 # wrangler files
 .wrangler
 .dev.vars
+
+# testing
+/test-results
+
+workbench.db
