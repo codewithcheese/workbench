@@ -1,3 +1,3 @@
-<div class="flex h-screen flex-col">
+<div class="flex h-screen flex-col overflow-y-auto">
   <slot></slot>
 </div>

@@ -7,7 +7,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest-setup.ts"],
     browser: {
-      enabled: false,
+      enabled: true,
       headless: true,
       name: "chrome",
     },
