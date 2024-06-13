@@ -38,12 +38,13 @@
   />
   <EditorCard bind:prompt project={data.project} {onChange} />
 </div>
-{#each data.responses.toReversed() as response (response.id)}
-  {@const model = response.model}
-  {@const service = model.service}
-  <ResponseCard {response} {service} initialMessages={response.messages} />
-{/each}
-
+<div class="flex flex-col gap-3 pt-1">
+  {#each data.responses.toReversed() as response (response.id)}
+    {@const model = response.model}
+    {@const service = model.service}
+    <ResponseCard {response} {service} initialMessages={response.messages} />
+  {/each}
+</div>
 <!--{:else}-->
 <!--  <Splash>-->
 <!--    <p>Configure your AI accounts to start building.</p>-->
