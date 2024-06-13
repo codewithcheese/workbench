@@ -25,7 +25,7 @@
     <TabsList>
       <TabsTrigger value="revise">Revise</TabsTrigger>
       <!--      <TabsTrigger value="chat">Chat</TabsTrigger>-->
-      <TabsTrigger value="eval">Eval</TabsTrigger>
+      <!--      <TabsTrigger value="eval">Eval</TabsTrigger>-->
     </TabsList>
   </Tabs>
   <!--  <Sheet />-->
