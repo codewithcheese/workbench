@@ -6,18 +6,6 @@ import { loadServices } from "./$data";
 export async function load({ params, depends }) {
   const project = await useDb().query.projectTable.findFirst({
     where: eq(projectTable.id, params.id),
-    with: {
-      responses: {
-        with: {
-          messages: true,
-          model: {
-            with: {
-              service: true,
-            },
-          },
-        },
-      },
-    },
   });
   if (!project) {
     return error(404, "Project not found");

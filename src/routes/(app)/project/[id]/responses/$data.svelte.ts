@@ -53,6 +53,7 @@ export async function updateMessages(responseId: string, newMessages: Message[])
       index += 1;
     }
   });
+  await invalidate("view:responses");
 }
 
 export async function removeResponse(responseId: string) {

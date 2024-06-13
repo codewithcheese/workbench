@@ -57,10 +57,6 @@
     refresh();
   }
 
-  // $: console.log("content", content);
-  // $: console.log("id", response.id, JSON.stringify(response));
-  // $: console.log("isLoading", $isLoading);
-
   async function refresh() {
     await updateResponsePrompt(response.id);
     if (store.selected.modelId && store.selected.modelId !== response.modelId) {
