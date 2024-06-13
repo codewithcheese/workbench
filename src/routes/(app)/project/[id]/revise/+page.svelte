@@ -5,8 +5,6 @@
   import ResponseCard from "./ResponseCard.svelte";
 
   let { data } = $props();
-  let services = $derived(data.services);
-  let project = $derived(data.project);
 
   // problem: cannot use project.prompt directly since codemirror resets cursor position when prompt signal changes
   // solution: consistent prompt signal for codemirror.
@@ -14,7 +12,9 @@
 
   // update prompt when project changes, cannot bind to derived state
   $effect(() => {
-    prompt = data.project.prompt;
+    if (data.project.prompt !== prompt) {
+      prompt = data.project.prompt;
+    }
   });
 
   // const update = _.debounce(updateProject, 100);
