@@ -3,6 +3,8 @@
   import { Input } from "@/components/ui/input";
   import { updateProject } from "../$data";
   import ResponseCard from "./ResponseCard.svelte";
+  import { untrack } from "svelte";
+  import { page } from "$app/stores";
 
   let { data } = $props();
 
@@ -10,11 +12,12 @@
   // solution: consistent prompt signal for codemirror.
   let prompt = $state(data.project.prompt);
 
-  // update prompt when project changes, cannot bind to derived state
   $effect(() => {
-    if (data.project.prompt !== prompt) {
+    // update prompt from data when route changes
+    $page.params.id;
+    untrack(() => {
       prompt = data.project.prompt;
-    }
+    });
   });
 
   // const update = _.debounce(updateProject, 100);
