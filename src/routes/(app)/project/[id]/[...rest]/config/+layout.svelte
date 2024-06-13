@@ -6,10 +6,10 @@
 </script>
 
 <Dialog
-  open="true"
+  open={true}
   onOpenChange={(isOpen) => {
     if (!isOpen) {
-      goto(`/project/${$page.params.id}`);
+      goto(`/project/${$page.params.id}/revise`);
     }
   }}
 >

@@ -17,7 +17,7 @@
   import { Decoration } from "@codemirror/view";
   import { goto } from "$app/navigation";
   import { documentTable, type Project, useDb } from "@/database";
-  import { submitPrompt } from "./$data";
+  import { submitPrompt } from "../$data";
   import { store } from "$lib/store.svelte";
   import { eq, like } from "drizzle-orm";
 
