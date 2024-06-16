@@ -58,14 +58,6 @@ export async function updateService(service: Service) {
   await invalidateModel(serviceTable, service);
 }
 
-export async function updateModels(service: Service) {
-  await useDb().query.modelTable.findMany({
-    where: eq(modelTable.serviceId, service.id),
-    orderBy: [asc(modelTable.id)],
-  });
-  await invalidateModel(serviceTable, service);
-}
-
 export async function replaceModels(service: Service, newModels: any[]) {
   console.time("replaceModels");
   await useDb().transaction(async (tx) => {
