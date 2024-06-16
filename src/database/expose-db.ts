@@ -1,4 +1,4 @@
-import { useDb } from "@/database/client";
+import { useDb, useDbFile } from "@/database/client";
 import { sql } from "drizzle-orm/sql";
 import { exportDb } from "@/database/export-db";
 
@@ -32,4 +32,23 @@ export function exposeDb() {
   };
   // @ts-expect-error
   window.db_download = exportDb;
+  // @ts-expect-error
+  window.db_overwrite = function () {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".db";
+    input.onchange = async function (e: any) {
+      console.log("overwrite", e);
+      if (!e.target) {
+        return;
+      }
+      const file = e.target.files[0];
+      if (!file) {
+        return;
+      }
+      const { overwriteDatabaseFile } = useDbFile();
+      await overwriteDatabaseFile(file);
+    };
+    document.body.appendChild(input);
+  };
 }

@@ -40,8 +40,7 @@
 </div>
 <div class="flex flex-col gap-3 pt-1">
   {#each data.responses.toReversed() as response (response.id)}
-    {@const model = response.model}
-    {@const service = model.service}
+    {@const service = response.model?.service}
     <ResponseCard {response} {service} initialMessages={response.messages} />
   {/each}
 </div>

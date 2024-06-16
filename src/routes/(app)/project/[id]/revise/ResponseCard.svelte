@@ -8,16 +8,23 @@
   import { Badge } from "@/components/ui/badge";
   import { useDb } from "@/database/client";
   import { eq } from "drizzle-orm";
-  import { modelTable, type ResponseMessage, responseTable, type Service } from "@/database/schema";
+  import {
+    type Model,
+    modelTable,
+    type ResponseMessage,
+    responseTable,
+    type Service,
+  } from "@/database/schema";
   import { store } from "@/lib/store.svelte";
   import { updateResponsePrompt } from "../$data";
   import { removeResponse, type ResponsesView, updateMessages } from "./$data.svelte";
   import { invalidateModel } from "@/database";
   import MessageMarkdown from "./MessageMarkdown.svelte";
+  import { toast } from "svelte-french-toast";
 
-  export let response: ResponsesView[number];
+  export let response: ResponsesView[number] & { model: Model | null };
   export let initialMessages: ResponseMessage[];
-  export let service: Service;
+  export let service: Service | null;
 
   // when loading messages mark finalized as false
   // when loading complete update messages and set finalized to true
@@ -25,17 +32,17 @@
   let format = "markdown";
 
   let body = {
-    providerId: service.providerId,
-    modelName: response.model.name,
-    baseURL: service.baseURL,
-    apiKey: service.apiKey,
+    providerId: service?.providerId,
+    modelName: response.model?.name,
+    baseURL: service?.baseURL,
+    apiKey: service?.apiKey,
   };
 
   $: body = {
-    providerId: service.providerId,
-    modelName: response.model.name,
-    baseURL: service.baseURL,
-    apiKey: service.apiKey,
+    providerId: service?.providerId,
+    modelName: response.model?.name,
+    baseURL: service?.baseURL,
+    apiKey: service?.apiKey,
   };
 
   let { messages, reload, isLoading, stop, error } = useChat({
@@ -93,7 +100,7 @@
   // set error when response is not ok
   $: {
     if ($error) {
-      response.error = $error.message;
+      toast.error($error.message);
     } else {
       response.error = null;
     }
@@ -116,7 +123,7 @@
       />
     {/if}
 
-    <div class="pr-2 text-xs text-gray-500">{response.model.name}</div>
+    <div class="pr-2 text-xs text-gray-500">{response.model?.name || "deleted"}</div>
     <div class="flex-1"></div>
     <Badge onclick={() => (format = "markdown")} variant="outline" class="hover:bg-gray-200"
       >Markdown</Badge
