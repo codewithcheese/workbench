@@ -1,7 +1,8 @@
 import { useDb } from "@/database/client";
 import { sql } from "drizzle-orm/sql";
+import { exportDb } from "@/database/export-db";
 
-export async function exposeDb() {
+export function exposeDb() {
   const db = useDb();
   // @ts-expect-error
   window.db = db;
@@ -29,4 +30,6 @@ export async function exposeDb() {
       console.log(record[0], count);
     }
   };
+  // @ts-expect-error
+  window.db_download = exportDb;
 }
