@@ -84,9 +84,8 @@ export async function replaceModels(service: Service, newModels: any[]) {
       await tx
         .insert(modelTable)
         .values({ id: nanoid(10), name: model.name, visible: 1, serviceId: service.id })
-        .onConflictDoUpdate({
+        .onConflictDoNothing({
           target: [modelTable.name, modelTable.serviceId],
-          set: model,
         });
     }
   });
