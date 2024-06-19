@@ -16,6 +16,7 @@
     // update prompt from data when route changes
     $page.params.id;
     untrack(() => {
+      console.log("updating prompt", $page.params.id);
       prompt = data.project.prompt;
     });
   });
