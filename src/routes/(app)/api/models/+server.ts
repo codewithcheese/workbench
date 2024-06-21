@@ -74,6 +74,9 @@ async function fetchAnthropicModels(apiKey: string, baseUrl = "https://api.anthr
     {
       name: "claude-3-haiku-20240307",
     },
+    {
+      name: "claude-3-5-sonnet-20240620",
+    },
   ];
   return new Response(JSON.stringify(models), {
     status: 200,
