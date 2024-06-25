@@ -11,10 +11,11 @@
   // problem: cannot use project.prompt directly since codemirror resets cursor position when prompt signal changes
   // solution: consistent prompt signal for codemirror.
   let prompt = $state(data.project.prompt);
+  let id = $derived($page.params.id);
 
   $effect(() => {
     // update prompt from data when route changes
-    $page.params.id;
+    id;
     untrack(() => {
       console.log("updating prompt", $page.params.id);
       prompt = data.project.prompt;
