@@ -1,7 +1,5 @@
-<svelte:options runes={false} />
-
 <script lang="ts">
-  import { type Message, useChat } from "ai/svelte";
+  import { useChat } from "$lib/use-chat.svelte";
   import { LoaderCircleIcon, RefreshCwIcon, XIcon } from "lucide-svelte";
   import { Card, CardContent, CardHeader } from "@/components/ui/card";
   import { Label } from "@/components/ui/label";
@@ -21,48 +19,70 @@
   import { invalidateModel } from "@/database";
   import MessageMarkdown from "./MessageMarkdown.svelte";
   import { toast } from "svelte-french-toast";
+  import { untrack } from "svelte";
 
-  export let response: ResponsesView[number] & { model: Model | null };
-  export let initialMessages: ResponseMessage[];
-  export let service: Service | null;
+  type Props = {
+    response: ResponsesView[number] & { model: Model | null };
+    initialMessages: ResponseMessage[];
+    service: Service | null;
+  };
+  let { response, initialMessages, service }: Props = $props();
 
-  // when loading messages mark finalized as false
-  // when loading complete update messages and set finalized to true
-  let finalized = true;
-  let format = "markdown";
-
-  let body = {
+  let format = $state("markdown");
+  let id = $derived(response.id);
+  let done = $state(false);
+  let body = $state({
     providerId: service?.providerId,
     modelName: response.model?.name,
     baseURL: service?.baseURL,
     apiKey: service?.apiKey,
-  };
-
-  $: body = {
-    providerId: service?.providerId,
-    modelName: response.model?.name,
-    baseURL: service?.baseURL,
-    apiKey: service?.apiKey,
-  };
-
-  let { messages, reload, isLoading, stop, error } = useChat({
-    // @ts-expect-error createdAt type mismatch
-    initialMessages,
-    body,
   });
 
-  $: ({ messages, reload, isLoading, stop, error } = useChat({
+  $effect(() => {
+    Object.assign(body, {
+      providerId: service?.providerId,
+      modelName: response.model?.name,
+      baseURL: service?.baseURL,
+      apiKey: service?.apiKey,
+    });
+  });
+
+  let chat = useChat({
     // @ts-expect-error createdAt type mismatch
     initialMessages,
     body,
-  }));
+    onError: (e) => {
+      console.log("onError", e);
+      toast.error(e.message);
+    },
+    onFinish: (message) => {
+      console.log("onFinish", chat.messages, message);
+      updateMessages(response.id, chat.messages);
+    },
+  });
 
-  $: content = $messages.find((m) => m.role === "assistant")?.content || "";
+  let content = $derived(chat.messages.find((m) => m.role === "assistant")?.content || "");
+  let lastMessageIsAssistant = $derived(chat.messages.findLast((m) => m.role === "assistant"));
 
-  const lastMessageIsAssistant = $messages.findLast((m) => m.role === "assistant");
-  if (!lastMessageIsAssistant && response.error == null) {
-    refresh();
-  }
+  // reset done when id changes
+  $effect(() => {
+    id;
+    untrack(() => {
+      // reset done when id changes
+      done = false;
+    });
+  });
+
+  // request a chat response on first load if last message is not assistant
+  $effect(() => {
+    if (!lastMessageIsAssistant && response.error == null && !done) {
+      done = true;
+      untrack(() => {
+        console.log("refreshing");
+        chat.reload();
+      });
+    }
+  });
 
   async function refresh() {
     await updateResponsePrompt(response.id);
@@ -83,33 +103,14 @@
     }
     await invalidateModel(responseTable, response);
     // @ts-expect-error hack to update messages
-    $messages = initialMessages;
-    await reload();
-  }
-
-  $: {
-    if ($isLoading) {
-      finalized = false;
-    }
-    if (!finalized && !$isLoading) {
-      finalized = true;
-      updateMessages(response.id, $messages);
-    }
-  }
-
-  // set error when response is not ok
-  $: {
-    if ($error) {
-      toast.error($error.message);
-    } else {
-      response.error = null;
-    }
+    chat.messages = initialMessages;
+    await chat.reload();
   }
 </script>
 
 <Card>
   <CardHeader class="flex flex-row space-x-2 space-y-0 bg-muted/50 p-2">
-    {#if $isLoading}
+    {#if chat.isLoading}
       <LoaderCircleIcon
         onclick={stop}
         size={16}
