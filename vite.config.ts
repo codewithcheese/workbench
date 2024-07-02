@@ -6,11 +6,11 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest-setup.ts"],
-    browser: {
-      enabled: true,
-      headless: true,
-      name: "chrome",
-    },
+    // browser: {
+    //   enabled: true,
+    //   headless: true,
+    //   name: "chrome",
+    // },
     alias: {
       "@testing-library/svelte": "@testing-library/svelte/svelte5",
     },
