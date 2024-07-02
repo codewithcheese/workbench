@@ -20,6 +20,7 @@
   import MessageMarkdown from "./MessageMarkdown.svelte";
   import { toast } from "svelte-french-toast";
   import { untrack } from "svelte";
+  import { Button } from "@/components/ui/button";
 
   type Props = {
     response: ResponsesView[number] & { model: Model | null };
@@ -109,19 +110,30 @@
 </script>
 
 <Card>
-  <CardHeader class="flex flex-row space-x-2 space-y-0 bg-muted/50 p-2">
+  <CardHeader class="flex flex-row items-center space-x-2 space-y-0 bg-muted/50 p-2">
     {#if chat.isLoading}
-      <LoaderCircleIcon
-        onclick={stop}
-        size={16}
-        class="loading-icon cursor-pointer text-gray-500 hover:bg-accent"
-      />
+      <Button
+        name="stop"
+        onclick={() => chat.stop()}
+        variant="ghost"
+        class="h-6 w-6 p-1 text-gray-500"
+      >
+        <LoaderCircleIcon class="loading-icon" />
+      </Button>
     {:else}
-      <RefreshCwIcon
+      <Button
+        aria-label="refresh"
         onclick={refresh}
-        size={16}
-        class="cursor-pointer text-gray-500 hover:bg-accent"
-      />
+        variant="ghost"
+        class="h-6 w-6 p-1 text-gray-500"
+      >
+        <RefreshCwIcon />
+      </Button>
+      <!--      <RefreshCwIcon-->
+      <!--        onclick={refresh}-->
+      <!--        size={16}-->
+      <!--        class="cursor-pointer text-gray-500 hover:bg-accent"-->
+      <!--      />-->
     {/if}
 
     <div class="pr-2 text-xs text-gray-500">{response.model?.name || "deleted"}</div>
