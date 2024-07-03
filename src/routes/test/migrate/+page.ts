@@ -1,4 +1,4 @@
-import { exposeDb } from "@/database/expose-db";
+import { exposeDb } from "@/database";
 
 export async function load({ depends }) {
   try {

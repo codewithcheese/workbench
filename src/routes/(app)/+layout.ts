@@ -1,7 +1,6 @@
 import "../../app.css";
 import "@fontsource-variable/inter";
-import { projectTable, registerModel, useDb } from "@/database";
-import { exposeDb } from "@/database/expose-db";
+import { exposeDb, projectTable, registerModel, useDb } from "@/database";
 
 export const ssr = false;
 let migrated = false;
