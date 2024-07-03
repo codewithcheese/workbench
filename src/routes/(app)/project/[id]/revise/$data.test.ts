@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadResponses, removeResponse } from "./$data";
+import { loadResponses, removeResponse, updateMessages } from "./$data";
 import Database from "better-sqlite3";
 import { type BetterSQLite3Database, drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "@/database/schema";
@@ -86,6 +86,28 @@ describe("loadResponses", () => {
   it("should return an empty array if no responses are found", async () => {
     const responses = await loadResponses("nonexistent");
     expect(responses).toHaveLength(0);
+  });
+});
+
+describe("updateMessages", () => {
+  it("should update existing messages and add new ones", async () => {
+    const newMessages = [
+      { id: "message1", role: "user", content: "Hello", createdAt: new Date() },
+      { id: "new-message2", role: "assistant", content: "Updated Hi there", createdAt: new Date() },
+    ];
+
+    // @ts-expect-error message type mismatch
+    await updateMessages("response1", newMessages);
+
+    const updatedMessages = await db.query.responseMessageTable.findMany({
+      where: eq(schema.responseMessageTable.responseId, "response1"),
+      orderBy: [schema.responseMessageTable.index],
+    });
+
+    expect(updatedMessages).toHaveLength(2);
+    expect(updatedMessages[0].content).toBe("Hello");
+    expect(updatedMessages[1].content).toBe("Updated Hi there");
+    expect(invalidate).toHaveBeenCalledWith("view:responses");
   });
 });
 

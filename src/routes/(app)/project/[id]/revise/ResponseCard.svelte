@@ -58,7 +58,7 @@
     },
     onFinish: (message) => {
       console.log("onFinish", chat.messages, message);
-      updateMessages(response.id, chat.messages);
+      updateMessages(response.id, $state.snapshot(chat.messages));
     },
   });
 

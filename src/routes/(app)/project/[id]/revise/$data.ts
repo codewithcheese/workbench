@@ -20,12 +20,6 @@ export function loadResponses(projectId: string) {
 }
 
 export async function updateMessages(responseId: string, newMessages: Message[]) {
-  console.log(
-    "updateMessages",
-    responseId,
-    newMessages.map((m) => $state.snapshot(m)),
-  );
-  newMessages = newMessages.map((m) => $state.snapshot(m));
   const currentMessages = await useDb().query.responseMessageTable.findMany({
     where: eq(responseMessageTable.responseId, responseId),
     orderBy: [asc(responseMessageTable.index)],

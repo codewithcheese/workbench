@@ -36,9 +36,6 @@ beforeEach(async () => {
   // Mock the useDb function and other imports
   vi.mock("@/database/client", () => ({
     useDb: vi.fn(() => db),
-    // invalidateModel: vi.fn(),
-    // modelTable: schema.modelTable,
-    // serviceTable: schema.serviceTable,
   }));
 
   await runMigrations(true);
