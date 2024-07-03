@@ -15,17 +15,14 @@ export async function newProject() {
   return id;
 }
 
-export async function removeProject(id: string) {
+export async function removeProject(projectId: string) {
   // remove responses
-  await useDb().transaction(async (tx) => {
-    await tx.delete(responseMessageTable).where(eq(responseMessageTable.responseId, id));
-    await tx.delete(responseTable).where(eq(responseTable.id, id));
-  });
+  await useDb().delete(responseTable).where(eq(responseTable.projectId, projectId));
   // delete project
-  await useDb().delete(projectTable).where(eq(projectTable.id, id));
+  await useDb().delete(projectTable).where(eq(projectTable.id, projectId));
   // find next project
   const nextProject = await useDb().query.projectTable.findFirst({
-    where: not(eq(projectTable.id, id)),
+    where: not(eq(projectTable.id, projectId)),
     orderBy: [desc(projectTable.createdAt)],
   });
   let nextId: string;
@@ -64,20 +61,20 @@ export async function duplicateProject(id: string) {
       prompt: project.prompt,
     });
     for (const response of project.responses) {
-      const id = nanoid(10);
+      const responseId = nanoid(10);
       await tx.insert(responseTable).values({
-        id,
+        id: responseId,
         projectId: newId,
         modelId: response.modelId,
         error: null,
       });
       let index = 0;
       for (const message of response.messages) {
-        const id = nanoid(10);
+        const responseMessageId = nanoid(10);
         await tx.insert(responseMessageTable).values({
-          id,
+          id: responseMessageId,
           index,
-          responseId: id,
+          responseId: responseId,
           role: message.role,
           content: message.content,
         });

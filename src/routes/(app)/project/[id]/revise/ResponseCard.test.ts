@@ -1,7 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-// @ts-expect-error unknown issue with path resolution
-import ResponseCard from "../src/routes/(app)/project/[id]/revise/ResponseCard.svelte";
+import ResponseCard from "./ResponseCard.svelte";
 import { useDb } from "@/database/client";
 import { useChat } from "$lib/use-chat.svelte";
 
@@ -75,8 +74,11 @@ describe("ResponseCard", () => {
 
   it("renders the component with initial messages", () => {
     render(ResponseCard, {
+      // @ts-expect-error partial mock
       response: mockResponse,
+      // @ts-expect-error partial mock
       initialMessages: mockInitialMessages,
+      // @ts-expect-error partial mock
       service: mockService,
     });
 
@@ -86,8 +88,11 @@ describe("ResponseCard", () => {
 
   it("switches between markdown and text format", async () => {
     render(ResponseCard, {
+      // @ts-expect-error partial mock
       response: mockResponse,
+      // @ts-expect-error partial mock
       initialMessages: mockInitialMessages,
+      // @ts-expect-error partial mock
       service: mockService,
     });
 
@@ -104,8 +109,11 @@ describe("ResponseCard", () => {
 
   it.skip("handles refresh action", async () => {
     render(ResponseCard, {
+      // @ts-expect-error partial mock
       response: mockResponse,
+      // @ts-expect-error partial mock
       initialMessages: mockInitialMessages,
+      // @ts-expect-error partial mock
       service: mockService,
     });
 
@@ -122,8 +130,11 @@ describe("ResponseCard", () => {
   it("displays error message when present", () => {
     const errorResponse = { ...mockResponse, error: "Test error message" };
     render(ResponseCard, {
+      // @ts-expect-error partial mock
       response: errorResponse,
+      // @ts-expect-error partial mock
       initialMessages: mockInitialMessages,
+      // @ts-expect-error partial mock
       service: mockService,
     });
 

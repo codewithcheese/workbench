@@ -70,7 +70,7 @@ importers:
         version: 0.21.2
       drizzle-orm:
         specifier: ^0.30.10
-        version: 0.30.10(@cloudflare/workers-types@4.20240502.0)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)
+        version: 0.30.10(@cloudflare/workers-types@4.20240502.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3)
       filepond:
         specifier: ^4.31.1
         version: 4.31.1
@@ -100,7 +100,7 @@ importers:
         version: 5.0.7
       sqlocal:
         specifier: ^0.9.0
-        version: 0.9.0(drizzle-orm@0.30.10(@cloudflare/workers-types@4.20240502.0)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1))(kysely@0.27.3)
+        version: 0.9.0(drizzle-orm@0.30.10(@cloudflare/workers-types@4.20240502.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3))(kysely@0.27.3)
       svelte-codemirror-editor:
         specifier: ^1.3.0
         version: 1.3.0(codemirror@6.0.1(@lezer/common@1.2.1))(svelte@5.0.0-next.123)
@@ -156,6 +156,9 @@ importers:
       '@testing-library/svelte':
         specifier: ^5.2.0
         version: 5.2.0(svelte@5.0.0-next.123)(vite@5.2.11(@types/node@20.14.9))(vitest@1.6.0(@types/node@20.14.9)(@vitest/browser@1.6.0)(@vitest/ui@1.6.0)(jsdom@24.0.0))
+      '@types/better-sqlite3':
+        specifier: ^7.6.11
+        version: 7.6.11
       '@vitest/ui':
         specifier: ^1.6.0
         version: 1.6.0(vitest@1.6.0)
@@ -1395,11 +1398,17 @@ packages:
   '@types/aria-query@5.0.4':
     resolution: {integrity: sha512-rfT93uj5s0PRL7EzccGMs3brplhcrghnDoV26NqKhCAS1hVo+WdNsPvE/yb6ilfr5hi2MEk6d5EWJTKdxg8jVw==}
 
+  '@types/better-sqlite3@7.6.11':
+    resolution: {integrity: sha512-i8KcD3PgGtGBLl3+mMYA8PdKkButvPyARxA7IQAd6qeslht13qxb1zzO8dRCtE7U3IoJS782zDBAeoKiM695kg==}
+
   '@types/cookie@0.6.0':
     resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
 
   '@types/diff-match-patch@1.0.36':
     resolution: {integrity: sha512-xFdR6tkm0MWvBfO8xXCSsinYxHcqkQUlcHeSpMC2ukzOb6lwQAfDmW+Qt0AvlGd8HpsS28qKsB+oPeJn9I39jg==}
+
+  '@types/emscripten@1.39.13':
+    resolution: {integrity: sha512-cFq+fO/isvhvmuP/+Sl4K4jtU6E23DoivtbO4r50e3odaxAiVdbfSYRDdJ4gCdxx+3aRjhphS5ZMwIH4hFy/Cw==}
 
   '@types/estree@1.0.5':
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
@@ -1427,6 +1436,9 @@ packages:
 
   '@types/pug@2.0.10':
     resolution: {integrity: sha512-Sk/uYFOBAB7mb74XcpizmH0KOR2Pv3D2Hmrh1Dmy5BmK3MpdSa5kqZcg6EKBdklU0bFXX9gCfzvpnyUehrPIuA==}
+
+  '@types/sql.js@1.4.9':
+    resolution: {integrity: sha512-ep8b36RKHlgWPqjNG9ToUrPiwkhwh0AEzy883mO5Xnd+cL6VBH1EvSjBAAuxLUFF2Vn/moE3Me6v9E1Lo+48GQ==}
 
   '@types/statuses@2.0.5':
     resolution: {integrity: sha512-jmIUGWrAiwu3dZpxntxieC+1n/5c3mjrImkmOSQ2NC5uP6cYO4aAZDdSmRcI5C1oiTmqlZGHC+/NmJrKogbP5A==}
@@ -3478,6 +3490,9 @@ packages:
   sprintf-js@1.1.3:
     resolution: {integrity: sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA==}
 
+  sql.js@1.10.3:
+    resolution: {integrity: sha512-H46aWtQkdyjZwFQgraUruy5h/DyJBbAK3EA/WEMqiqF6PGPfKBSKBj/er3dVyYqVIoYfRf5TFM/loEjtQIrqJg==}
+
   sqlocal@0.9.0:
     resolution: {integrity: sha512-/NiXQFa2+H5zkKr06SkIwjeItz5+GJerZh/rGjiT+X21k/J/29HeYd6a++iIeOtZHBd4qI4eSi8iOYq+yNk1YQ==}
     peerDependencies:
@@ -5217,9 +5232,16 @@ snapshots:
 
   '@types/aria-query@5.0.4': {}
 
+  '@types/better-sqlite3@7.6.11':
+    dependencies:
+      '@types/node': 20.14.9
+
   '@types/cookie@0.6.0': {}
 
   '@types/diff-match-patch@1.0.36': {}
+
+  '@types/emscripten@1.39.13':
+    optional: true
 
   '@types/estree@1.0.5': {}
 
@@ -5246,6 +5268,12 @@ snapshots:
       undici-types: 5.26.5
 
   '@types/pug@2.0.10': {}
+
+  '@types/sql.js@1.4.9':
+    dependencies:
+      '@types/emscripten': 1.39.13
+      '@types/node': 20.14.9
+    optional: true
 
   '@types/statuses@2.0.5': {}
 
@@ -5933,12 +5961,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.30.10(@cloudflare/workers-types@4.20240502.0)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1):
+  drizzle-orm@0.30.10(@cloudflare/workers-types@4.20240502.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3):
     optionalDependencies:
       '@cloudflare/workers-types': 4.20240502.0
+      '@types/better-sqlite3': 7.6.11
+      '@types/sql.js': 1.4.9
       better-sqlite3: 10.0.0
       kysely: 0.27.3
       react: 18.3.1
+      sql.js: 1.10.3
 
   duplexer2@0.1.4:
     dependencies:
@@ -7332,13 +7363,16 @@ snapshots:
 
   sprintf-js@1.1.3: {}
 
-  sqlocal@0.9.0(drizzle-orm@0.30.10(@cloudflare/workers-types@4.20240502.0)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1))(kysely@0.27.3):
+  sql.js@1.10.3:
+    optional: true
+
+  sqlocal@0.9.0(drizzle-orm@0.30.10(@cloudflare/workers-types@4.20240502.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3))(kysely@0.27.3):
     dependencies:
       '@sqlite.org/sqlite-wasm': 3.45.3-build1
       coincident: 1.2.3
       nanoid: 5.0.7
     optionalDependencies:
-      drizzle-orm: 0.30.10(@cloudflare/workers-types@4.20240502.0)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)
+      drizzle-orm: 0.30.10(@cloudflare/workers-types@4.20240502.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3)
       kysely: 0.27.3
     transitivePeerDependencies:
       - bufferutil

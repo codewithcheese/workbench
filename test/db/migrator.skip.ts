@@ -1,4 +1,4 @@
-import { runMigrations } from "../src/database/migrator";
+import { runMigrations } from "../../src/database/migrator";
 import { describe, it } from "vitest";
 
 describe("drizzle migrations", () => {

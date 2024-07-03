@@ -1,8 +1,7 @@
 import "../../app.css";
 import "@fontsource-variable/inter";
-import { projectTable, registerModel, useDb } from "@/database";
+import { exposeDb, projectTable, registerModel, useDb } from "@/database";
 import { sql } from "drizzle-orm/sql";
-import { exposeDb } from "@/database/expose-db";
 
 export const ssr = false;
 let migrated = false;
@@ -15,6 +14,7 @@ export async function load({ depends }) {
       const { runMigrations } = await import("@/database/migrator");
       console.log("Migrating database");
       await runMigrations();
+      await useDb().run(sql.raw("PRAGMA foreign_keys=on;"));
       console.log("Migration complete");
       migrated = true;
     }
