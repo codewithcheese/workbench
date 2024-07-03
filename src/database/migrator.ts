@@ -3,7 +3,7 @@ import journal from "./migrations/meta/_journal.json";
 import { useDb } from "@/database/client";
 import { seed } from "@/database/seed";
 
-export async function runMigrations() {
+export async function runMigrations(skipSeed = false) {
   const haveMigrationsTable = await useDb().get(
     sql.raw("SELECT name FROM sqlite_master WHERE type='table' AND name='migrations';"),
   );
@@ -15,7 +15,7 @@ export async function runMigrations() {
   for (const entry of journal.entries) {
     await applyMigration(entry.idx, entry.tag);
   }
-  if (shouldSeed) {
+  if (shouldSeed && !skipSeed) {
     await seed();
   }
   console.log("Migrations applied");

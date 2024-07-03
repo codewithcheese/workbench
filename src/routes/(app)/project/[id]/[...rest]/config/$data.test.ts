@@ -41,7 +41,7 @@ beforeEach(async () => {
     // serviceTable: schema.serviceTable,
   }));
 
-  await runMigrations();
+  await runMigrations(true);
 
   // Insert test data
   await db.insert(schema.serviceTable).values([

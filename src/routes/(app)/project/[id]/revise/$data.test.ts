@@ -30,7 +30,7 @@ beforeEach(async () => {
     useDb: vi.fn(() => db),
   }));
 
-  await runMigrations();
+  await runMigrations(true);
 
   // Insert test data
   await db.insert(schema.serviceTable).values([

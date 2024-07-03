@@ -31,7 +31,7 @@ beforeEach(async () => {
 
   db.run(sql.raw("PRAGMA foreign_keys=off;"));
 
-  await runMigrations();
+  await runMigrations(true);
 
   db.run(sql.raw("PRAGMA foreign_keys=on;"));
 
