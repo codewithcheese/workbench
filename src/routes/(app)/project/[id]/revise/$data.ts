@@ -1,6 +1,6 @@
-import { type ResponseMessage, responseMessageTable, responseTable, useDb } from "@/database";
+import { responseMessageTable, responseTable, useDb } from "@/database";
 import { asc, eq } from "drizzle-orm";
-import { invalidate, invalidateAll } from "$app/navigation";
+import { invalidate } from "$app/navigation";
 import { type Message } from "ai";
 
 export type ResponsesView = Awaited<ReturnType<typeof loadResponses>>;

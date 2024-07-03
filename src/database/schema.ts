@@ -21,10 +21,8 @@ export const responseTable = sqliteTable(
     id: text("id").primaryKey(),
     projectId: text("projectId")
       .notNull()
-      .references(() => projectTable.id),
-    modelId: text("modelId")
-      .notNull()
-      .references(() => modelTable.id),
+      .references(() => projectTable.id, { onDelete: "cascade" }),
+    modelId: text("modelId").notNull(),
     error: text("error"),
     createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
   },
@@ -40,7 +38,7 @@ export const responseMessageTable = sqliteTable(
     index: int("index").notNull(),
     responseId: text("responseId")
       .notNull()
-      .references(() => responseTable.id),
+      .references(() => responseTable.id, { onDelete: "cascade" }),
     role: text("role").notNull(),
     content: text("content").notNull(),
     createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
@@ -56,7 +54,7 @@ export const modelTable = sqliteTable(
     id: text("id").notNull().primaryKey(),
     serviceId: text("serviceId")
       .notNull()
-      .references(() => serviceTable.id),
+      .references(() => serviceTable.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     visible: int("visible").notNull(),
     createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
@@ -83,16 +81,16 @@ export const projectTable = sqliteTable("project", {
   createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const evalTable = sqliteTable("eval", {
-  id: text("id").primaryKey(),
-  projectId: text("projectId")
-    .notNull()
-    .references(() => projectTable.id),
-  question: text("question").notNull(),
-  answer: text("answer").notNull(),
-  createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
-  updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
-});
+// export const evalTable = sqliteTable("eval", {
+//   id: text("id").primaryKey(),
+//   projectId: text("projectId")
+//     .notNull()
+//     .references(() => projectTable.id),
+//   question: text("question").notNull(),
+//   answer: text("answer").notNull(),
+//   createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
+//   updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
+// });
 
 /**
  * Types
@@ -104,7 +102,7 @@ export type ResponseMessage = InferSelectModel<typeof responseMessageTable>;
 export type Model = InferSelectModel<typeof modelTable>;
 export type Service = InferSelectModel<typeof serviceTable>;
 export type Project = InferSelectModel<typeof projectTable>;
-export type Eval = InferSelectModel<typeof evalTable>;
+// export type Eval = InferSelectModel<typeof evalTable>;
 
 /**
  * Relations
@@ -144,9 +142,9 @@ export const responseMessageRelations = relations(responseMessageTable, ({ one }
   }),
 }));
 
-export const evalRelations = relations(evalTable, ({ one }) => ({
-  project: one(projectTable, {
-    fields: [evalTable.projectId],
-    references: [projectTable.id],
-  }),
-}));
+// export const evalRelations = relations(evalTable, ({ one }) => ({
+//   project: one(projectTable, {
+//     fields: [evalTable.projectId],
+//     references: [projectTable.id],
+//   }),
+// }));

@@ -15,7 +15,7 @@
   } from "@/database/schema";
   import { store } from "@/lib/store.svelte";
   import { updateResponsePrompt } from "../$data";
-  import { removeResponse, type ResponsesView, updateMessages } from "./$data.svelte";
+  import { removeResponse, type ResponsesView, updateMessages } from "./$data";
   import { invalidateModel } from "@/database";
   import MessageMarkdown from "./MessageMarkdown.svelte";
   import { toast } from "svelte-french-toast";

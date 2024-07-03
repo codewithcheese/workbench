@@ -2,7 +2,7 @@ import { exposeDb } from "@/database/expose-db";
 
 export async function load({ depends }) {
   try {
-    await exposeDb();
+    exposeDb();
     const { runMigrations } = await import("@/database/migrator");
     console.log("Migrating database");
     await runMigrations();

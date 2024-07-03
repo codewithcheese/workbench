@@ -1,7 +1,6 @@
 import "../../app.css";
 import "@fontsource-variable/inter";
 import { projectTable, registerModel, useDb } from "@/database";
-import { sql } from "drizzle-orm/sql";
 import { exposeDb } from "@/database/expose-db";
 
 export const ssr = false;

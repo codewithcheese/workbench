@@ -1,4 +1,4 @@
-import { loadResponses } from "./$data.svelte";
+import { loadResponses } from "./$data";
 import { registerModel, responseTable } from "@/database";
 
 export async function load({ params, depends }) {
