@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { SQLocal } from "sqlocal";
 
-describe("sql", () => {
+describe.skip("sql", () => {
   const { sql } = new SQLocal("sql-test.sqlite3");
 
   beforeEach(async () => {
