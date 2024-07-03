@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+// @ts-expect-error unknown issue with path resolution
 import ResponseCard from "../src/routes/(app)/project/[id]/revise/ResponseCard.svelte";
 import { useDb } from "@/database/client";
 import { useChat } from "$lib/use-chat.svelte";
