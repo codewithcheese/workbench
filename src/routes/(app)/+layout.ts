@@ -1,6 +1,6 @@
 import "../../app.css";
 import "@fontsource-variable/inter";
-import { exposeDb, projectTable, registerModel, useDb } from "@/database";
+import { exposeDb, chatTable, registerModel, useDb } from "@/database";
 import { sql } from "drizzle-orm/sql";
 
 export const ssr = false;
@@ -21,10 +21,10 @@ export async function load({ depends }) {
   } catch (err) {
     console.error(err);
   }
-  const projects = await useDb().query.projectTable.findMany({});
-  registerModel(projectTable, projects, depends);
-  depends("view:projects");
+  const chats = await useDb().query.chatTable.findMany({});
+  registerModel(chatTable, chats, depends);
+  depends("view:chats");
   return {
-    projects,
+    chats,
   };
 }

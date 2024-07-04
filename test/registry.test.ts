@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   type Model,
-  type Project,
-  projectTable,
+  type Chat,
+  chatTable,
   type Response,
   type ResponseMessage,
   type Service,
@@ -11,7 +11,7 @@ import { registerModel } from "../src/database";
 
 describe("cache", () => {
   it("should use relations to extract models", async () => {
-    type ProjectView = Project & {
+    type ChatView = Chat & {
       responses: (Response & {
         model: Model & {
           service: Service;
@@ -20,15 +20,15 @@ describe("cache", () => {
       })[];
     };
 
-    let view: ProjectView | ProjectView[] = {
-      id: "id-project",
+    let view: ChatView | ChatView[] = {
+      id: "id-chat",
       name: "Untitled",
       prompt: "",
       createdAt: new Date().toISOString(),
       responses: [
         {
           id: "id-response",
-          projectId: "id-project",
+          chatId: "id-chat",
           modelId: "id-model",
           error: null,
           createdAt: new Date().toISOString(),
@@ -69,12 +69,12 @@ describe("cache", () => {
       ],
     };
     const dependencies = new Set<string>();
-    registerModel(projectTable, view, (...deps) => {
+    registerModel(chatTable, view, (...deps) => {
       deps.forEach((d) => dependencies.add(d));
     });
     expect(dependencies).toEqual(
       new Set([
-        "model:project:id-project",
+        "model:chat:id-chat",
         "model:response:id-response",
         "model:responseMessage:id-message",
         "model:responseMessage:id-message2",

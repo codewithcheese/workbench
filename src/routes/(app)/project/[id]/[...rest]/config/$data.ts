@@ -99,5 +99,5 @@ export async function toggleAllVisible(service: Service, visible: 1 | 0) {
   await useDb().update(modelTable).set({ visible }).where(eq(modelTable.serviceId, service.id));
   console.timeEnd("toggleAllVisible");
   await invalidateModel(serviceTable, service);
-  await invalidate("view:project");
+  await invalidate("view:chat");
 }

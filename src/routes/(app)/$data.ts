@@ -1,45 +1,45 @@
 import { useDb } from "@/database/client";
 import { asc, desc, eq, not } from "drizzle-orm";
-import { projectTable, responseMessageTable, responseTable } from "@/database/schema";
+import { chatTable, responseMessageTable, responseTable } from "@/database/schema";
 import { nanoid } from "nanoid";
 import { invalidate } from "$app/navigation";
 
-export async function newProject() {
+export async function newChat() {
   const id = nanoid(10);
-  await useDb().insert(projectTable).values({
+  await useDb().insert(chatTable).values({
     id: id,
     name: "Untitled",
     prompt: "",
   });
-  await invalidate("view:projects");
+  await invalidate("view:chats");
   return id;
 }
 
-export async function removeProject(projectId: string) {
+export async function removeChat(chatId: string) {
   // remove responses
-  await useDb().delete(responseTable).where(eq(responseTable.projectId, projectId));
-  // delete project
-  await useDb().delete(projectTable).where(eq(projectTable.id, projectId));
-  // find next project
-  const nextProject = await useDb().query.projectTable.findFirst({
-    where: not(eq(projectTable.id, projectId)),
-    orderBy: [desc(projectTable.createdAt)],
+  await useDb().delete(responseTable).where(eq(responseTable.chatId, chatId));
+  // delete chat
+  await useDb().delete(chatTable).where(eq(chatTable.id, chatId));
+  // find next chat
+  const nextChat = await useDb().query.chatTable.findFirst({
+    where: not(eq(chatTable.id, chatId)),
+    orderBy: [desc(chatTable.createdAt)],
   });
   let nextId: string;
-  if (nextProject) {
-    // next project exists, use it
-    nextId = nextProject.id;
+  if (nextChat) {
+    // next chat exists, use it
+    nextId = nextChat.id;
   } else {
-    // no next project, create new project
-    nextId = await newProject();
+    // no next chat, create new chat
+    nextId = await newChat();
   }
-  await invalidate("view:projects");
+  await invalidate("view:chats");
   return nextId;
 }
 
-export async function duplicateProject(id: string) {
-  const project = await useDb().query.projectTable.findFirst({
-    where: eq(projectTable.id, id),
+export async function duplicateChat(id: string) {
+  const chat = await useDb().query.chatTable.findFirst({
+    where: eq(chatTable.id, id),
     with: {
       responses: {
         with: {
@@ -50,21 +50,21 @@ export async function duplicateProject(id: string) {
       },
     },
   });
-  if (!project) {
-    throw new Error("Project not found");
+  if (!chat) {
+    throw new Error(`Chat ${id} not found`);
   }
-  const newId = nanoid(10);
+  const newChatId = nanoid(10);
   await useDb().transaction(async (tx) => {
-    await tx.insert(projectTable).values({
-      id: newId,
-      name: `${project.name} copy`,
-      prompt: project.prompt,
+    await tx.insert(chatTable).values({
+      id: newChatId,
+      name: `${chat.name} copy`,
+      prompt: chat.prompt,
     });
-    for (const response of project.responses) {
+    for (const response of chat.responses) {
       const responseId = nanoid(10);
       await tx.insert(responseTable).values({
         id: responseId,
-        projectId: newId,
+        chatId: newChatId,
         modelId: response.modelId,
         error: null,
       });
@@ -82,6 +82,6 @@ export async function duplicateProject(id: string) {
       }
     }
   });
-  await invalidate("view:projects");
-  return newId;
+  await invalidate("view:chats");
+  return newChatId;
 }

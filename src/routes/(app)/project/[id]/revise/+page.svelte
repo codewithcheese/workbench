@@ -1,16 +1,16 @@
 <script lang="ts">
   import EditorCard from "./EditorCard.svelte";
   import { Input } from "@/components/ui/input";
-  import { updateProject } from "../$data";
+  import { updateChat } from "../$data";
   import ResponseCard from "./ResponseCard.svelte";
   import { untrack } from "svelte";
   import { page } from "$app/stores";
 
   let { data } = $props();
 
-  // problem: cannot use project.prompt directly since codemirror resets cursor position when prompt signal changes
+  // problem: cannot use chat.prompt directly since codemirror resets cursor position when prompt signal changes
   // solution: consistent prompt signal for codemirror.
-  let prompt = $state(data.project.prompt);
+  let prompt = $state(data.chat.prompt);
   let id = $derived($page.params.id);
 
   $effect(() => {
@@ -18,27 +18,27 @@
     id;
     untrack(() => {
       console.log("updating prompt", $page.params.id);
-      prompt = data.project.prompt;
+      prompt = data.chat.prompt;
     });
   });
 
-  // const update = _.debounce(updateProject, 100);
+  // const update = _.debounce(updateChat, 100);
 
   function onChange() {
-    updateProject({ ...data.project, prompt });
+    updateChat({ ...data.chat, prompt });
   }
 </script>
 
 <div class="space-y-2 overflow-y-auto pl-1 pr-2 pt-1">
   <Input
     class="p-2 text-lg"
-    bind:value={data.project.name}
+    bind:value={data.chat.name}
     oninput={() => {
-      console.log("onChange", data.project.name);
+      console.log("onChange", data.chat.name);
       onChange();
     }}
   />
-  <EditorCard bind:prompt project={data.project} {onChange} />
+  <EditorCard bind:prompt chat={data.chat} {onChange} />
 </div>
 <div class="flex flex-col gap-3 pt-1">
   {#each data.responses.toReversed() as response (response.id)}

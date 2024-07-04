@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { projectTable, registerModel, serviceTable, useDb } from "@/database";
+import { chatTable, registerModel, serviceTable, useDb } from "@/database";
 import { error } from "@sveltejs/kit";
 import { loadServices } from "./$data";
 
@@ -14,18 +14,18 @@ export async function load({ route, url, params, depends }) {
     tab = "revise";
   }
 
-  const project = await useDb().query.projectTable.findFirst({
-    where: eq(projectTable.id, params.id),
+  const chat = await useDb().query.chatTable.findFirst({
+    where: eq(chatTable.id, params.id),
   });
-  if (!project) {
-    return error(404, "Project not found");
+  if (!chat) {
+    return error(404, `Chat ${params.id} not found`);
   }
-  registerModel(projectTable, project, depends);
+  registerModel(chatTable, chat, depends);
 
   const services = await loadServices();
   registerModel(serviceTable, services, depends);
 
-  depends("view:project");
+  depends("view:chat");
 
-  return { project, services, tab };
+  return { chat, services, tab };
 }

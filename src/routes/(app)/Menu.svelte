@@ -8,18 +8,18 @@
   import { goto } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
   import PersistenceAlert from "@/components/PersistenceAlert.svelte";
-  import { type Project } from "@/database";
-  import { duplicateProject, newProject, removeProject } from "./$data";
+  import { type Chat } from "@/database";
+  import { duplicateChat, newChat, removeChat } from "./$data";
 
-  let { projects }: { projects: Project[] } = $props();
+  let { chats }: { chats: Chat[] } = $props();
 
-  let projectId: string | undefined = $derived.by(() => {
+  let chatId: string | undefined = $derived.by(() => {
     if ($page.url.pathname.startsWith("/project")) {
       return $page.params.id;
     }
   });
 
-  let projectToDelete: Project | null = $state(null);
+  let chatToDelete: Chat | null = $state(null);
 </script>
 
 <div class="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
@@ -34,7 +34,7 @@
     class="h-8 w-8 rounded-full p-1"
     variant="outline"
     onclick={async () => {
-      const id = await newProject();
+      const id = await newChat();
       goto(`/project/${id}`);
     }}
   >
@@ -68,23 +68,21 @@
       </Button>
     </div>
     <div class="mt-6 overflow-x-hidden">
-      <h3 class="mb-2 overflow-hidden text-ellipsis break-all px-4 text-xs font-medium">
-        Projects
-      </h3>
-      {#each projects.toReversed() as project (project.id)}
+      <h3 class="mb-2 overflow-hidden text-ellipsis break-all px-4 text-xs font-medium">Recent</h3>
+      {#each chats.toReversed() as chat (chat.id)}
         <div
-          class:bg-accent={project.id === projectId}
+          class:bg-accent={chat.id === chatId}
           class="group flex flex-row items-center overflow-x-hidden px-4"
         >
           <Button
             variant="ghost"
-            href={`/project/${project.id}`}
+            href={`/project/${chat.id}`}
             class={cn(
               "w-full justify-start p-0 text-muted-foreground hover:bg-transparent",
-              project.id === projectId && "text-primary",
+              chat.id === chatId && "text-primary",
             )}
           >
-            {project.name}
+            {chat.name}
           </Button>
           <div class="flex flex-1"></div>
           <DropdownMenu.Root>
@@ -98,12 +96,10 @@
               >
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
-              <DropdownMenu.Item onclick={() => (projectToDelete = project)}
-                >Delete</DropdownMenu.Item
-              >
+              <DropdownMenu.Item onclick={() => (chatToDelete = chat)}>Delete</DropdownMenu.Item>
               <DropdownMenu.Item
                 onclick={async () => {
-                  const newId = await duplicateProject(project.id);
+                  const newId = await duplicateChat(chat.id);
                   await goto(`/project/${newId}`);
                 }}>Duplicate</DropdownMenu.Item
               >
@@ -114,18 +110,18 @@
     </div>
   </nav>
 </div>
-{#if projectToDelete}
+{#if chatToDelete}
   <DeleteDialog
-    name={projectToDelete.name}
-    type="project"
+    name={chatToDelete.name}
+    type="chat"
     onConfirm={async () => {
-      if (projectToDelete) {
-        const nextId = await removeProject(projectToDelete.id);
+      if (chatToDelete) {
+        const nextId = await removeChat(chatToDelete.id);
         await goto(`/project/${nextId}`);
       }
     }}
     onCancel={() => {
-      projectToDelete = null;
+      chatToDelete = null;
     }}
   />
 {/if}
