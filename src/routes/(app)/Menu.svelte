@@ -14,7 +14,7 @@
   let { chats }: { chats: Chat[] } = $props();
 
   let chatId: string | undefined = $derived.by(() => {
-    if ($page.url.pathname.startsWith("/project")) {
+    if ($page.url.pathname.startsWith("/chat")) {
       return $page.params.id;
     }
   });
@@ -35,7 +35,7 @@
     variant="outline"
     onclick={async () => {
       const id = await newChat();
-      goto(`/project/${id}`);
+      goto(`/chat/${id}`);
     }}
   >
     <PlusIcon class="text-gray-600" />
@@ -76,7 +76,7 @@
         >
           <Button
             variant="ghost"
-            href={`/project/${chat.id}`}
+            href={`/chat/${chat.id}`}
             class={cn(
               "w-full justify-start p-0 text-muted-foreground hover:bg-transparent",
               chat.id === chatId && "text-primary",
@@ -100,7 +100,7 @@
               <DropdownMenu.Item
                 onclick={async () => {
                   const newId = await duplicateChat(chat.id);
-                  await goto(`/project/${newId}`);
+                  await goto(`/chat/${newId}`);
                 }}>Duplicate</DropdownMenu.Item
               >
             </DropdownMenu.Content>
@@ -117,7 +117,7 @@
     onConfirm={async () => {
       if (chatToDelete) {
         const nextId = await removeChat(chatToDelete.id);
-        await goto(`/project/${nextId}`);
+        await goto(`/chat/${nextId}`);
       }
     }}
     onCancel={() => {

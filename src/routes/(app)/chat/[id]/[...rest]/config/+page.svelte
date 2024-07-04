@@ -5,8 +5,8 @@
   let { data } = $props();
 
   if (data.services.length > 0) {
-    goto(`/project/${$page.params.id}/config/select`);
+    goto(`/chat/${$page.params.id}/config/select`);
   } else {
-    goto(`/project/${$page.params.id}/config/create`);
+    goto(`/chat/${$page.params.id}/config/create`);
   }
 </script>

@@ -13,11 +13,11 @@
   let { data } = $props();
 
   function onSelect(service: ServicesView[number]) {
-    goto(`/project/${$page.params.id}/config/${service.id}`);
+    goto(`/chat/${$page.params.id}/config/${service.id}`);
   }
 
   function onAdd() {
-    goto(`/project/${$page.params.id}/config/create`);
+    goto(`/chat/${$page.params.id}/config/create`);
   }
 </script>
 

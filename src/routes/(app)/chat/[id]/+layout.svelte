@@ -12,7 +12,7 @@
   let chat = $derived(data.chat);
 
   function tabClick(value?: string) {
-    goto(`/project/${chat.id}/${value}`);
+    goto(`/chat/${chat.id}/${value}`);
   }
 
   $inspect("chat layout", data);
@@ -41,7 +41,7 @@
   <div class="relative ml-auto flex-1 md:grow-0">
     <div class="flex flex-row">
       <SelectModel {services} />
-      <Button variant="ghost" onclick={() => goto(`/project/${chat.id}/config`)}>
+      <Button variant="ghost" onclick={() => goto(`/chat/${chat.id}/config`)}>
         <SettingsIcon size={16} />
       </Button>
     </div>

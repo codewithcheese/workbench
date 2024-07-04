@@ -13,7 +13,7 @@
       if (!service) {
         return toast.error("Failed to add service");
       }
-      await goto(`/project/${$page.params.id}/config/${service.id}`);
+      await goto(`/chat/${$page.params.id}/config/${service.id}`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Unknown error");
     }

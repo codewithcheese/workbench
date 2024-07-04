@@ -37,7 +37,7 @@
   }
 
   async function onBack() {
-    await goto(`/project/${$page.params.id}/config/select`);
+    await goto(`/chat/${$page.params.id}/config/select`);
   }
 
   async function onDelete() {
