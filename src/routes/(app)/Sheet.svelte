@@ -3,9 +3,9 @@
   import { Button } from "@/components/ui/button";
   import { MenuIcon } from "lucide-svelte";
   import Menu from "./Menu.svelte";
-  import type { Project } from "@/database";
+  import type { Chat } from "@/database";
 
-  let { projects }: { projects: Project[] } = $props();
+  let { chats }: { chats: Chat[] } = $props();
 </script>
 
 <Sheet.Root>
@@ -16,6 +16,6 @@
     </Button>
   </Sheet.Trigger>
   <Sheet.Content side="left" class="flex flex-col">
-    <Menu {projects} />
+    <Menu {chats} />
   </Sheet.Content>
 </Sheet.Root>

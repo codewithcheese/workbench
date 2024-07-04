@@ -16,17 +16,17 @@
   import type { CompletionSource } from "@codemirror/autocomplete";
   import { Decoration } from "@codemirror/view";
   import { goto } from "$app/navigation";
-  import { documentTable, type Project, useDb } from "@/database";
+  import { documentTable, type Chat, useDb } from "@/database";
   import { submitPrompt } from "../$data";
   import { store } from "$lib/store.svelte";
   import { eq, like } from "drizzle-orm";
 
   type Props = {
-    project: Project;
+    chat: Chat;
     prompt: string;
     onChange: () => void;
   };
-  let { project, prompt = $bindable(""), onChange }: Props = $props();
+  let { chat, prompt = $bindable(""), onChange }: Props = $props();
 
   let docMentionRegex = /\[\[([^\]]|](?!]))*/g;
 
@@ -141,7 +141,7 @@
         {
           key: "Ctrl-Enter",
           run: () => {
-            submitPrompt(project, store.selected.modelId).catch(console.error);
+            submitPrompt(chat, store.selected.modelId).catch(console.error);
             return true;
           },
         },

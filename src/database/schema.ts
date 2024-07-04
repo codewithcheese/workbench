@@ -19,15 +19,15 @@ export const responseTable = sqliteTable(
   "response",
   {
     id: text("id").primaryKey(),
-    projectId: text("projectId")
+    chatId: text("chatId")
       .notNull()
-      .references(() => projectTable.id, { onDelete: "cascade" }),
+      .references(() => chatTable.id, { onDelete: "cascade" }),
     modelId: text("modelId").notNull(),
     error: text("error"),
     createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
   },
   (table) => ({
-    projectIdIdx: index("projectId_idx").on(table.projectId),
+    chatIdIdx: index("chatId_idx").on(table.chatId),
   }),
 );
 
@@ -74,23 +74,12 @@ export const serviceTable = sqliteTable("service", {
   createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const projectTable = sqliteTable("project", {
+export const chatTable = sqliteTable("chat", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   prompt: text("prompt").notNull(),
   createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
-
-// export const evalTable = sqliteTable("eval", {
-//   id: text("id").primaryKey(),
-//   projectId: text("projectId")
-//     .notNull()
-//     .references(() => projectTable.id),
-//   question: text("question").notNull(),
-//   answer: text("answer").notNull(),
-//   createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
-//   updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
-// });
 
 /**
  * Types
@@ -101,21 +90,21 @@ export type Response = InferSelectModel<typeof responseTable>;
 export type ResponseMessage = InferSelectModel<typeof responseMessageTable>;
 export type Model = InferSelectModel<typeof modelTable>;
 export type Service = InferSelectModel<typeof serviceTable>;
-export type Project = InferSelectModel<typeof projectTable>;
+export type Chat = InferSelectModel<typeof chatTable>;
 // export type Eval = InferSelectModel<typeof evalTable>;
 
 /**
  * Relations
  */
 
-export const projectRelations = relations(projectTable, ({ many }) => ({
+export const chatRelations = relations(chatTable, ({ many }) => ({
   responses: many(responseTable),
 }));
 
 export const responseRelations = relations(responseTable, ({ one, many }) => ({
-  project: one(projectTable, {
-    fields: [responseTable.projectId],
-    references: [projectTable.id],
+  chat: one(chatTable, {
+    fields: [responseTable.chatId],
+    references: [chatTable.id],
   }),
   model: one(modelTable, {
     fields: [responseTable.modelId],
@@ -141,10 +130,3 @@ export const responseMessageRelations = relations(responseMessageTable, ({ one }
     references: [responseTable.id],
   }),
 }));
-
-// export const evalRelations = relations(evalTable, ({ one }) => ({
-//   project: one(projectTable, {
-//     fields: [evalTable.projectId],
-//     references: [projectTable.id],
-//   }),
-// }));

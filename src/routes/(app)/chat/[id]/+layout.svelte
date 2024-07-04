@@ -9,13 +9,13 @@
 
   let { data } = $props();
   let services = $derived(data.services);
-  let project = $derived(data.project);
+  let chat = $derived(data.chat);
 
   function tabClick(value?: string) {
-    goto(`/project/${project.id}/${value}`);
+    goto(`/chat/${chat.id}/${value}`);
   }
 
-  $inspect("project layout", data);
+  $inspect("chat layout", data);
 </script>
 
 <header
@@ -41,14 +41,14 @@
   <div class="relative ml-auto flex-1 md:grow-0">
     <div class="flex flex-row">
       <SelectModel {services} />
-      <Button variant="ghost" onclick={() => goto(`/project/${project.id}/config`)}>
+      <Button variant="ghost" onclick={() => goto(`/chat/${chat.id}/config`)}>
         <SettingsIcon size={16} />
       </Button>
     </div>
   </div>
 
   {#if store.selected.modelId}
-    <Button onclick={() => submitPrompt(project, store.selected.modelId)}>
+    <Button onclick={() => submitPrompt(chat, store.selected.modelId)}>
       <PlayIcon size={16} class="mr-2" />
       Run
       <div

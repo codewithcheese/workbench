@@ -18,20 +18,20 @@ export async function runMigrations(skipSeed = false) {
   if (shouldSeed && !skipSeed) {
     await seed();
   }
-  console.log("Migrations applied");
+  // console.log("Migrations applied");
 }
 
 async function applyMigration(idx: number, migration: string) {
   // check if migration is already applied
   const checkQuery = `SELECT name FROM migrations WHERE name='${migration}'`;
-  console.log("checkQuery", checkQuery);
+  // console.log("checkQuery", checkQuery);
   const hasMigration = await useDb().get(sql.raw(checkQuery));
-  console.log("hasMigration", hasMigration);
+  // console.log("hasMigration", hasMigration);
   if (!hasMigration) {
     try {
       await useDb().transaction(async (tx) => {
         const migrationSql = (await import(`./migrations/${migration}.sql?raw`)).default;
-        console.log("Applying migration", migration);
+        // console.log("Applying migration", migration);
         // split statements for better-sqlite3 compatibility
         await Promise.all(
           migrationSql.split("--> statement-breakpoint").map((s: string) => tx.run(sql.raw(s))),

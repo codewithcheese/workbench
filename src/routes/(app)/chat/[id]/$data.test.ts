@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi, beforeAll, afterAll } from "vitest";
-import { updateProject, updateResponsePrompt, interpolateDocuments, submitPrompt } from "./$data";
+import { updateChat, updateResponsePrompt, interpolateDocuments, submitPrompt } from "./$data";
 import Database from "better-sqlite3";
 import { type BetterSQLite3Database, drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "@/database/schema";
@@ -55,12 +55,12 @@ beforeEach(async () => {
     .values([{ id: "model1", serviceId: "service1", name: "Test Model", visible: 1 }]);
 
   await db
-    .insert(schema.projectTable)
-    .values([{ id: "project1", name: "Test Project", prompt: "Test prompt with [[doc1]]" }]);
+    .insert(schema.chatTable)
+    .values([{ id: "chat1", name: "Test Chat", prompt: "Test prompt with [[doc1]]" }]);
 
   await db
     .insert(schema.responseTable)
-    .values([{ id: "response1", projectId: "project1", modelId: "model1" }]);
+    .values([{ id: "response1", chatId: "chat1", modelId: "model1" }]);
 
   await db.insert(schema.responseMessageTable).values([
     {
@@ -81,21 +81,21 @@ afterEach(() => {
   sqlite.close();
 });
 
-describe("updateProject", () => {
-  it("should update a project", async () => {
-    const updatedProject = {
-      id: "project1",
-      name: "Updated Project",
+describe("updateChat", () => {
+  it("should update a chat", async () => {
+    const updatedChat = {
+      id: "chat1",
+      name: "Updated Chat",
       prompt: "Updated prompt",
       createdAt: new Date().toISOString(),
     };
-    await updateProject(updatedProject);
+    await updateChat(updatedChat);
 
-    const project = await db.query.projectTable.findFirst({
-      where: eq(schema.projectTable.id, "project1"),
+    const chat = await db.query.chatTable.findFirst({
+      where: eq(schema.chatTable.id, "chat1"),
     });
 
-    expect(project).toEqual(expect.objectContaining(updatedProject));
+    expect(chat).toEqual(expect.objectContaining(updatedChat));
     expect(invalidate).toHaveBeenCalled();
   });
 });
@@ -135,13 +135,13 @@ describe("submitPrompt", () => {
   it("should submit a prompt and create a new response", async () => {
     vi.mocked(nanoid).mockReturnValueOnce("response2").mockReturnValueOnce("message2");
 
-    const project = {
-      id: "project1",
-      name: "Test Project",
+    const chat = {
+      id: "chat1",
+      name: "Test Chat",
       prompt: "Test prompt with [[doc1]]",
       createdAt: new Date().toISOString(),
     };
-    await submitPrompt(project, "model1");
+    await submitPrompt(chat, "model1");
 
     const response = await db.query.responseTable.findFirst({
       where: eq(schema.responseTable.id, "response2"),
@@ -163,24 +163,24 @@ describe("submitPrompt", () => {
   });
 
   it("should show error toast if no model is selected", async () => {
-    const project = {
-      id: "project1",
-      name: "Test Project",
+    const chat = {
+      id: "chat1",
+      name: "Test Chat",
       prompt: "Test prompt",
       createdAt: new Date().toISOString(),
     };
-    await submitPrompt(project, null);
+    await submitPrompt(chat, null);
     expect(toast.error).toHaveBeenCalledWith("No model selected");
   });
 
   it("should show error toast if selected model is not found", async () => {
-    const project = {
-      id: "project1",
-      name: "Test Project",
+    const chat = {
+      id: "chat1",
+      name: "Test Chat",
       prompt: "Test prompt",
       createdAt: new Date().toISOString(),
     };
-    await submitPrompt(project, "nonexistent");
+    await submitPrompt(chat, "nonexistent");
     expect(toast.error).toHaveBeenCalledWith("Selected model not found");
   });
 });

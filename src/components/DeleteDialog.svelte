@@ -12,7 +12,7 @@
 
   type Props = {
     name: string;
-    type: "project" | "document";
+    type: "chat" | "document";
     onConfirm: () => void;
     onCancel: () => void;
   };

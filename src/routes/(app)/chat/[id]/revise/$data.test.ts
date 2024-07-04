@@ -6,6 +6,11 @@ import * as schema from "@/database/schema";
 import { runMigrations } from "@/database/migrator";
 import { eq } from "drizzle-orm";
 import { invalidate } from "$app/navigation";
+import { useDb } from "@/database";
+
+vi.mock("nanoid");
+vi.mock("$app/navigation");
+vi.mock("@/database/client");
 
 let sqlite: Database.Database;
 let db: BetterSQLite3Database<typeof schema>;
@@ -14,21 +19,7 @@ beforeEach(async () => {
   // Set up database
   sqlite = new Database(":memory:");
   db = drizzle(sqlite, { schema });
-
-  // Set up mocks
-  vi.mock("$app/navigation", () => ({
-    invalidate: vi.fn(),
-    invalidateAll: vi.fn(),
-  }));
-
-  vi.mock("nanoid", () => ({
-    nanoid: vi.fn(),
-  }));
-
-  // Mock the useDb function
-  vi.mock("@/database/client", () => ({
-    useDb: vi.fn(() => db),
-  }));
+  vi.mocked(useDb).mockReturnValue(db);
 
   await runMigrations(true);
 
@@ -48,12 +39,12 @@ beforeEach(async () => {
     .values([{ id: "model1", serviceId: "service1", name: "Test Model", visible: 1 }]);
 
   await db
-    .insert(schema.projectTable)
-    .values([{ id: "project1", name: "Test Project", prompt: "Test prompt" }]);
+    .insert(schema.chatTable)
+    .values([{ id: "chat1", name: "Test Chat", prompt: "Test prompt" }]);
 
   await db
     .insert(schema.responseTable)
-    .values([{ id: "response1", projectId: "project1", modelId: "model1" }]);
+    .values([{ id: "response1", chatId: "chat1", modelId: "model1" }]);
 
   await db.insert(schema.responseMessageTable).values([
     { id: "message1", index: 0, responseId: "response1", role: "user", content: "Hello" },
@@ -63,18 +54,18 @@ beforeEach(async () => {
 
 afterEach(() => {
   sqlite.close();
-  vi.restoreAllMocks();
+  vi.resetAllMocks();
 });
 
 describe("loadResponses", () => {
-  it("should load responses for a given project", async () => {
-    const responses = await loadResponses("project1");
+  it("should load responses for a given chat", async () => {
+    const responses = await loadResponses("chat1");
 
     expect(responses).toHaveLength(1);
     expect(responses[0]).toEqual(
       expect.objectContaining({
         id: "response1",
-        projectId: "project1",
+        chatId: "chat1",
         modelId: "model1",
       }),
     );

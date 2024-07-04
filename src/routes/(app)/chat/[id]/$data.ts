@@ -1,8 +1,8 @@
 import {
   documentTable,
   modelTable,
-  type Project,
-  projectTable,
+  type Chat,
+  chatTable,
   responseMessageTable,
   responseTable,
   useDb,
@@ -23,15 +23,15 @@ export function loadServices() {
   });
 }
 
-export async function updateProject(project: Project) {
-  console.log("updateProject", project);
+export async function updateChat(chat: Chat) {
+  console.log("updateChat", chat);
   const result = await useDb()
-    .update(projectTable)
-    .set({ ...project })
-    .where(eq(projectTable.id, project.id))
+    .update(chatTable)
+    .set({ ...chat })
+    .where(eq(chatTable.id, chat.id))
     .returning();
   console.log(result);
-  await invalidateModel(projectTable, project);
+  await invalidateModel(chatTable, chat);
 }
 
 export async function updateResponsePrompt(id: string) {
@@ -50,14 +50,14 @@ export async function updateResponsePrompt(id: string) {
     if (!message) {
       return toast.error("Message not found");
     }
-    const project = await useDb().query.projectTable.findFirst({
-      where: eq(projectTable.id, response.projectId),
+    const chat = await useDb().query.chatTable.findFirst({
+      where: eq(chatTable.id, response.chatId),
     });
-    if (!project) {
-      return toast.error("Project not found");
+    if (!chat) {
+      return toast.error("Chat not found");
     }
     // interpolate documents into prompt
-    const content = await interpolateDocuments(project.prompt);
+    const content = await interpolateDocuments(chat.prompt);
     console.log("updated prompt", content);
     await useDb()
       .update(responseMessageTable)
@@ -95,7 +95,7 @@ export async function interpolateDocuments(prompt: string) {
   return interpolatedPrompt;
 }
 
-export async function submitPrompt(project: Project, modelId: string | null) {
+export async function submitPrompt(chat: Chat, modelId: string | null) {
   try {
     if (!modelId) {
       throw new Error("No model selected");
@@ -108,13 +108,13 @@ export async function submitPrompt(project: Project, modelId: string | null) {
     }
     // const model = db.models.get(store.selected.modelId);
     // interpolate documents into prompt
-    const content = await interpolateDocuments(project.prompt);
+    const content = await interpolateDocuments(chat.prompt);
     console.log("content", content);
     await useDb().transaction(async (tx) => {
       const responseId = nanoid(10);
       await tx.insert(responseTable).values({
         id: responseId,
-        projectId: project.id,
+        chatId: chat.id,
         modelId: model.id,
         error: null,
       });

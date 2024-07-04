@@ -5,7 +5,7 @@ import { type Message } from "ai";
 
 export type ResponsesView = Awaited<ReturnType<typeof loadResponses>>;
 
-export function loadResponses(projectId: string) {
+export function loadResponses(chatId: string) {
   return useDb().query.responseTable.findMany({
     with: {
       messages: true,
@@ -15,7 +15,7 @@ export function loadResponses(projectId: string) {
         },
       },
     },
-    where: eq(responseTable.projectId, projectId),
+    where: eq(responseTable.chatId, chatId),
   });
 }
 

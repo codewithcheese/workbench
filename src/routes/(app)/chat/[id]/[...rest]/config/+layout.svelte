@@ -9,7 +9,7 @@
   open={true}
   onOpenChange={(isOpen) => {
     if (!isOpen) {
-      goto(`/project/${$page.params.id}/revise`);
+      goto(`/chat/${$page.params.id}/revise`);
     }
   }}
 >
