@@ -29,22 +29,24 @@
   }
 </script>
 
-<div class="space-y-2 overflow-y-auto pl-1 pr-2 pt-1">
-  <Input
-    class="p-2 text-lg"
-    bind:value={data.chat.name}
-    oninput={() => {
-      console.log("onChange", data.chat.name);
-      onChange();
-    }}
-  />
-  <EditorCard bind:prompt chat={data.chat} {onChange} />
-</div>
-<div class="flex flex-col gap-3 pt-1">
-  {#each data.responses.toReversed() as response (response.id)}
-    {@const service = response.model?.service}
-    <ResponseCard {response} {service} initialMessages={response.messages} />
-  {/each}
+<div class="grid grid-cols-2 gap-3 overflow-y-auto px-4">
+  <div class="space-y-2 overflow-y-auto pl-1 pr-2 pt-1">
+    <Input
+      class="p-2 text-lg"
+      bind:value={data.chat.name}
+      oninput={() => {
+        console.log("onChange", data.chat.name);
+        onChange();
+      }}
+    />
+    <EditorCard bind:prompt chat={data.chat} {onChange} />
+  </div>
+  <div class="flex flex-col gap-3 pt-1">
+    {#each data.responses.toReversed() as response (response.id)}
+      {@const service = response.model?.service}
+      <ResponseCard {response} {service} initialMessages={response.messages} />
+    {/each}
+  </div>
 </div>
 <!--{:else}-->
 <!--  <Splash>-->

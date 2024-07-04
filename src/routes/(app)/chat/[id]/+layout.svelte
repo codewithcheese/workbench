@@ -12,7 +12,11 @@
   let chat = $derived(data.chat);
 
   function tabClick(value?: string) {
-    goto(`/chat/${chat.id}/${value}`);
+    if (value === "chat") {
+      goto(`/chat/${chat.id}`);
+    } else {
+      goto(`/chat/${chat.id}/${value}`);
+    }
   }
 
   $inspect("chat layout", data);
@@ -23,8 +27,8 @@
 >
   <Tabs onValueChange={tabClick} value={data.tab}>
     <TabsList>
+      <TabsTrigger value="chat">Chat</TabsTrigger>
       <TabsTrigger value="revise">Revise</TabsTrigger>
-      <!--      <TabsTrigger value="chat">Chat</TabsTrigger>-->
       <!--      <TabsTrigger value="eval">Eval</TabsTrigger>-->
     </TabsList>
   </Tabs>
@@ -60,9 +64,8 @@
   {/if}
 </header>
 
-<div class="grid grid-cols-2 gap-3 overflow-y-auto px-4">
-  <slot />
-</div>
+<slot />
+
 <!--{:else}-->
 <!--  <Splash>-->
 <!--    <p>Configure your AI accounts to start building.</p>-->

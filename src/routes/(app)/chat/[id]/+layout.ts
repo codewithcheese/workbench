@@ -12,6 +12,8 @@ export async function load({ route, url, params, depends }) {
     //   tab = "chat";
   } else if (route.id.includes(`[id]/revise`)) {
     tab = "revise";
+  } else {
+    tab = "chat";
   }
 
   const chat = await useDb().query.chatTable.findFirst({

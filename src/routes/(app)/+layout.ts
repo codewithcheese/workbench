@@ -22,6 +22,7 @@ export async function load({ depends }) {
     console.error(err);
   }
   const chats = await useDb().query.chatTable.findMany({});
+  console.log("chats", chats);
   registerModel(chatTable, chats, depends);
   depends("view:chats");
   return {

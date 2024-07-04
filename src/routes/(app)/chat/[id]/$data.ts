@@ -7,7 +7,7 @@ import {
   responseTable,
   useDb,
 } from "@/database";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { invalidate } from "$app/navigation";
 import { toast } from "svelte-french-toast";
@@ -21,6 +21,24 @@ export function loadServices() {
       models: true,
     },
   });
+}
+
+export async function getLatestResponse(chatId: string) {
+  // get latest revision
+  const response = await useDb().query.responseTable.findMany({
+    where: eq(responseTable.chatId, chatId),
+    with: {
+      messages: true,
+      model: {
+        with: {
+          service: true,
+        },
+      },
+    },
+    orderBy: [desc(responseTable.createdAt)],
+    limit: 1,
+  });
+  return { response };
 }
 
 export async function updateChat(chat: Chat) {
