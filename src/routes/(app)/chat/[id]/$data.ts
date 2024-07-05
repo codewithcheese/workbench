@@ -40,9 +40,9 @@ export async function getLatestResponse(chatId: string) {
   return response;
 }
 
-export function getDefaultModel() {
+export function getModelService(modelId: string) {
   return useDb().query.modelTable.findFirst({
-    where: eq(modelTable.visible, 1),
+    where: eq(modelTable.id, modelId),
     with: {
       service: true,
     },
@@ -50,7 +50,7 @@ export function getDefaultModel() {
 }
 
 export async function createResponse(chatId: string) {
-  const model = await getDefaultModel();
+  const model = await useDb().query.modelTable.findFirst({ where: eq(modelTable.visible, 1) });
   const responseId = nanoid(10);
   await useDb()
     .insert(responseTable)

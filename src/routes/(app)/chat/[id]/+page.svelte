@@ -13,69 +13,77 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+  import { store } from "$lib/store.svelte";
+  import { getModelService } from "./$data";
+  import { cn } from "$lib/cn";
+  import { untrack } from "svelte";
 
   let { data } = $props();
   let service = $derived(data.response.model?.service);
   let response = $derived(data.response);
+  let bottomRef: HTMLDivElement;
 
   $inspect("chat page", data);
 
-  let body = $state({
-    providerId: service?.providerId,
-    modelName: response.model?.name,
-    baseURL: service?.baseURL,
-    apiKey: service?.apiKey,
-  });
-
-  $inspect("chat page", data, body);
-
-  $effect(() => {
-    Object.assign(body, {
-      providerId: service?.providerId,
-      modelName: response.model?.name,
-      baseURL: service?.baseURL,
-      apiKey: service?.apiKey,
-    });
-  });
+  let body = $state<{ providerId?: string; modelName?: string; baseURL?: string; apiKey?: string }>(
+    {
+      providerId: undefined,
+      modelName: undefined,
+      baseURL: undefined,
+      apiKey: undefined,
+    },
+  );
 
   let chat = useChat({
+    // @ts-expect-error message type mismatch
     initialMessages: response.messages,
     body,
     onError: (e) => {
-      console.log("onError", e);
       toast.error(e.message);
     },
     onFinish: (message) => {
-      console.log("onFinish", chat.messages, message);
-      // updateMessages(response.id, $state.snapshot(chat.messages));
+      updateMessages(response.id, $state.snapshot(chat.messages));
     },
   });
 
-  function handleSubmit(value: string) {
+  async function handleSubmit(value: string) {
+    if (!store.selected.modelId) {
+      toast.error("No model selected");
+      return;
+    }
+    const model = await getModelService(store.selected.modelId);
+    if (!model) {
+      toast.error("Selected model not found");
+      return;
+    }
+    Object.assign(body, {
+      providerId: model.service.providerId,
+      modelName: model.name,
+      baseURL: model.service.baseURL,
+      apiKey: model.service.apiKey,
+    });
     chat.input = value;
     chat.handleSubmit();
   }
+
+  function scrollToBottom() {
+    bottomRef.scrollIntoView({ behavior: "smooth" });
+  }
+
+  $effect(() => {
+    chat.messages;
+    untrack(() => {
+      scrollToBottom();
+    });
+  });
 </script>
 
-<div class="flex h-full flex-col">
-  {#if !service}
-    <div class="mx-auto w-full max-w-3xl">
-      <Alert>
-        <AlertTitle>No model</AlertTitle>
-        <AlertDescription>
-          <a class="underline" href={`/chat/${$page.params.id}/config`}>
-            Configure your AI accounts
-          </a>
-          to start a chatting.
-        </AlertDescription>
-      </Alert>
-    </div>
-  {/if}
+<div class="mb-[100px] flex h-full flex-col gap-2 p-4">
   {#each chat.messages as message (message.id)}
     {@const format = "markdown"}
     {@const content = message.content}
-    <Card>
-      <CardContent class="p-6">
+    <Card class={cn("", message.role === "user" && "border-none bg-muted/100")}>
+      <CardContent class="p-4">
         {#if response.error}
           <Label class="text-red-500">{response.error}</Label>
         {/if}
@@ -88,6 +96,6 @@
       </CardContent>
     </Card>
   {/each}
-  <div class="flex-1"></div>
-  <MessageInput onSubmit={handleSubmit} />
+  <div bind:this={bottomRef} id="bottom-anchor" class="flex-1"></div>
 </div>
+<MessageInput onSubmit={handleSubmit} />

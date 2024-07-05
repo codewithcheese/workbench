@@ -39,15 +39,11 @@
   }
 
   onMount(() => {
-    resize();
-  });
-
-  $effect(() => {
-    resize();
+    textareaElement.focus();
   });
 </script>
 
-<div class="mx-auto w-full max-w-3xl">
+<div class="sticky bottom-0 mx-auto w-full max-w-3xl">
   <Card class="w-full rounded-b-none border-b-0">
     <CardContent class="p-4">
       {#if isUploadOpen}
@@ -75,7 +71,7 @@
           placeholder="Type your message here..."
           bind:value={content}
           on:input={resize}
-          class="max-h-[200px] min-h-1 resize-none overflow-y-auto border-none bg-gray-100 focus-visible:ring-0"
+          class="max-h-[200px] min-h-1 resize-none overflow-y-auto border-none bg-muted/100 focus-visible:ring-0"
           onkeydown={handleKeydown}
         />
         <Button variant="default" size="icon" onclick={onSubmit}>
