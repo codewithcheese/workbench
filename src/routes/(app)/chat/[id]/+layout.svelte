@@ -64,7 +64,7 @@
   {/if}
 </header>
 
-<div class="h-full overflow-y-auto">
+<div class="flex flex-1 flex-col overflow-y-auto">
   <slot />
 </div>
 

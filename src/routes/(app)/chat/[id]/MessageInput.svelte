@@ -31,6 +31,7 @@
   }
 
   function handleSubmit() {
+    console.log("handleSubmit", content);
     onSubmit(content);
   }
 
@@ -68,13 +69,13 @@
         </Button>
         <Textarea
           bind:element={textareaElement}
-          placeholder="Type your message here..."
+          placeholder="What's on your mind?"
           bind:value={content}
           on:input={resize}
-          class="max-h-[200px] min-h-1 resize-none overflow-y-auto border-none bg-muted/100 focus-visible:ring-0"
+          class=" max-h-[200px] min-h-1 flex-1 resize-none overflow-y-auto border-none bg-muted/50 focus-visible:ring-0"
           onkeydown={handleKeydown}
         />
-        <Button variant="default" size="icon" onclick={onSubmit}>
+        <Button variant="default" size="icon" onclick={handleSubmit}>
           <Send class="h-4 w-4" />
         </Button>
       </div>
