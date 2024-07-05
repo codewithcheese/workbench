@@ -1,8 +1,8 @@
 import {
-  documentTable,
-  modelTable,
   type Chat,
   chatTable,
+  documentTable,
+  modelTable,
   responseMessageTable,
   responseTable,
   useDb,
@@ -25,7 +25,7 @@ export function loadServices() {
 
 export async function getLatestResponse(chatId: string) {
   // get latest revision
-  const response = await useDb().query.responseTable.findMany({
+  const response = await useDb().query.responseTable.findFirst({
     where: eq(responseTable.chatId, chatId),
     with: {
       messages: true,
@@ -36,9 +36,33 @@ export async function getLatestResponse(chatId: string) {
       },
     },
     orderBy: [desc(responseTable.createdAt)],
-    limit: 1,
   });
-  return { response };
+  return response;
+}
+
+export function getDefaultModel() {
+  return useDb().query.modelTable.findFirst({
+    where: eq(modelTable.visible, 1),
+    with: {
+      service: true,
+    },
+  });
+}
+
+export async function createResponse(chatId: string) {
+  const model = await getDefaultModel();
+  const responseId = nanoid(10);
+  await useDb()
+    .insert(responseTable)
+    .values({
+      id: responseId,
+      chatId,
+      modelId: model?.id || "none",
+      error: null,
+      createdAt: new Date().toISOString(),
+    })
+    .execute();
+  return getLatestResponse(chatId);
 }
 
 export async function updateChat(chat: Chat) {

@@ -5,22 +5,15 @@
   import { Textarea } from "@/components/ui/textarea";
   import { Send, Plus, HardDriveUpload, CloudUpload, Clipboard } from "lucide-svelte";
 
-  let message = $state("");
+  type Props = {
+    onSubmit: (value: string) => void;
+  };
+  let { onSubmit }: Props = $props();
   let isUploadOpen = $state(false);
   let textareaElement: HTMLTextAreaElement;
+  let content = $state("");
 
-  function handleSendMessage() {
-    console.log("Sending message:", message);
-    message = "";
-  }
-
-  function handleInput(event: Event) {
-    const textarea = event.target as HTMLTextAreaElement;
-    message = textarea.value;
-    adjustTextareaHeight();
-  }
-
-  function adjustTextareaHeight() {
+  function resize() {
     textareaElement.style.height = "auto";
     textareaElement.style.height = `${textareaElement.scrollHeight}px`;
   }
@@ -30,16 +23,27 @@
     isUploadOpen = false;
   }
 
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleSubmit();
+    }
+  }
+
+  function handleSubmit() {
+    onSubmit(content);
+  }
+
   function toggleUploadOptions() {
     isUploadOpen = !isUploadOpen;
   }
 
   onMount(() => {
-    adjustTextareaHeight();
+    resize();
   });
 
   $effect(() => {
-    adjustTextareaHeight();
+    resize();
   });
 </script>
 
@@ -69,11 +73,12 @@
         <Textarea
           bind:element={textareaElement}
           placeholder="Type your message here..."
-          value={message}
-          on:input={handleInput}
+          bind:value={content}
+          on:input={resize}
           class="max-h-[200px] min-h-1 resize-none overflow-y-auto border-none bg-gray-100 focus-visible:ring-0"
+          onkeydown={handleKeydown}
         />
-        <Button variant="default" size="icon" on:click={handleSendMessage}>
+        <Button variant="default" size="icon" onclick={onSubmit}>
           <Send class="h-4 w-4" />
         </Button>
       </div>

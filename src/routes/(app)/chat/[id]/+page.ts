@@ -1,16 +1,13 @@
-import { getLatestResponse } from "./$data";
+import { createResponse, getLatestResponse } from "./$data";
 import { registerModel, responseTable } from "@/database";
 import { error } from "@sveltejs/kit";
 
 export async function load({ params, depends }) {
-  try {
-    const { response } = await getLatestResponse(params.id);
-    registerModel(responseTable, response, depends);
-    depends("view:messages");
-    console.log("response", response);
-    return { response, hello: "world" };
-  } catch (e) {
-    console.error("error", e);
+  const response = (await getLatestResponse(params.id)) || (await createResponse(params.id));
+  if (!response) {
     return error(500, "Error loading chat");
   }
+  registerModel(responseTable, response!, depends);
+  depends("view:messages");
+  return { response };
 }
