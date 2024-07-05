@@ -17,13 +17,12 @@
   function handleInput(event: Event) {
     const textarea = event.target as HTMLTextAreaElement;
     message = textarea.value;
-    // adjustTextareaHeight();
+    adjustTextareaHeight();
   }
 
   function adjustTextareaHeight() {
-    // if (textareaElement) {
-    //   textareaElement.style.height = `${textareaElement.scrollHeight}px`;
-    // }
+    textareaElement.style.height = "auto";
+    textareaElement.style.height = `${textareaElement.scrollHeight}px`;
   }
 
   function handleUpload(type: string) {
@@ -44,8 +43,8 @@
   });
 </script>
 
-<div class="mx-auto w-full max-w-3xl p-4">
-  <Card class="w-full">
+<div class="mx-auto w-full max-w-3xl">
+  <Card class="w-full rounded-b-none border-b-0">
     <CardContent class="p-4">
       {#if isUploadOpen}
         <div class="mb-4 flex items-center justify-start gap-2">
@@ -68,10 +67,11 @@
           <Plus class="h-4 w-4" />
         </Button>
         <Textarea
+          bind:element={textareaElement}
           placeholder="Type your message here..."
           value={message}
           on:input={handleInput}
-          class="max-h-[200px] resize-none overflow-y-auto"
+          class="max-h-[200px] min-h-1 resize-none overflow-y-auto border-none bg-gray-100 focus-visible:ring-0"
         />
         <Button variant="default" size="icon" on:click={handleSendMessage}>
           <Send class="h-4 w-4" />
