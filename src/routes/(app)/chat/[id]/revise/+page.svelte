@@ -10,7 +10,11 @@
 
   // problem: cannot use chat.prompt directly since codemirror resets cursor position when prompt signal changes
   // solution: consistent prompt signal for codemirror.
-  let prompt = $state(data.chat.prompt);
+  // let prompt = $state(data.chat.prompt);
+
+  let lastUserMessage = $derived(data.response.messages.findLast((m) => m.role === "user"));
+  let prompt = $state(lastUserMessage?.content || "");
+
   let id = $derived($page.params.id);
 
   $effect(() => {
