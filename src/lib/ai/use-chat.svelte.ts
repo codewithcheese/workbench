@@ -8,32 +8,20 @@ import type {
   JSONValue,
   Message,
   ToolCallHandler,
-  UseChatOptions,
 } from "@ai-sdk/ui-utils";
 import { callChatApi, generateId as generateIdFunc, processChatStream } from "@ai-sdk/ui-utils";
 
-export type { CreateMessage, Message, UseChatOptions };
+// todo remove tool and function calling until the library is stable and we need it
 
-/**
- Typed tool call that is returned by generateText and streamText.
- It contains the tool call ID, the tool name, and the tool arguments.
- */
+export type { CreateMessage };
+
 interface ToolCall$1<NAME extends string, ARGS> {
-  /**
-   ID of the tool call. This ID is used to match the tool call with the tool result.
-   */
   toolCallId: string;
-  /**
-   Name of the tool that is being called.
-   */
   toolName: NAME;
-  /**
-   Arguments of the tool call. This is a JSON-serializable object that matches the tool's input schema.
-   */
   args: ARGS;
 }
 
-type UseChatOptions = {
+export type ChatOptions = {
   /**
    * The API endpoint that accepts a `{ messages: Message[] }` object and returns
    * a stream of tokens of the AI chat response. Defaults to `/api/chat`.
@@ -56,7 +44,7 @@ type UseChatOptions = {
   /**
    * Edit index, is set then input will be set to the content of the message at the given index
    */
-  editing?: { index: number };
+  editing: { index: number } | null;
   /**
    * @deprecated Use AI SDK 3.1 `streamText` and `onToolCall` instead.
    *
@@ -97,6 +85,8 @@ type UseChatOptions = {
    * Callback function to be called when an error is encountered.
    */
   onError?: (error: Error) => void;
+  /** Callback function to be called when a message is updated */
+  onMessageUpdate?: (messages: Message[]) => void;
   /**
    * A way to provide a function that is going to be used for ids for messages.
    * If not provided nanoid is used by default.
@@ -138,55 +128,6 @@ type UseChatOptions = {
    or to provide a custom fetch implementation for e.g. testing.
    */
   fetch?: FetchFunction;
-};
-
-export type UseChatHelpers = {
-  /** Current messages in the chat */
-  // messages: Readable<Message[]>;
-  messages: Message[];
-  /** The error object of the API request */
-  // error: Readable<undefined | Error>;
-  error: undefined | Error;
-  /**
-   * Append a user message to the chat list. This triggers the API call to fetch
-   * the assistant's response.
-   * @param message The message to append
-   * @param chatRequestOptions Additional options to pass to the API call
-   */
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions,
-  ) => Promise<string | null | undefined>;
-  /**
-   * Reload the last AI chat response for the given chat history. If the last
-   * message isn't from the assistant, it will request the API to generate a
-   * new response.
-   */
-  reload: (chatRequestOptions?: ChatRequestOptions) => Promise<string | null | undefined>;
-  /**
-   * Abort the current request immediately, keep the generated tokens if any.
-   */
-  stop: () => void;
-  /**
-   * Update the `messages` state locally. This is useful when you want to
-   * edit the messages on the client, and then trigger the `reload` method
-   * manually to regenerate the AI response.
-   */
-  setMessages: (messages: Message[]) => void;
-  /** The current value of the input */
-  input: string;
-
-  /** Form submission handler to automatically reset input and append a user message  */
-  handleSubmit: (
-    event?: { preventDefault?: () => void },
-    chatRequestOptions?: ChatRequestOptions,
-  ) => void;
-  metadata?: Object;
-  /** Whether the API request is in progress */
-  isLoading: boolean | undefined;
-
-  /** Additional data added on the server via StreamData */
-  data: JSONValue[] | undefined;
 };
 
 const getStreamedResponse = async (
@@ -275,125 +216,105 @@ let uniqueId = 0;
 
 const store: Record<string, Message[] | undefined> = {};
 
-export function useChat({
-  api = "/api/chat",
-  id,
-  initialMessages = [],
-  initialInput = "",
-  editing,
-  sendExtraMessageFields,
-  experimental_onFunctionCall,
-  experimental_onToolCall,
-  streamMode,
-  onResponse,
-  onFinish,
-  onError,
-  credentials,
-  headers,
-  body,
-  generateId = generateIdFunc,
-  fetch,
-}: UseChatOptions = {}): UseChatHelpers {
-  // Generate a unique id for the chat if not provided.
-  const chatId = id || `chat-${uniqueId++}`;
+export function useChat(options: ChatOptions): ChatService {
+  return new ChatService(options);
+}
 
-  const key = `${api}|${chatId}`;
+export class ChatService {
+  messages: Message[] = $state([]);
+  error: undefined | Error = $state(undefined);
+  input: string = $state("");
+  isLoading: boolean | undefined = $state(undefined);
+  data: JSONValue[] | undefined = $state(undefined);
+  metadata?: Object;
 
-  const state = $state<UseChatHelpers>({
-    messages: initialMessages,
-    input: editing ? initialMessages[editing.index].content : initialInput,
-    data: [],
-    metadata: undefined,
-    isLoading: false,
-    error: undefined,
-    reload: async () => null,
-    stop: () => {},
-    setMessages: () => {},
-    append: async () => null,
-    handleSubmit: () => {},
-  });
+  private id: string;
+  private api: string;
+  private editing: { index: number } | null;
+  private generateId: IdGenerator;
+  private abortController: AbortController | null;
+  private sendExtraMessageFields: boolean | undefined;
+  private experimental_onFunctionCall: FunctionCallHandler | undefined;
+  private experimental_onToolCall: ToolCallHandler | undefined;
+  private streamMode: "stream-data" | "text" | undefined;
+  private onResponse: ((response: Response) => void | Promise<void>) | undefined;
+  private onFinish: ((message: Message) => void) | undefined;
+  private onError: ((error: Error) => void) | undefined;
+  private onMessageUpdate: ((messages: Message[]) => void) | undefined;
+  private credentials: RequestCredentials | undefined;
+  private headers: Record<string, string> | Headers | undefined;
+  private body: object | undefined;
+  private fetch: FetchFunction | undefined;
 
-  const mutate = (data: Message[]) => {
-    store[key] = data;
-    state.messages = data;
-    return data;
-  };
-
-  // Abort controller to cancel the current API call.
-  let abortController: AbortController | null = null;
-
-  const extraMetadata = {
+  constructor({
+    api = "/api/chat",
+    id,
+    initialMessages = [],
+    initialInput = "",
+    editing = null,
+    sendExtraMessageFields,
+    experimental_onFunctionCall,
+    experimental_onToolCall,
+    streamMode,
+    onResponse,
+    onFinish,
+    onError,
+    onMessageUpdate,
     credentials,
     headers,
     body,
-  };
-
-  // Actual mutation hook to send messages to the API endpoint and update the
-  // chat state.
-  async function triggerRequest(chatRequest: ChatRequest) {
-    try {
-      state.error = undefined;
-      state.isLoading = true;
-      abortController = new AbortController();
-
-      await processChatStream({
-        getStreamedResponse: () =>
-          getStreamedResponse(
-            api,
-            chatRequest,
-            mutate,
-            (data) => {
-              state.data = data;
-            },
-            state.data,
-            extraMetadata,
-            state.messages,
-            abortController,
-            generateId,
-            streamMode,
-            onFinish,
-            onResponse,
-            sendExtraMessageFields,
-            fetch,
-          ),
-        experimental_onFunctionCall,
-        experimental_onToolCall,
-        updateChatRequest: (chatRequestParam) => {
-          chatRequest = chatRequestParam;
-        },
-        getCurrentMessages: () => state.messages,
-      });
-
-      abortController = null;
-
-      return null;
-    } catch (err) {
-      // Ignore abort errors as they are expected.
-      if ((err as any).name === "AbortError") {
-        abortController = null;
-        return null;
-      }
-
-      if (onError && err instanceof Error) {
-        onError(err);
-      }
-
-      state.error = err as Error;
-    } finally {
-      state.isLoading = false;
-    }
+    generateId = generateIdFunc,
+    fetch,
+  }: ChatOptions) {
+    // assign options
+    this.api = api;
+    this.id = id || `chat-${uniqueId++}`;
+    this.editing = editing;
+    this.sendExtraMessageFields = sendExtraMessageFields;
+    this.experimental_onFunctionCall = experimental_onFunctionCall;
+    this.experimental_onToolCall = experimental_onToolCall;
+    this.streamMode = streamMode;
+    this.onResponse = onResponse;
+    this.onFinish = onFinish;
+    this.onError = onError;
+    this.onMessageUpdate = onMessageUpdate;
+    this.credentials = credentials;
+    this.headers = headers;
+    this.body = body;
+    this.messages = initialMessages || [];
+    // fixme smells
+    this.input =
+      editing && initialMessages ? initialMessages[editing.index].content : initialInput || "";
+    this.data = [];
+    this.metadata = undefined;
+    this.isLoading = false;
+    this.error = undefined;
+    this.abortController = new AbortController();
+    this.generateId = generateId;
+    this.editing = editing;
+    this.fetch = fetch;
   }
 
-  state.append = async (
+  get key() {
+    return `${this.api}|${this.id}`;
+  }
+
+  /**
+   * Append a user message to the chat list. This triggers the API call to fetch
+   * the assistant's response.
+   * @param message The message to append
+   * @param chatRequestOptions Additional options to pass to the API call
+   */
+  append(
     message: Message | CreateMessage,
     { options, functions, function_call, tools, tool_choice, data }: ChatRequestOptions = {},
-  ) => {
+  ): Promise<string | null | undefined> {
     if (!message.id) {
-      message.id = generateId();
+      message.id = this.generateId();
     }
 
     const chatRequest: ChatRequest = {
-      messages: state.messages.concat(message as Message),
+      messages: this.messages.concat(message as Message),
       options,
       data,
       ...(functions !== undefined && { functions }),
@@ -401,33 +322,32 @@ export function useChat({
       ...(tools !== undefined && { tools }),
       ...(tool_choice !== undefined && { tool_choice }),
     };
-    return triggerRequest(chatRequest);
-  };
+    return this.triggerRequest(chatRequest);
+  }
 
-  state.reload = async ({
+  /**
+   * Reload the last AI chat response for the given chat history. If the last
+   * message isn't from the assistant, it will request the API to generate a
+   * new response.
+   */
+  async reload({
     options,
     functions,
     function_call,
     tools,
     tool_choice,
-  }: ChatRequestOptions = {}) => {
-    const messagesSnapshot = state.messages;
-    if (messagesSnapshot.length === 0) return null;
+  }: ChatRequestOptions = {}): Promise<string | null | undefined> {
+    let messagesSnapshot = structuredClone(this.messages);
+    if (messagesSnapshot.length === 0) {
+      return null;
+    }
 
     // Remove last assistant message and retry last user message.
     const lastMessage = messagesSnapshot.at(-1);
     if (lastMessage?.role === "assistant") {
-      const chatRequest: ChatRequest = {
-        messages: messagesSnapshot.slice(0, -1),
-        options,
-        ...(functions !== undefined && { functions }),
-        ...(function_call !== undefined && { function_call }),
-        ...(tools !== undefined && { tools }),
-        ...(tool_choice !== undefined && { tool_choice }),
-      };
-
-      return triggerRequest(chatRequest);
+      messagesSnapshot = messagesSnapshot.slice(0, -1);
     }
+
     const chatRequest: ChatRequest = {
       messages: messagesSnapshot,
       options,
@@ -437,38 +357,113 @@ export function useChat({
       ...(tool_choice !== undefined && { tool_choice }),
     };
 
-    return triggerRequest(chatRequest);
-  };
+    return this.triggerRequest(chatRequest);
+  }
 
-  state.stop = () => {
-    if (abortController) {
-      abortController.abort();
-      abortController = null;
+  /**
+   * Abort the current request immediately, keep the generated tokens if any.
+   */
+  stop(): void {
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
     }
-  };
+  }
 
-  state.setMessages = (messages: Message[]) => {
-    mutate(messages);
-  };
+  /**
+   * Update the `messages` state locally. This is useful when you want to
+   * edit the messages on the client, and then trigger the `reload` method
+   * manually to regenerate the AI response.
+   */
+  setMessages(key: string, messages: Message[]): void {
+    store[key] = messages;
+    this.messages = messages;
+    if (this.onMessageUpdate) {
+      this.onMessageUpdate(messages);
+    }
+  }
 
-  state.handleSubmit = (
+  /** Form submission handler to automatically reset input and append a user message  */
+  handleSubmit(
     event?: { preventDefault?: () => void },
-    options: ChatRequestOptions = {},
-  ) => {
+    chatRequestOptions?: ChatRequestOptions,
+  ): void {
     event?.preventDefault?.();
-    const inputValue = state.input;
+    const inputValue = this.input;
     if (!inputValue) return;
+    this.input = "";
 
-    state.append(
-      {
-        content: inputValue,
-        role: "user",
-        createdAt: new Date(),
-      },
-      options,
-    );
-    state.input = "";
-  };
+    if (this.editing) {
+      let message = this.messages[this.editing.index];
+      message.content = inputValue;
+      // todo implement editing/revise
+    } else {
+      this.append(
+        {
+          content: inputValue,
+          role: "user",
+          createdAt: new Date(),
+        },
+        chatRequestOptions,
+      );
+    }
+  }
 
-  return state;
+  private async triggerRequest(chatRequest: ChatRequest): Promise<string | null | undefined> {
+    try {
+      this.error = undefined;
+      this.isLoading = true;
+      this.abortController = new AbortController();
+
+      const extraMetadata = {
+        credentials: this.credentials,
+        headers: this.headers,
+        body: this.body,
+      };
+
+      await processChatStream({
+        getStreamedResponse: () =>
+          getStreamedResponse(
+            this.api || "/api/chat",
+            chatRequest,
+            (messages: Message[]) => this.setMessages(this.key, messages),
+            (data) => {
+              this.data = data;
+            },
+            this.data,
+            extraMetadata,
+            this.messages,
+            this.abortController,
+            this.generateId,
+            this.streamMode,
+            this.onFinish,
+            this.onResponse,
+            this.sendExtraMessageFields,
+            this.fetch,
+          ),
+        experimental_onFunctionCall: this.experimental_onFunctionCall,
+        experimental_onToolCall: this.experimental_onToolCall,
+        updateChatRequest: (chatRequestParam) => {
+          chatRequest = chatRequestParam;
+        },
+        getCurrentMessages: () => this.messages,
+      });
+      this.abortController = null;
+      return null;
+    } catch (err) {
+      // Ignore abort errors as they are expected.
+      if ((err as any).name === "AbortError") {
+        this.abortController = null;
+        return null;
+      }
+
+      if (this.onError && err instanceof Error) {
+        this.onError(err);
+      }
+
+      this.error = err as Error;
+    } finally {
+      this.isLoading = false;
+    }
+  }
 }

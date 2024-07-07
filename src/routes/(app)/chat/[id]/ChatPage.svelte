@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useChat } from "$lib/ai/use-chat.svelte";
+  import { ChatService, useChat } from "$lib/ai/use-chat.svelte";
   import { toast } from "svelte-french-toast";
   import { removeResponse, updateMessages } from "./revise/$data";
   import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -35,7 +35,7 @@
     },
   );
 
-  let chat = useChat({
+  let chatService = new ChatService({
     // @ts-expect-error message type mismatch
     initialMessages: messages,
     body,
@@ -43,7 +43,10 @@
       toast.error(e.message);
     },
     onFinish: (message) => {
-      updateMessages(responseId, $state.snapshot(chat.messages));
+      updateMessages(responseId, $state.snapshot(chatService.messages));
+    },
+    onMessageUpdate: (messages) => {
+      bottomRef.scrollIntoView({ behavior: "smooth" });
     },
   });
 
@@ -64,30 +67,19 @@
       apiKey: model.service.apiKey,
     });
     console.log("calling chat.handleSubmit", value);
-    chat.input = value;
-    chat.handleSubmit();
+    chatService.input = value;
+    chatService.handleSubmit();
   }
-
-  function scrollToBottom() {
-    bottomRef.scrollIntoView({ behavior: "smooth" });
-  }
-
-  $effect(() => {
-    chat.messages;
-    untrack(() => {
-      scrollToBottom();
-    });
-  });
 </script>
 
 <div class="flex flex-1 flex-col gap-2 p-4">
-  {#each chat.messages as message (message.id)}
+  {#each chatService.messages as message (message.id)}
     {@const format = "markdown"}
     {@const content = message.content}
     <Card class={cn("", message.role === "user" && "border-none bg-muted/100")}>
       <CardContent class="p-4">
-        {#if chat.error}
-          <Label class="text-red-500">{chat.error}</Label>
+        {#if chatService.error}
+          <Label class="text-red-500">{chatService.error}</Label>
         {/if}
 
         {#if format === "markdown"}

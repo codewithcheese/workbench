@@ -58,9 +58,9 @@
 </header>
 
 <div class="flex flex-1 flex-col overflow-y-auto">
-  <div class="px-4">
+  <div class="px-3">
     <Input
-      class="text-lg focus-visible:ring-0 focus-visible:ring-offset-0"
+      class="border-none p-1 text-xl focus-visible:ring-0 focus-visible:ring-offset-0"
       bind:value={data.chat.name}
       oninput={handleNameChange}
     />
