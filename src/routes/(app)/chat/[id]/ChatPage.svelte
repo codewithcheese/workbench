@@ -5,14 +5,16 @@
   import MessageInput from "./MessageInput.svelte";
   import { store } from "$lib/store.svelte";
   import { getModelService } from "./$data";
-  import type { ResponseMessage } from "@/database";
+  import type { Chat, ResponseMessage } from "@/database";
   import MessageCard from "./MessageCard.svelte";
+  import ChatTitlebar from "./ChatTitlebar.svelte";
 
   type Props = {
+    chat: Chat;
     responseId: string;
     messages: ResponseMessage[];
   };
-  let { responseId, messages }: Props = $props();
+  let { chat, responseId, messages }: Props = $props();
   let bottomRef: HTMLDivElement;
 
   let body = $state<{ providerId?: string; modelName?: string; baseURL?: string; apiKey?: string }>(
@@ -61,6 +63,7 @@
   }
 </script>
 
+<ChatTitlebar {chat} tab="chat" />
 <div class="flex flex-1 flex-col gap-2 p-4">
   {#each chatService.messages as message (message.id)}
     <MessageCard {message} />

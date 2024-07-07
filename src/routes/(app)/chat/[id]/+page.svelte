@@ -6,5 +6,5 @@
 </script>
 
 {#key $page.params.id}
-  <ChatPage responseId={data.response.id} messages={data.response.messages} />
+  <ChatPage chat={data.chat} responseId={data.response.id} messages={data.response.messages} />
 {/key}

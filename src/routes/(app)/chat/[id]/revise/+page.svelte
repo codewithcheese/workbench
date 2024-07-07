@@ -13,6 +13,7 @@
   import { PlayIcon, Send, SendIcon } from "lucide-svelte";
   import { ChatService } from "$lib/chat-service.svelte.js";
   import { toast } from "svelte-french-toast";
+  import ChatTitlebar from "../ChatTitlebar.svelte";
 
   let { data } = $props();
 
@@ -129,6 +130,7 @@
   }
 </script>
 
+<ChatTitlebar chat={data.chat} tab="revise" onRunClick={handleSubmit} />
 <div class="grid grid-cols-2 gap-3 overflow-y-auto px-4">
   <div class="flex flex-col gap-2 overflow-y-auto py-4">
     {#each chatService.messages as message, index (message.id)}

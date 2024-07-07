@@ -12,15 +12,14 @@
   let chat = $derived(data.chat);
 
   function tabClick(value?: string) {
+    if (!value) {
+      return;
+    }
     if (value === "chat") {
       goto(`/chat/${chat.id}`);
     } else {
       goto(`/chat/${chat.id}/${value}`);
     }
-  }
-
-  async function handleNameChange() {
-    await updateChat(chat.id, { name: data.chat.name });
   }
 
   $inspect("chat layout", data);
@@ -57,29 +56,5 @@
 </header>
 
 <div class="flex flex-1 flex-col overflow-y-auto">
-  <div class="flex flex-row px-3">
-    <Input
-      class="border-none p-1 text-xl focus-visible:ring-0 focus-visible:ring-offset-0"
-      bind:value={data.chat.name}
-      oninput={handleNameChange}
-    />
-    {#if data.tab === "revise"}
-      <Button variant="default" onclick={() => {}}>
-        <PlayIcon class="mr-2 h-4 w-4" /> Run
-        <div
-          class="w-13 pointer-events-none ml-2 hidden h-6 rounded-full bg-gray-700 px-2 py-1 md:inline-flex"
-        >
-          <div class="pointer-events-none text-center text-xs font-light text-white">Ctrl + ⏎</div>
-        </div>
-      </Button>
-    {/if}
-  </div>
   <slot />
 </div>
-
-<!--{:else}-->
-<!--  <Splash>-->
-<!--    <p>Configure your AI accounts to start building.</p>-->
-<!--    <Button onclick={() => document.getElementById("model-config-trigger")?.click()}>Start</Button>-->
-<!--  </Splash>-->
-<!--{/if}-->
