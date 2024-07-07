@@ -1,23 +1,12 @@
 <script lang="ts">
-  import { ChatService, useChat } from "$lib/ai/use-chat.svelte";
+  import { ChatService } from "$lib/ai/use-chat.svelte";
   import { toast } from "svelte-french-toast";
-  import { removeResponse, updateMessages } from "./revise/$data";
-  import { Card, CardContent, CardHeader } from "@/components/ui/card";
-  import { Input } from "@/components/ui/input";
+  import { updateMessages } from "./revise/$data";
   import MessageInput from "./MessageInput.svelte";
-  import { Button } from "@/components/ui/button";
-  import { LoaderCircleIcon, RefreshCwIcon, XIcon } from "lucide-svelte";
-  import { Badge } from "@/components/ui/badge";
-  import { Label } from "@/components/ui/label";
-  import MessageMarkdown from "./revise/MessageMarkdown.svelte";
-  import { goto } from "$app/navigation";
-  import { page } from "$app/stores";
-  import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
   import { store } from "$lib/store.svelte";
   import { getModelService } from "./$data";
-  import { cn } from "$lib/cn";
-  import { untrack } from "svelte";
   import type { ResponseMessage } from "@/database";
+  import MessageCard from "./MessageCard.svelte";
 
   type Props = {
     responseId: string;
@@ -74,21 +63,7 @@
 
 <div class="flex flex-1 flex-col gap-2 p-4">
   {#each chatService.messages as message (message.id)}
-    {@const format = "markdown"}
-    {@const content = message.content}
-    <Card class={cn("", message.role === "user" && "border-none bg-muted/100")}>
-      <CardContent class="p-4">
-        {#if chatService.error}
-          <Label class="text-red-500">{chatService.error}</Label>
-        {/if}
-
-        {#if format === "markdown"}
-          <MessageMarkdown {content} />
-        {:else}
-          {content}
-        {/if}
-      </CardContent>
-    </Card>
+    <MessageCard {message} />
   {/each}
   <div bind:this={bottomRef} id="bottom-anchor"></div>
 </div>

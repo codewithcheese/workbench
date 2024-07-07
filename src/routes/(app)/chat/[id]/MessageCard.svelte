@@ -1,12 +1,11 @@
 <script lang="ts">
   import { cn } from "$lib/cn.js";
   import MessageMarkdown from "./revise/MessageMarkdown.svelte";
-  import { Label } from "@/components/ui/label/index.js";
   import { Card, CardContent } from "@/components/ui/card/index.js";
-  import type { ResponseMessage } from "@/database";
+  import type { Message } from "ai";
 
   type Props = {
-    message: ResponseMessage;
+    message: Message;
   };
   let { message }: Props = $props();
   let format = "markdown";
