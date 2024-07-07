@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useChat } from "$lib/ai/chat-service.svelte.js";
+  import { ChatService } from "$lib/chat-service.svelte.js";
   import { LoaderCircleIcon, RefreshCwIcon, XIcon } from "lucide-svelte";
   import { Card, CardContent, CardHeader } from "@/components/ui/card";
   import { Label } from "@/components/ui/label";
@@ -48,7 +48,7 @@
     });
   });
 
-  let chat = useChat({
+  let chat = new ChatService({
     // @ts-expect-error createdAt type mismatch
     initialMessages,
     body,

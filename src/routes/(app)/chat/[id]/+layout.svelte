@@ -1,11 +1,10 @@
 <script lang="ts">
   import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
   import { goto } from "$app/navigation";
-  import { store } from "$lib/store.svelte";
   import SelectModel from "./SelectModel.svelte";
   import { Button } from "@/components/ui/button";
-  import { PlayIcon, SettingsIcon } from "lucide-svelte";
-  import { submitPrompt, updateChat } from "./$data";
+  import { SettingsIcon } from "lucide-svelte";
+  import { updateChat } from "./$data";
   import { Input } from "@/components/ui/input";
 
   let { data } = $props();
@@ -28,7 +27,7 @@
 </script>
 
 <header
-  class="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background p-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:pt-2"
+  class="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background p-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-4 sm:pt-2"
 >
   <Tabs onValueChange={tabClick} value={data.tab}>
     <TabsList>
