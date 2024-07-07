@@ -16,6 +16,8 @@
 
   let { data } = $props();
 
+  let editIndex = getEditIndex();
+
   let body = $state<{ providerId?: string; modelName?: string; baseURL?: string; apiKey?: string }>(
     {
       providerId: undefined,
@@ -28,13 +30,13 @@
   let chatService = new ChatService({
     // @ts-expect-error message type mismatch
     initialMessages: data.response.messages,
-    editing: getEditing(),
+    editing: editIndex ? { index: editIndex } : undefined,
     body,
     onError: (e) => {
       toast.error(e.message);
     },
     onFinish: (message) => {
-      updateMessages(data.response.id, $state.snapshot(chatService.messages));
+      // updateMessages(data.response.id, $state.snapshot(chatService.messages));
     },
   });
 
@@ -77,13 +79,9 @@
   //   return nextIndex;
   // }
 
-  function getEditing() {
-    const editingIndex = data.response.messages.findLastIndex((m) => m.role === "user");
-    if (editingIndex === -1) {
-      return undefined;
-    } else {
-      return { index: editingIndex };
-    }
+  function getEditIndex() {
+    const editIndex = data.response.messages.findLastIndex((m) => m.role === "user");
+    return editIndex === -1 ? undefined : editIndex;
   }
 
   // function getUserMessage() {
@@ -100,15 +98,9 @@
   // }
   //
   function getAssistantMessage() {
-    let editing = getEditing();
-    if (!editing) {
-      return undefined;
-    }
-    if (editing) {
-      return chatService.messages.find(
-        (m, index) => m.role === "assistant" && index > editing.index,
-      );
-    }
+    return editIndex
+      ? chatService.messages.find((m, index) => m.role === "assistant" && index > editIndex!)
+      : undefined;
   }
 
   async function handleSubmit() {
@@ -138,7 +130,12 @@
 </script>
 
 <div class="grid grid-cols-2 gap-3 overflow-y-auto px-4">
-  <div class="overflow-y-auto py-4">
+  <div class="flex flex-col gap-2 overflow-y-auto py-4">
+    {#each chatService.messages as message, index (message.id)}
+      {#if !editIndex || index < editIndex}
+        <MessageCard {message} />
+      {/if}
+    {/each}
     <EditorCard bind:prompt={chatService.input} chat={data.chat} {onChange} />
   </div>
   <div class="flex flex-col gap-3 py-4">
