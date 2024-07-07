@@ -1,5 +1,5 @@
 import { sqliteTable, text, int, primaryKey, index, unique } from "drizzle-orm/sqlite-core";
-import { type InferSelectModel, relations } from "drizzle-orm";
+import { type InferInsertModel, type InferSelectModel, relations } from "drizzle-orm";
 import { sql } from "drizzle-orm/sql";
 
 /**
@@ -88,6 +88,7 @@ export const chatTable = sqliteTable("chat", {
 export type Document = InferSelectModel<typeof documentTable>;
 export type Response = InferSelectModel<typeof responseTable>;
 export type ResponseMessage = InferSelectModel<typeof responseMessageTable>;
+export type InsertResponseMessage = InferInsertModel<typeof responseMessageTable>;
 export type Model = InferSelectModel<typeof modelTable>;
 export type Service = InferSelectModel<typeof serviceTable>;
 export type Chat = InferSelectModel<typeof chatTable>;

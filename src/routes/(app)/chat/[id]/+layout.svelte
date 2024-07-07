@@ -5,7 +5,8 @@
   import SelectModel from "./SelectModel.svelte";
   import { Button } from "@/components/ui/button";
   import { PlayIcon, SettingsIcon } from "lucide-svelte";
-  import { submitPrompt } from "./$data";
+  import { submitPrompt, updateChat } from "./$data";
+  import { Input } from "@/components/ui/input";
 
   let { data } = $props();
   let services = $derived(data.services);
@@ -17,6 +18,10 @@
     } else {
       goto(`/chat/${chat.id}/${value}`);
     }
+  }
+
+  async function handleNameChange() {
+    await updateChat(chat.id, { name: data.chat.name });
   }
 
   $inspect("chat layout", data);
@@ -50,21 +55,16 @@
       </Button>
     </div>
   </div>
-
-  {#if store.selected.modelId}
-    <Button onclick={() => submitPrompt(chat, store.selected.modelId)}>
-      <PlayIcon size={16} class="mr-2" />
-      Run
-      <div
-        class="w-13 pointer-events-none ml-1 hidden h-6 rounded-full bg-white bg-opacity-20 px-2 py-1 md:inline-flex"
-      >
-        <div class="pointer-events-none text-center text-xs font-light text-white">Ctrl + ⏎</div>
-      </div>
-    </Button>
-  {/if}
 </header>
 
 <div class="flex flex-1 flex-col overflow-y-auto">
+  <div class="px-4">
+    <Input
+      class="text-lg focus-visible:ring-0 focus-visible:ring-offset-0"
+      bind:value={data.chat.name}
+      oninput={handleNameChange}
+    />
+  </div>
   <slot />
 </div>
 

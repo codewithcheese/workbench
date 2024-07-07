@@ -1,0 +1,25 @@
+<script lang="ts">
+  import { cn } from "$lib/cn.js";
+  import MessageMarkdown from "./revise/MessageMarkdown.svelte";
+  import { Label } from "@/components/ui/label/index.js";
+  import { Card, CardContent } from "@/components/ui/card/index.js";
+  import type { ResponseMessage } from "@/database";
+
+  type Props = {
+    message: ResponseMessage;
+  };
+  let { message }: Props = $props();
+  let format = "markdown";
+
+  $inspect("message card", message);
+</script>
+
+<Card class={cn("", message.role === "user" && "border-none bg-muted/100")}>
+  <CardContent class="p-4">
+    {#if format === "markdown"}
+      <MessageMarkdown content={message.content} />
+    {:else}
+      {message.content}
+    {/if}
+  </CardContent>
+</Card>

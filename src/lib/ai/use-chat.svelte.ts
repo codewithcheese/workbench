@@ -3,14 +3,142 @@ import type {
   ChatRequestOptions,
   CreateMessage,
   FetchFunction,
+  FunctionCallHandler,
   IdGenerator,
   JSONValue,
   Message,
+  ToolCallHandler,
   UseChatOptions,
 } from "@ai-sdk/ui-utils";
 import { callChatApi, generateId as generateIdFunc, processChatStream } from "@ai-sdk/ui-utils";
 
 export type { CreateMessage, Message, UseChatOptions };
+
+/**
+ Typed tool call that is returned by generateText and streamText.
+ It contains the tool call ID, the tool name, and the tool arguments.
+ */
+interface ToolCall$1<NAME extends string, ARGS> {
+  /**
+   ID of the tool call. This ID is used to match the tool call with the tool result.
+   */
+  toolCallId: string;
+  /**
+   Name of the tool that is being called.
+   */
+  toolName: NAME;
+  /**
+   Arguments of the tool call. This is a JSON-serializable object that matches the tool's input schema.
+   */
+  args: ARGS;
+}
+
+type UseChatOptions = {
+  /**
+   * The API endpoint that accepts a `{ messages: Message[] }` object and returns
+   * a stream of tokens of the AI chat response. Defaults to `/api/chat`.
+   */
+  api?: string;
+  /**
+   * A unique identifier for the chat. If not provided, a random one will be
+   * generated. When provided, the `useChat` hook with the same `id` will
+   * have shared states across components.
+   */
+  id?: string;
+  /**
+   * Initial messages of the chat. Useful to load an existing chat history.
+   */
+  initialMessages?: Message[];
+  /**
+   * Initial input of the chat.
+   */
+  initialInput?: string;
+  /**
+   * Edit index, is set then input will be set to the content of the message at the given index
+   */
+  editing?: { index: number };
+  /**
+   * @deprecated Use AI SDK 3.1 `streamText` and `onToolCall` instead.
+   *
+   * Callback function to be called when a function call is received.
+   * If the function returns a `ChatRequest` object, the request will be sent
+   * automatically to the API and will be used to update the chat.
+   */
+  experimental_onFunctionCall?: FunctionCallHandler;
+  /**
+   * @deprecated Use AI SDK 3.1 `streamText` and `onToolCall` instead.
+   *
+   * Callback function to be called when a tool call is received.
+   * If the function returns a `ChatRequest` object, the request will be sent
+   * automatically to the API and will be used to update the chat.
+   */
+  experimental_onToolCall?: ToolCallHandler;
+  /**
+   Optional callback function that is invoked when a tool call is received.
+   Intended for automatic client-side tool execution.
+
+   You can optionally return a result for the tool call,
+   either synchronously or asynchronously.
+   */
+  onToolCall?: ({
+    toolCall,
+  }: {
+    toolCall: ToolCall$1<string, unknown>;
+  }) => void | Promise<unknown> | unknown;
+  /**
+   * Callback function to be called when the API response is received.
+   */
+  onResponse?: (response: Response) => void | Promise<void>;
+  /**
+   * Callback function to be called when the chat is finished streaming.
+   */
+  onFinish?: (message: Message) => void;
+  /**
+   * Callback function to be called when an error is encountered.
+   */
+  onError?: (error: Error) => void;
+  /**
+   * A way to provide a function that is going to be used for ids for messages.
+   * If not provided nanoid is used by default.
+   */
+  generateId?: IdGenerator;
+  /**
+   * The credentials mode to be used for the fetch request.
+   * Possible values are: 'omit', 'same-origin', 'include'.
+   * Defaults to 'same-origin'.
+   */
+  credentials?: RequestCredentials;
+  /**
+   * HTTP headers to be sent with the API request.
+   */
+  headers?: Record<string, string> | Headers;
+  /**
+   * Extra body object to be sent with the API request.
+   * @example
+   * Send a `sessionId` to the API along with the messages.
+   * ```js
+   * useChat({
+   *   body: {
+   *     sessionId: '123',
+   *   }
+   * })
+   * ```
+   */
+  body?: object;
+  /**
+   * Whether to send extra message fields such as `message.id` and `message.createdAt` to the API.
+   * Defaults to `false`. When set to `true`, the API endpoint might need to
+   * handle the extra fields before forwarding the request to the AI service.
+   */
+  sendExtraMessageFields?: boolean;
+  /** Stream mode (default to "stream-data") */
+  streamMode?: "stream-data" | "text";
+  /**
+   Custom fetch implementation. You can use it as a middleware to intercept requests,
+   or to provide a custom fetch implementation for e.g. testing.
+   */
+  fetch?: FetchFunction;
+};
 
 export type UseChatHelpers = {
   /** Current messages in the chat */
@@ -60,6 +188,7 @@ export type UseChatHelpers = {
   /** Additional data added on the server via StreamData */
   data: JSONValue[] | undefined;
 };
+
 const getStreamedResponse = async (
   api: string,
   chatRequest: ChatRequest,
@@ -151,6 +280,7 @@ export function useChat({
   id,
   initialMessages = [],
   initialInput = "",
+  editing,
   sendExtraMessageFields,
   experimental_onFunctionCall,
   experimental_onToolCall,
@@ -171,7 +301,7 @@ export function useChat({
 
   const state = $state<UseChatHelpers>({
     messages: initialMessages,
-    input: initialInput,
+    input: editing ? initialMessages[editing.index].content : initialInput,
     data: [],
     metadata: undefined,
     isLoading: false,

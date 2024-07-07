@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useChat } from "../../src/lib/use-chat.svelte";
+  import { useChat } from "$lib/ai/use-chat.svelte";
 
   let chat = useChat({
     api: "http://localhost:3000/api/chat",

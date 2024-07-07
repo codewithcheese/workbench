@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useChat } from "$lib/use-chat.svelte";
+  import { useChat } from "$lib/ai/use-chat.svelte";
   import { toast } from "svelte-french-toast";
   import { removeResponse, updateMessages } from "./revise/$data";
   import { Card, CardContent, CardHeader } from "@/components/ui/card";

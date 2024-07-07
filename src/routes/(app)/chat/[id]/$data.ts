@@ -65,15 +65,15 @@ export async function createResponse(chatId: string) {
   return getLatestResponse(chatId);
 }
 
-export async function updateChat(chat: Chat) {
-  console.log("updateChat", chat);
+export async function updateChat(chatId: string, updates: Partial<Chat>) {
+  console.log("updateChat", chatId, updates);
   const result = await useDb()
     .update(chatTable)
-    .set({ ...chat })
-    .where(eq(chatTable.id, chat.id))
+    .set({ ...updates })
+    .where(eq(chatTable.id, chatId))
     .returning();
   console.log(result);
-  await invalidateModel(chatTable, chat);
+  await invalidateModel(chatTable, { id: chatId });
 }
 
 export async function updateResponsePrompt(id: string) {

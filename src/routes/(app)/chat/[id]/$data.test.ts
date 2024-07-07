@@ -89,7 +89,7 @@ describe("updateChat", () => {
       prompt: "Updated prompt",
       createdAt: new Date().toISOString(),
     };
-    await updateChat(updatedChat);
+    await updateChat(updatedChat.id, updatedChat);
 
     const chat = await db.query.chatTable.findFirst({
       where: eq(schema.chatTable.id, "chat1"),

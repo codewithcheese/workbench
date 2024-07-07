@@ -1,60 +1,155 @@
 <script lang="ts">
   import EditorCard from "./EditorCard.svelte";
-  import { Input } from "@/components/ui/input";
-  import { updateChat } from "../$data";
   import ResponseCard from "./ResponseCard.svelte";
-  import { untrack } from "svelte";
-  import { page } from "$app/stores";
+  import { insertResponseMessage, updateMessages, updateResponseMessage } from "./$data";
+  import { nanoid } from "nanoid";
+  import { invalidate } from "$app/navigation";
+  import { concatMap, Subject, throttleTime } from "rxjs";
+  import type { ResponseMessage } from "@/database";
+  import MessageCard from "../MessageCard.svelte";
+  import { getModelService, submitPrompt } from "../$data";
+  import { store } from "$lib/store.svelte";
+  import { Button } from "@/components/ui/button";
+  import { PlayIcon, Send, SendIcon } from "lucide-svelte";
+  import { useChat } from "$lib/ai/use-chat.svelte";
+  import { toast } from "svelte-french-toast";
 
   let { data } = $props();
 
-  // problem: cannot use chat.prompt directly since codemirror resets cursor position when prompt signal changes
-  // solution: consistent prompt signal for codemirror.
-  // let prompt = $state(data.chat.prompt);
+  let body = $state<{ providerId?: string; modelName?: string; baseURL?: string; apiKey?: string }>(
+    {
+      providerId: undefined,
+      modelName: undefined,
+      baseURL: undefined,
+      apiKey: undefined,
+    },
+  );
 
-  let lastUserMessage = $derived(data.response.messages.findLast((m) => m.role === "user"));
-  let prompt = $state(lastUserMessage?.content || "");
-
-  let id = $derived($page.params.id);
-
-  $effect(() => {
-    // update prompt from data when route changes
-    id;
-    untrack(() => {
-      console.log("updating prompt", $page.params.id);
-      prompt = data.chat.prompt;
-    });
+  let chat = useChat({
+    // @ts-expect-error message type mismatch
+    initialMessages: data.response.messages,
+    editing: getEditing(),
+    body,
+    onError: (e) => {
+      toast.error(e.message);
+    },
+    onFinish: (message) => {
+      updateMessages(data.response.id, $state.snapshot(chat.messages));
+    },
   });
 
-  // const update = _.debounce(updateChat, 100);
+  let assistantMessage = $derived(getAssistantMessage());
 
-  function onChange() {
-    updateChat({ ...data.chat, prompt });
+  // let userMessage = $derived(getUserMessage());
+  // let assistantMessage = $derived(userMessage ? getAssistantMessage(userMessage) : null);
+  // // problem: cannot bind content since codemirror resets cursor position when content is updated by loader
+  // // solution: uncontrolled prompt using state, does not update until navigation
+  // let prompt = $state(userMessage ? userMessage.content : "");
+  //
+  // $inspect("revise", data.response.messages, userMessage, assistantMessage, prompt);
+  //
+  // const input$ = new Subject();
+  // input$
+  //   .pipe(
+  //     throttleTime(100, undefined, { leading: true, trailing: true }),
+  //     concatMap(async (newValue) => {
+  //       if (userMessage) {
+  //         await updateResponseMessage(userMessage.id, { content: newValue });
+  //       } else {
+  //         await insertResponseMessage({
+  //           id: nanoid(),
+  //           responseId: data.response.id,
+  //           role: "user",
+  //           content: newValue,
+  //         });
+  //       }
+  //       // will reload messages so that next change will update instead of creating a new message.
+  //       await invalidate("view:messages");
+  //     }),
+  //   )
+  //   .subscribe();
+  //
+  // function getNextIndex() {
+  //   const nextIndex = data.response.messages.length
+  //     ? data.response.messages.reduce((localMax, curr) => Math.max(localMax, curr.index), 0) + 1
+  //     : 0;
+  //   console.log("nextIndex", data.response.messages.length, nextIndex);
+  //   return nextIndex;
+  // }
+
+  function getEditing() {
+    const editingIndex = data.response.messages.findLastIndex((m) => m.role === "user");
+    if (editingIndex === -1) {
+      return undefined;
+    } else {
+      return { index: editingIndex };
+    }
+  }
+
+  // function getUserMessage() {
+  //   let message = chat.messages.findLast((m) => m.role === "user");
+  //   if (!message) {
+  //     message = {
+  //       id: nanoid(),
+  //       role: "user",
+  //       content: "",
+  //     };
+  //     chat.messages.push(message);
+  //   }
+  //   return message;
+  // }
+  //
+  function getAssistantMessage() {
+    let editing = getEditing();
+    if (!editing) {
+      return undefined;
+    }
+    if (editing) {
+      return chat.messages.find((m, index) => m.role === "assistant" && index > editing.index);
+    }
+  }
+
+  async function handleSubmit() {
+    // const message = chat.messages.find((m) => m.id === userMessage.id);
+    // if (!store.selected.modelId) {
+    //   toast.error("No model selected");
+    //   return;
+    // }
+    // const model = await getModelService(store.selected.modelId);
+    // if (!model) {
+    //   toast.error("Selected model not found");
+    //   return;
+    // }
+    // Object.assign(body, {
+    //   providerId: model.service.providerId,
+    //   modelName: model.name,
+    //   baseURL: model.service.baseURL,
+    //   apiKey: model.service.apiKey,
+    // });
+    // message.content = prompt;
+    // chat.reload();
+  }
+
+  async function onChange() {
+    // input$.next(prompt);
   }
 </script>
 
 <div class="grid grid-cols-2 gap-3 overflow-y-auto px-4">
-  <div class="space-y-2 overflow-y-auto pl-1 pr-2 pt-1">
-    <Input
-      class="p-2 text-lg"
-      bind:value={data.chat.name}
-      oninput={() => {
-        console.log("onChange", data.chat.name);
-        onChange();
-      }}
-    />
-    <EditorCard bind:prompt chat={data.chat} {onChange} />
+  <div class="overflow-y-auto py-4">
+    <EditorCard bind:prompt={chat.input} chat={data.chat} {onChange} />
+    <Button class="my-2 px-2" variant="default" onclick={handleSubmit}>
+      <Send class="h-4 w-4" />
+      <div
+        class="w-13 pointer-events-none ml-2 hidden h-6 rounded-full bg-gray-700 px-2 py-1 md:inline-flex"
+      >
+        <div class="pointer-events-none text-center text-xs font-light text-white">Ctrl + ⏎</div>
+      </div>
+    </Button>
   </div>
-  <div class="flex flex-col gap-3 pt-1">
-    {#each data.responses.toReversed() as response (response.id)}
-      {@const service = response.model?.service}
-      <ResponseCard {response} {service} initialMessages={response.messages} />
-    {/each}
+  <div class="flex flex-col gap-3 py-4">
+    {#if assistantMessage}
+      <MessageCard message={assistantMessage} />
+    {/if}
   </div>
 </div>
-<!--{:else}-->
-<!--  <Splash>-->
-<!--    <p>Configure your AI accounts to start building.</p>-->
-<!--    <Button onclick={() => document.getElementById("model-config-trigger")?.click()}>Start</Button>-->
-<!--  </Splash>-->
-<!--{/if}-->
