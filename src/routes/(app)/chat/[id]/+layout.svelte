@@ -3,7 +3,7 @@
   import { goto } from "$app/navigation";
   import SelectModel from "./SelectModel.svelte";
   import { Button } from "@/components/ui/button";
-  import { SettingsIcon } from "lucide-svelte";
+  import { PlayIcon, SettingsIcon } from "lucide-svelte";
   import { updateChat } from "./$data";
   import { Input } from "@/components/ui/input";
 
@@ -57,12 +57,22 @@
 </header>
 
 <div class="flex flex-1 flex-col overflow-y-auto">
-  <div class="px-3">
+  <div class="flex flex-row px-3">
     <Input
       class="border-none p-1 text-xl focus-visible:ring-0 focus-visible:ring-offset-0"
       bind:value={data.chat.name}
       oninput={handleNameChange}
     />
+    {#if data.tab === "revise"}
+      <Button variant="default" onclick={() => {}}>
+        <PlayIcon class="mr-2 h-4 w-4" /> Run
+        <div
+          class="w-13 pointer-events-none ml-2 hidden h-6 rounded-full bg-gray-700 px-2 py-1 md:inline-flex"
+        >
+          <div class="pointer-events-none text-center text-xs font-light text-white">Ctrl + ⏎</div>
+        </div>
+      </Button>
+    {/if}
   </div>
   <slot />
 </div>

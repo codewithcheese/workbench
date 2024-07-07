@@ -140,14 +140,6 @@
 <div class="grid grid-cols-2 gap-3 overflow-y-auto px-4">
   <div class="overflow-y-auto py-4">
     <EditorCard bind:prompt={chatService.input} chat={data.chat} {onChange} />
-    <Button class="my-2 px-2" variant="default" onclick={handleSubmit}>
-      <Send class="h-4 w-4" />
-      <div
-        class="w-13 pointer-events-none ml-2 hidden h-6 rounded-full bg-gray-700 px-2 py-1 md:inline-flex"
-      >
-        <div class="pointer-events-none text-center text-xs font-light text-white">Ctrl + ⏎</div>
-      </div>
-    </Button>
   </div>
   <div class="flex flex-col gap-3 py-4">
     {#if assistantMessage}
