@@ -24,9 +24,10 @@
   type Props = {
     chat: Chat;
     prompt: string;
-    onChange: () => void;
+    onChange?: () => void;
+    onSubmit?: () => void;
   };
-  let { chat, prompt = $bindable(""), onChange }: Props = $props();
+  let { chat, prompt = $bindable(""), onChange, onSubmit }: Props = $props();
 
   let docMentionRegex = /\[\[([^\]]|](?!]))*/g;
 
@@ -141,7 +142,7 @@
         {
           key: "Ctrl-Enter",
           run: () => {
-            submitPrompt(chat, store.selected.modelId).catch(console.error);
+            onSubmit && onSubmit();
             return true;
           },
         },
@@ -165,7 +166,12 @@
 <div>
   <Card class="overflow-y-auto">
     <CardContent class="p-0">
-      <CodeMirror class="w-full" bind:value={prompt} {extensions} on:change={onChange} />
+      <CodeMirror
+        class="w-full"
+        bind:value={prompt}
+        {extensions}
+        on:change={() => onChange && onChange()}
+      />
     </CardContent>
   </Card>
 </div>

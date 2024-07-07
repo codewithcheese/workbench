@@ -278,9 +278,6 @@ export class ChatService {
     this.headers = headers;
     this.body = body;
     this.messages = initialMessages || [];
-    // fixme smells
-    this.input =
-      editing && initialMessages ? initialMessages[editing.index].content : initialInput || "";
     this.data = [];
     this.metadata = undefined;
     this.isLoading = false;
@@ -289,6 +286,13 @@ export class ChatService {
     this.generateId = generateId;
     this.editing = editing;
     this.fetch = fetch;
+    // if editing, set initial input to the content of the message at the given index
+    if (editing && initialMessages) {
+      this.input = initialMessages[editing.index].content;
+      console.log("initial input", this.input);
+    } else {
+      this.input = initialInput || "";
+    }
   }
 
   get key() {
@@ -311,6 +315,29 @@ export class ChatService {
 
     const chatRequest: ChatRequest = {
       messages: this.messages.concat(message as Message),
+      options,
+      data,
+      ...(functions !== undefined && { functions }),
+      ...(function_call !== undefined && { function_call }),
+      ...(tools !== undefined && { tools }),
+      ...(tool_choice !== undefined && { tool_choice }),
+    };
+    return this.triggerRequest(chatRequest);
+  }
+
+  edit(
+    content: string,
+    index: number,
+    { options, functions, function_call, tools, tool_choice, data }: ChatRequestOptions = {},
+  ) {
+    console.log("edit", content, index, this.messages);
+    let messagesSnapshot = structuredClone($state.snapshot(this.messages));
+    messagesSnapshot[index].content = content;
+    // remove messages after edit
+    messagesSnapshot = messagesSnapshot.slice(0, index + 1);
+    console.log("edit", messagesSnapshot);
+    const chatRequest: ChatRequest = {
+      messages: messagesSnapshot,
       options,
       data,
       ...(functions !== undefined && { functions }),
@@ -372,6 +399,7 @@ export class ChatService {
    * manually to regenerate the AI response.
    */
   setMessages(key: string, messages: Message[]): void {
+    console.log("setMessages", key, messages);
     store[key] = messages;
     this.messages = messages;
     if (this.onMessageUpdate) {
@@ -380,28 +408,30 @@ export class ChatService {
   }
 
   /** Form submission handler to automatically reset input and append a user message  */
-  handleSubmit(
-    event?: { preventDefault?: () => void },
-    chatRequestOptions?: ChatRequestOptions,
-  ): void {
-    event?.preventDefault?.();
-    const inputValue = this.input;
-    if (!inputValue) return;
-    this.input = "";
+  handleSubmit(event?: { preventDefault?: () => void }, chatRequestOptions?: ChatRequestOptions) {
+    try {
+      console.log("handleSubmit", this.input, this.editing);
+      event?.preventDefault?.();
+      const inputValue = this.input;
+      if (!inputValue) return;
 
-    if (this.editing) {
-      let message = this.messages[this.editing.index];
-      message.content = inputValue;
-      // todo implement editing/revise
-    } else {
-      this.append(
-        {
-          content: inputValue,
-          role: "user",
-          createdAt: new Date(),
-        },
-        chatRequestOptions,
-      );
+      if (this.editing) {
+        let message = this.messages[this.editing.index];
+        message.content = inputValue;
+        return this.edit(inputValue, this.editing.index, chatRequestOptions);
+      } else {
+        this.input = "";
+        return this.append(
+          {
+            content: inputValue,
+            role: "user",
+            createdAt: new Date(),
+          },
+          chatRequestOptions,
+        );
+      }
+    } catch (e) {
+      console.error(e);
     }
   }
 

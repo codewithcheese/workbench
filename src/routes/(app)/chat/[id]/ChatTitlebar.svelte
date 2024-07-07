@@ -32,7 +32,11 @@
     }}
   />
   {#if tab === "revise"}
-    <Button variant="default" onclick={onRunClick}>
+    <Button
+      variant="default"
+      class="focus-visible:ring-0 focus-visible:ring-offset-0"
+      onclick={onRunClick}
+    >
       <PlayIcon class="mr-2 h-4 w-4" /> Run
       <div
         class="w-13 pointer-events-none ml-2 hidden h-6 rounded-full bg-gray-700 px-2 py-1 md:inline-flex"

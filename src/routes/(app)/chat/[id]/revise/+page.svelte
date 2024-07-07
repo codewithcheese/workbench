@@ -41,6 +41,8 @@
     },
   });
 
+  $inspect("input", chatService.input);
+
   let assistantMessage = $derived(getAssistantMessage());
 
   // let userMessage = $derived(getUserMessage());
@@ -85,19 +87,6 @@
     return editIndex === -1 ? undefined : editIndex;
   }
 
-  // function getUserMessage() {
-  //   let message = chat.messages.findLast((m) => m.role === "user");
-  //   if (!message) {
-  //     message = {
-  //       id: nanoid(),
-  //       role: "user",
-  //       content: "",
-  //     };
-  //     chat.messages.push(message);
-  //   }
-  //   return message;
-  // }
-  //
   function getAssistantMessage() {
     return editIndex
       ? chatService.messages.find((m, index) => m.role === "assistant" && index > editIndex!)
@@ -105,28 +94,22 @@
   }
 
   async function handleSubmit() {
-    // const message = chat.messages.find((m) => m.id === userMessage.id);
-    // if (!store.selected.modelId) {
-    //   toast.error("No model selected");
-    //   return;
-    // }
-    // const model = await getModelService(store.selected.modelId);
-    // if (!model) {
-    //   toast.error("Selected model not found");
-    //   return;
-    // }
-    // Object.assign(body, {
-    //   providerId: model.service.providerId,
-    //   modelName: model.name,
-    //   baseURL: model.service.baseURL,
-    //   apiKey: model.service.apiKey,
-    // });
-    // message.content = prompt;
-    // chat.reload();
-  }
-
-  async function onChange() {
-    // input$.next(prompt);
+    if (!store.selected.modelId) {
+      toast.error("No model selected");
+      return;
+    }
+    const model = await getModelService(store.selected.modelId);
+    if (!model) {
+      toast.error("Selected model not found");
+      return;
+    }
+    Object.assign(body, {
+      providerId: model.service.providerId,
+      modelName: model.name,
+      baseURL: model.service.baseURL,
+      apiKey: model.service.apiKey,
+    });
+    chatService.handleSubmit();
   }
 </script>
 
@@ -138,7 +121,7 @@
         <MessageCard {message} />
       {/if}
     {/each}
-    <EditorCard bind:prompt={chatService.input} chat={data.chat} {onChange} />
+    <EditorCard bind:prompt={chatService.input} chat={data.chat} onSubmit={handleSubmit} />
   </div>
   <div class="flex flex-col gap-3 py-4">
     {#if assistantMessage}

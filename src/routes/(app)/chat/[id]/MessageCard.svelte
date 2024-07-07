@@ -9,8 +9,6 @@
   };
   let { message }: Props = $props();
   let format = "markdown";
-
-  $inspect("message card", message);
 </script>
 
 <Card class={cn("", message.role === "user" && "border-none bg-muted/100")}>
