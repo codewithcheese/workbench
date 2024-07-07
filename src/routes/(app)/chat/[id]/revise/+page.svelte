@@ -17,7 +17,7 @@
 
   let { data } = $props();
 
-  let editIndex = getEditIndex();
+  let editIndex = findEditIndex();
 
   let body = $state<{ providerId?: string; modelName?: string; baseURL?: string; apiKey?: string }>(
     {
@@ -37,6 +37,7 @@
       toast.error(e.message);
     },
     onFinish: (message) => {
+      console.log("onFinish", message);
       // updateMessages(data.response.id, $state.snapshot(chatService.messages));
     },
   });
@@ -82,7 +83,7 @@
   //   return nextIndex;
   // }
 
-  function getEditIndex() {
+  function findEditIndex() {
     const editIndex = data.response.messages.findLastIndex((m) => m.role === "user");
     return editIndex === -1 ? undefined : editIndex;
   }
