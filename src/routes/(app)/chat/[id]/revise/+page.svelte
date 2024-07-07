@@ -11,7 +11,7 @@
   import { store } from "$lib/store.svelte";
   import { Button } from "@/components/ui/button";
   import { PlayIcon, Send, SendIcon } from "lucide-svelte";
-  import { useChat } from "$lib/ai/use-chat.svelte";
+  import { ChatService } from "$lib/chat-service.svelte.js";
   import { toast } from "svelte-french-toast";
 
   let { data } = $props();
@@ -25,7 +25,7 @@
     },
   );
 
-  let chat = useChat({
+  let chatService = new ChatService({
     // @ts-expect-error message type mismatch
     initialMessages: data.response.messages,
     editing: getEditing(),
@@ -34,7 +34,7 @@
       toast.error(e.message);
     },
     onFinish: (message) => {
-      updateMessages(data.response.id, $state.snapshot(chat.messages));
+      updateMessages(data.response.id, $state.snapshot(chatService.messages));
     },
   });
 
@@ -105,7 +105,9 @@
       return undefined;
     }
     if (editing) {
-      return chat.messages.find((m, index) => m.role === "assistant" && index > editing.index);
+      return chatService.messages.find(
+        (m, index) => m.role === "assistant" && index > editing.index,
+      );
     }
   }
 
@@ -137,7 +139,7 @@
 
 <div class="grid grid-cols-2 gap-3 overflow-y-auto px-4">
   <div class="overflow-y-auto py-4">
-    <EditorCard bind:prompt={chat.input} chat={data.chat} {onChange} />
+    <EditorCard bind:prompt={chatService.input} chat={data.chat} {onChange} />
     <Button class="my-2 px-2" variant="default" onclick={handleSubmit}>
       <Send class="h-4 w-4" />
       <div

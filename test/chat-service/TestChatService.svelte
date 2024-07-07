@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { useChat } from "$lib/ai/use-chat.svelte";
+  import { ChatService } from "$lib/chat-service.svelte.js";
 
-  let chat = useChat({
+  let chat = new ChatService({
     api: "http://localhost:3000/api/chat",
   });
 

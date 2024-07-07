@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/svelte";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ResponseCard from "./ResponseCard.svelte";
 import { useDb } from "@/database/client";
-import { useChat } from "$lib/ai/use-chat.svelte";
+import { useChat } from "$lib/ai/chat-service.svelte.js";
 
 // Mock the dependencies
 vi.mock("@/database/client", () => ({

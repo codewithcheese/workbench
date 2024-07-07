@@ -44,7 +44,7 @@ export type ChatOptions = {
   /**
    * Edit index, is set then input will be set to the content of the message at the given index
    */
-  editing: { index: number } | null;
+  editing?: { index: number };
   /**
    * @deprecated Use AI SDK 3.1 `streamText` and `onToolCall` instead.
    *
@@ -216,10 +216,6 @@ let uniqueId = 0;
 
 const store: Record<string, Message[] | undefined> = {};
 
-export function useChat(options: ChatOptions): ChatService {
-  return new ChatService(options);
-}
-
 export class ChatService {
   messages: Message[] = $state([]);
   error: undefined | Error = $state(undefined);
@@ -230,7 +226,7 @@ export class ChatService {
 
   private id: string;
   private api: string;
-  private editing: { index: number } | null;
+  private editing: { index: number } | undefined;
   private generateId: IdGenerator;
   private abortController: AbortController | null;
   private sendExtraMessageFields: boolean | undefined;
@@ -251,7 +247,7 @@ export class ChatService {
     id,
     initialMessages = [],
     initialInput = "",
-    editing = null,
+    editing,
     sendExtraMessageFields,
     experimental_onFunctionCall,
     experimental_onToolCall,

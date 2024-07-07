@@ -1,10 +1,10 @@
 /* @vitest-environment jsdom */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, waitFor } from "@testing-library/svelte";
-import TestUseChatComponent from "./TestUseChat.svelte";
+import TestUseChatComponent from "./TestChatService.svelte";
 import { createMockServer } from "./mock-server";
 
-describe("useChat in Svelte component", () => {
+describe("ChatService in Svelte component", () => {
   const mockServer = createMockServer();
 
   beforeEach(() => {

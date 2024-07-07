@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ChatService } from "$lib/ai/use-chat.svelte";
+  import { ChatService } from "$lib/chat-service.svelte.js";
   import { toast } from "svelte-french-toast";
   import { updateMessages } from "./revise/$data";
   import MessageInput from "./MessageInput.svelte";

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useChat } from "$lib/ai/use-chat.svelte";
+  import { useChat } from "$lib/ai/chat-service.svelte.js";
   import { LoaderCircleIcon, RefreshCwIcon, XIcon } from "lucide-svelte";
   import { Card, CardContent, CardHeader } from "@/components/ui/card";
   import { Label } from "@/components/ui/label";
