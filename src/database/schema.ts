@@ -48,6 +48,39 @@ export const responseMessageTable = sqliteTable(
   }),
 );
 
+export const revisionTable = sqliteTable(
+  "revision",
+  {
+    id: text("id").primaryKey(),
+    version: int("version").notNull(),
+    chatId: text("chatId")
+      .notNull()
+      .references(() => chatTable.id, { onDelete: "cascade" }),
+    error: text("error"),
+    createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
+  },
+  (table) => ({
+    chatIdIdx: index("revision_chatId_idx").on(table.chatId),
+  }),
+);
+
+export const messageTable = sqliteTable(
+  "message",
+  {
+    id: text("id").primaryKey(),
+    index: int("index").notNull(),
+    revisionId: text("revisionId")
+      .notNull()
+      .references(() => revisionTable.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    content: text("content").notNull(),
+    createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
+  },
+  (table) => ({
+    revisionIdIdx: index("message_revisionId_idx").on(table.revisionId),
+  }),
+);
+
 export const modelTable = sqliteTable(
   "model",
   {
@@ -89,6 +122,8 @@ export type Document = InferSelectModel<typeof documentTable>;
 export type Response = InferSelectModel<typeof responseTable>;
 export type ResponseMessage = InferSelectModel<typeof responseMessageTable>;
 export type InsertResponseMessage = InferInsertModel<typeof responseMessageTable>;
+export type Revision = InferSelectModel<typeof revisionTable>;
+export type Message = InferSelectModel<typeof messageTable>;
 export type Model = InferSelectModel<typeof modelTable>;
 export type Service = InferSelectModel<typeof serviceTable>;
 export type Chat = InferSelectModel<typeof chatTable>;
@@ -129,5 +164,20 @@ export const responseMessageRelations = relations(responseMessageTable, ({ one }
   response: one(responseTable, {
     fields: [responseMessageTable.responseId],
     references: [responseTable.id],
+  }),
+}));
+
+export const revisionRelations = relations(revisionTable, ({ one, many }) => ({
+  chat: one(chatTable, {
+    fields: [revisionTable.chatId],
+    references: [chatTable.id],
+  }),
+  messages: many(messageTable),
+}));
+
+export const messageRelations = relations(messageTable, ({ one, many }) => ({
+  revision: one(revisionTable, {
+    fields: [messageTable.revisionId],
+    references: [revisionTable.id],
   }),
 }));

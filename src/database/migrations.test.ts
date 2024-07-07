@@ -214,16 +214,28 @@ describe("Migration Tests", () => {
     expect(initialMessageCount).toBe(testData.responseMessages.length);
   }
 
+  async function applyMigrationsUpTo(targetMigration: string) {
+    let isFirstMigration = true;
+    for (const entry of journal.entries) {
+      if (isFirstMigration) {
+        await runMigration(entry.tag);
+        insertTestData();
+        isFirstMigration = false;
+      } else {
+        await runMigration(entry.tag);
+      }
+      if (entry.tag === targetMigration) {
+        break;
+      }
+    }
+  }
+
   vi.mock("@/database/client");
 
   beforeEach(async () => {
     sqlite = new Database(":memory:");
     db = drizzle(sqlite);
     vi.mocked(useDb).mockReturnValue(db);
-
-    // run initial migration and insert test data
-    await runMigration(journal.entries[0].tag);
-    insertTestData();
   });
 
   afterEach(() => {
@@ -241,6 +253,8 @@ describe("Migration Tests", () => {
   }
 
   it("0000_careful_smiling_tiger", async () => {
+    await applyMigrationsUpTo("0000_careful_smiling_tiger");
+
     /*
      * Check for unique and other indexes after the first migration
      * This ensures that the initial schema is set up correctly with all necessary constraints
@@ -257,7 +271,7 @@ describe("Migration Tests", () => {
   });
 
   it("0001_nosy_earthquake", async () => {
-    await runMigration(journal.entries[1].tag);
+    await applyMigrationsUpTo("0001_nosy_earthquake");
 
     /*
      * Verify data integrity after the second migration.
@@ -331,8 +345,7 @@ describe("Migration Tests", () => {
   });
 
   it("0002_overjoyed_mordo", async () => {
-    await runMigration(journal.entries[1].tag);
-    await runMigration(journal.entries[2].tag);
+    await applyMigrationsUpTo("0002_overjoyed_mordo");
 
     /*
      * Verify that the 'project' table was successfully renamed to 'chat'.
@@ -443,5 +456,114 @@ describe("Migration Tests", () => {
       sql`SELECT COUNT(*) as count FROM responseMessage`,
     ).count;
     expect(remainingMessageCount).toBe(initialMessageCount - 3); // 'project1' had 3 messages
+  });
+
+  it("0003_huge_nick_fury", async () => {
+    await applyMigrationsUpTo("0003_huge_nick_fury");
+
+    // Check for the creation of new tables
+    const messageTable = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='table' AND name='message'`,
+    );
+    expect(messageTable).toBeTruthy();
+
+    const revisionTable = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='table' AND name='revision'`,
+    );
+    expect(revisionTable).toBeTruthy();
+
+    // Verify the creation of new indexes
+    const messageIndex = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='index' AND name='message_revisionId_idx'`,
+    );
+    expect(messageIndex).toBeTruthy();
+
+    const revisionIndex = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='index' AND name='revision_chatId_idx'`,
+    );
+    expect(revisionIndex).toBeTruthy();
+
+    // Check that data has been migrated correctly
+    const revisionCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM revision`,
+    ).count;
+    expect(revisionCount).toBe(initialResponseCount);
+
+    const messageCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM message`,
+    ).count;
+    expect(messageCount).toBe(initialMessageCount);
+
+    // Verify the structure of the new tables
+    const revisionColumns = db.all<{ name: string; type: string }>(
+      sql`PRAGMA table_info(revision)`,
+    );
+    expect(revisionColumns).toContainEqual(
+      expect.objectContaining({ name: "version", type: "INTEGER" }),
+    );
+    expect(revisionColumns).toContainEqual(
+      expect.objectContaining({ name: "chatId", type: "TEXT" }),
+    );
+
+    const messageColumns = db.all<{ name: string; type: string }>(sql`PRAGMA table_info(message)`);
+    expect(messageColumns).toContainEqual(
+      expect.objectContaining({ name: "revisionId", type: "TEXT" }),
+    );
+    expect(messageColumns).toContainEqual(expect.objectContaining({ name: "role", type: "TEXT" }));
+
+    // Verify the content of migrated data
+    const revisionData = db.all<{ id: string; version: number; chatId: string }>(
+      sql`SELECT id, version, chatId FROM revision ORDER BY chatId, createdAt`,
+    );
+
+    // Sort testData.responses by createdAt to ensure correct ordering
+    const sortedResponses = [...testData.responses].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+
+    // Calculate expected versions
+    const chatVersions = new Map<string, number>();
+    const expectedRevisionData = sortedResponses.map(({ id, projectId: chatId }) => {
+      const currentVersion = (chatVersions.get(chatId) || 0) + 1;
+      chatVersions.set(chatId, currentVersion);
+      return { id, version: currentVersion, chatId };
+    });
+
+    expect(revisionData).toEqual(expectedRevisionData);
+
+    const messageData = db.all<{ id: string; revisionId: string; role: string; content: string }>(
+      sql`SELECT id, revisionId, role, content FROM message ORDER BY id`,
+    );
+    expect(messageData).toEqual(
+      testData.responseMessages.map(({ id, responseId: revisionId, role, content }) => ({
+        id,
+        revisionId,
+        role,
+        content,
+      })),
+    );
+
+    // Test cascading delete behavior
+    await db.run(sql`DELETE FROM chat WHERE id = 'project2'`);
+    const remainingRevisionCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM revision WHERE chatId = 'project2'`,
+    ).count;
+    expect(remainingRevisionCount).toBe(0);
+
+    const remainingMessageCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM message WHERE revisionId IN (SELECT id FROM revision WHERE chatId = 'project2')`,
+    ).count;
+    expect(remainingMessageCount).toBe(0);
+
+    // Verify that the deletion didn't affect other chats' data
+    const totalRemainingRevisionCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM revision`,
+    ).count;
+    expect(totalRemainingRevisionCount).toBe(revisionCount - 1); // 'project2' had 1 response/revision
+
+    const totalRemainingMessageCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM message`,
+    ).count;
+    expect(totalRemainingMessageCount).toBe(messageCount - 2); // 'project2' had 2 messages
   });
 });
