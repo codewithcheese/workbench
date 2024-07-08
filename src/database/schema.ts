@@ -15,39 +15,6 @@ export const documentTable = sqliteTable("document", {
   createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const responseTable = sqliteTable(
-  "response",
-  {
-    id: text("id").primaryKey(),
-    chatId: text("chatId")
-      .notNull()
-      .references(() => chatTable.id, { onDelete: "cascade" }),
-    modelId: text("modelId").notNull(),
-    error: text("error"),
-    createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
-  },
-  (table) => ({
-    chatIdIdx: index("chatId_idx").on(table.chatId),
-  }),
-);
-
-export const responseMessageTable = sqliteTable(
-  "responseMessage",
-  {
-    id: text("id").primaryKey(),
-    index: int("index").notNull(),
-    responseId: text("responseId")
-      .notNull()
-      .references(() => responseTable.id, { onDelete: "cascade" }),
-    role: text("role").notNull(),
-    content: text("content").notNull(),
-    createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
-  },
-  (table) => ({
-    responseIdIdx: index("responseId_idx").on(table.responseId),
-  }),
-);
-
 export const revisionTable = sqliteTable(
   "revision",
   {
@@ -119,11 +86,9 @@ export const chatTable = sqliteTable("chat", {
  */
 
 export type Document = InferSelectModel<typeof documentTable>;
-export type Response = InferSelectModel<typeof responseTable>;
-export type ResponseMessage = InferSelectModel<typeof responseMessageTable>;
-export type InsertResponseMessage = InferInsertModel<typeof responseMessageTable>;
 export type Revision = InferSelectModel<typeof revisionTable>;
 export type Message = InferSelectModel<typeof messageTable>;
+export type InsertMessage = InferInsertModel<typeof messageTable>;
 export type Model = InferSelectModel<typeof modelTable>;
 export type Service = InferSelectModel<typeof serviceTable>;
 export type Chat = InferSelectModel<typeof chatTable>;
@@ -134,19 +99,7 @@ export type Chat = InferSelectModel<typeof chatTable>;
  */
 
 export const chatRelations = relations(chatTable, ({ many }) => ({
-  responses: many(responseTable),
-}));
-
-export const responseRelations = relations(responseTable, ({ one, many }) => ({
-  chat: one(chatTable, {
-    fields: [responseTable.chatId],
-    references: [chatTable.id],
-  }),
-  model: one(modelTable, {
-    fields: [responseTable.modelId],
-    references: [modelTable.id],
-  }),
-  messages: many(responseMessageTable),
+  revisions: many(revisionTable),
 }));
 
 export const modelRelations = relations(modelTable, ({ one }) => ({
@@ -158,13 +111,6 @@ export const modelRelations = relations(modelTable, ({ one }) => ({
 
 export const serviceRelations = relations(serviceTable, ({ many }) => ({
   models: many(modelTable),
-}));
-
-export const responseMessageRelations = relations(responseMessageTable, ({ one }) => ({
-  response: one(responseTable, {
-    fields: [responseMessageTable.responseId],
-    references: [responseTable.id],
-  }),
 }));
 
 export const revisionRelations = relations(revisionTable, ({ one, many }) => ({

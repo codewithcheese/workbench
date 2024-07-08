@@ -1,6 +1,6 @@
 import { useDb } from "@/database/client";
 import { asc, desc, eq, not } from "drizzle-orm";
-import { chatTable, responseMessageTable, responseTable } from "@/database/schema";
+import { chatTable, revisionTable, messageTable } from "@/database/schema";
 import { nanoid } from "nanoid";
 import { invalidate } from "$app/navigation";
 
@@ -16,9 +16,6 @@ export async function newChat() {
 }
 
 export async function removeChat(chatId: string) {
-  // remove responses
-  await useDb().delete(responseTable).where(eq(responseTable.chatId, chatId));
-  // delete chat
   await useDb().delete(chatTable).where(eq(chatTable.id, chatId));
   // find next chat
   const nextChat = await useDb().query.chatTable.findFirst({
@@ -41,10 +38,10 @@ export async function duplicateChat(id: string) {
   const chat = await useDb().query.chatTable.findFirst({
     where: eq(chatTable.id, id),
     with: {
-      responses: {
+      revisions: {
         with: {
           messages: {
-            orderBy: [asc(responseMessageTable.index)],
+            orderBy: [asc(messageTable.index)],
           },
         },
       },
@@ -60,24 +57,15 @@ export async function duplicateChat(id: string) {
       name: `${chat.name} copy`,
       prompt: chat.prompt,
     });
-    for (const response of chat.responses) {
-      const responseId = nanoid(10);
-      await tx.insert(responseTable).values({
-        id: responseId,
-        chatId: newChatId,
-        modelId: response.modelId,
-        error: null,
-      });
+    for (const revision of chat.revisions) {
+      const newRevisionId = nanoid(10);
+      await tx.insert(revisionTable).values({ ...revision, id: newRevisionId, chatId: newChatId });
       let index = 0;
-      for (const message of response.messages) {
-        const responseMessageId = nanoid(10);
-        await tx.insert(responseMessageTable).values({
-          id: responseMessageId,
-          index,
-          responseId: responseId,
-          role: message.role,
-          content: message.content,
-        });
+      for (const message of revision.messages) {
+        const newMessageId = nanoid(10);
+        await tx
+          .insert(messageTable)
+          .values({ ...message, id: newMessageId, revisionId: newRevisionId });
         index += 1;
       }
     }

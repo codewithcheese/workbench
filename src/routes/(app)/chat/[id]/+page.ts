@@ -1,13 +1,13 @@
-import { createResponse, getLatestResponse } from "./$data";
-import { registerModel, responseTable } from "@/database";
+import { createRevision, getLatestRevision } from "./$data";
+import { registerModel, revisionTable } from "@/database";
 import { error } from "@sveltejs/kit";
 
 export async function load({ params, depends }) {
-  const response = (await getLatestResponse(params.id)) || (await createResponse(params.id));
-  if (!response) {
+  const revision = (await getLatestRevision(params.id)) || (await createRevision(params.id));
+  if (!revision) {
     return error(500, "Error loading chat");
   }
-  registerModel(responseTable, response!, depends);
+  registerModel(revisionTable, revision, depends);
   depends("view:messages");
-  return { response };
+  return { revision };
 }

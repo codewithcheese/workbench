@@ -4,7 +4,7 @@ import Database from "better-sqlite3";
 import { type BetterSQLite3Database, drizzle } from "drizzle-orm/better-sqlite3";
 import { nanoid } from "nanoid";
 import * as schema from "@/database/schema";
-import { chatTable, responseMessageTable, responseTable } from "@/database/schema";
+import { chatTable, revisionTable, messageTable } from "@/database/schema";
 import { runMigrations } from "@/database/migrator";
 import { eq } from "drizzle-orm";
 import { invalidate } from "$app/navigation";
@@ -30,8 +30,8 @@ describe("(app)/$data", () => {
     await runMigrations(true);
     db.run(sql.raw("PRAGMA foreign_keys=on;"));
 
-    await db.delete(schema.responseMessageTable);
-    await db.delete(schema.responseTable);
+    await db.delete(schema.messageTable);
+    await db.delete(schema.revisionTable);
     await db.delete(schema.chatTable);
     await db.delete(schema.modelTable);
     await db.delete(schema.serviceTable);
@@ -56,15 +56,27 @@ describe("(app)/$data", () => {
       { id: "chat2", name: "Chat 2", prompt: "Prompt 2" },
     ]);
 
-    await db.insert(schema.responseTable).values([
-      { id: "response1", chatId: "chat1", modelId: "model1" },
-      { id: "response2", chatId: "chat2", modelId: "model1" },
+    await db.insert(schema.revisionTable).values([
+      { id: "chat1-revision1", version: 1, chatId: "chat1" },
+      { id: "chat2-revision1", version: 1, chatId: "chat2" },
     ]);
 
-    await db.insert(schema.responseMessageTable).values([
-      { id: "message1", index: 0, responseId: "response1", role: "user", content: "Hello" },
-      { id: "message2", index: 1, responseId: "response1", role: "assistant", content: "Hi there" },
-      { id: "message3", index: 0, responseId: "response2", role: "user", content: "How are you?" },
+    await db.insert(schema.messageTable).values([
+      { id: "message1", index: 0, revisionId: "chat1-revision1", role: "user", content: "Hello" },
+      {
+        id: "message2",
+        index: 1,
+        revisionId: "chat1-revision1",
+        role: "assistant",
+        content: "Hi there",
+      },
+      {
+        id: "message3",
+        index: 0,
+        revisionId: "chat2-revision1",
+        role: "user",
+        content: "How are you?",
+      },
     ]);
   });
 
@@ -104,13 +116,13 @@ describe("(app)/$data", () => {
       });
       expect(removedChat).toBeUndefined();
 
-      const removedResponses = await db.query.responseTable.findMany({
-        where: eq(responseTable.chatId, "chat1"),
+      const removedResponses = await db.query.revisionTable.findMany({
+        where: eq(revisionTable.chatId, "chat1"),
       });
       expect(removedResponses).toHaveLength(0);
 
-      const removedMessages = await db.query.responseMessageTable.findMany({
-        where: eq(responseMessageTable.responseId, "response1"),
+      const removedMessages = await db.query.messageTable.findMany({
+        where: eq(messageTable.revisionId, "chat1-revision1"),
       });
       expect(removedMessages).toHaveLength(0);
 
@@ -135,7 +147,7 @@ describe("(app)/$data", () => {
     it("should duplicate a chat and its associated data", async () => {
       vi.mocked(nanoid)
         .mockReturnValueOnce("newChatId")
-        .mockReturnValueOnce("newResponseId")
+        .mockReturnValueOnce("newRevisionId")
         .mockReturnValueOnce("newMessageId");
 
       const newChatId = await duplicateChat("chat2");
@@ -144,7 +156,7 @@ describe("(app)/$data", () => {
       const duplicatedChat = await db.query.chatTable.findFirst({
         where: eq(chatTable.id, "newChatId"),
         with: {
-          responses: {
+          revisions: {
             with: {
               messages: true,
             },
@@ -157,18 +169,18 @@ describe("(app)/$data", () => {
         name: "Chat 2 copy",
         prompt: "Prompt 2",
         createdAt: expect.any(String),
-        responses: [
+        revisions: [
           {
-            id: "newResponseId",
+            id: "newRevisionId",
+            version: 1,
             chatId: "newChatId",
-            modelId: "model1",
             error: null,
             createdAt: expect.any(String),
             messages: [
               {
                 id: expect.any(String),
                 index: 0,
-                responseId: "newResponseId",
+                revisionId: "newRevisionId",
                 role: "user",
                 content: "How are you?",
                 createdAt: expect.any(String),

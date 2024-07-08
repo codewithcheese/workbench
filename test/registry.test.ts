@@ -1,22 +1,12 @@
 import { describe, expect, it } from "vitest";
-import {
-  type Model,
-  type Chat,
-  chatTable,
-  type Response,
-  type ResponseMessage,
-  type Service,
-} from "@/database/schema";
+import { type Chat, chatTable, type Message, type Revision } from "@/database/schema";
 import { registerModel } from "../src/database";
 
 describe("cache", () => {
   it("should use relations to extract models", async () => {
     type ChatView = Chat & {
-      responses: (Response & {
-        model: Model & {
-          service: Service;
-        };
-        messages: ResponseMessage[];
+      revisions: (Revision & {
+        messages: Message[];
       })[];
     };
 
@@ -25,18 +15,18 @@ describe("cache", () => {
       name: "Untitled",
       prompt: "",
       createdAt: new Date().toISOString(),
-      responses: [
+      revisions: [
         {
-          id: "id-response",
+          id: "id-revision",
+          version: 1,
           chatId: "id-chat",
-          modelId: "id-model",
           error: null,
           createdAt: new Date().toISOString(),
           messages: [
             {
               id: "id-message",
               index: 0,
-              responseId: "id-response",
+              revisionId: "id-revision",
               role: "user",
               content: "",
               createdAt: new Date().toISOString(),
@@ -44,27 +34,12 @@ describe("cache", () => {
             {
               id: "id-message2",
               index: 0,
-              responseId: "id-response",
+              revisionId: "id-revision",
               role: "user",
               content: "",
               createdAt: new Date().toISOString(),
             },
           ],
-          model: {
-            id: "id-model",
-            serviceId: "id-service",
-            name: "",
-            visible: 1,
-            createdAt: new Date().toISOString(),
-            service: {
-              id: "id-service",
-              name: "",
-              providerId: "",
-              baseURL: "",
-              apiKey: "",
-              createdAt: new Date().toISOString(),
-            },
-          },
         },
       ],
     };
@@ -75,11 +50,9 @@ describe("cache", () => {
     expect(dependencies).toEqual(
       new Set([
         "model:chat:id-chat",
-        "model:response:id-response",
-        "model:responseMessage:id-message",
-        "model:responseMessage:id-message2",
-        "model:model:id-model",
-        "model:service:id-service",
+        "model:revision:id-revision",
+        "model:message:id-message",
+        "model:message:id-message2",
       ]),
     );
   });

@@ -1,23 +1,15 @@
 <script lang="ts">
   import EditorCard from "./EditorCard.svelte";
-  import ResponseCard from "./ResponseCard.svelte";
-  import { insertResponseMessage, updateMessages, updateResponseMessage } from "./$data";
-  import { nanoid } from "nanoid";
-  import { invalidate } from "$app/navigation";
-  import { concatMap, Subject, throttleTime } from "rxjs";
-  import type { ResponseMessage } from "@/database";
   import MessageCard from "../MessageCard.svelte";
-  import { getModelService, submitPrompt } from "../$data";
+  import { getModelService } from "../$data";
   import { store } from "$lib/store.svelte";
-  import { Button } from "@/components/ui/button";
-  import { PlayIcon, Send, SendIcon } from "lucide-svelte";
   import { ChatService } from "$lib/chat-service.svelte.js";
   import { toast } from "svelte-french-toast";
   import ChatTitlebar from "../ChatTitlebar.svelte";
 
   let { data } = $props();
 
-  let editIndex = findEditIndex();
+  let editIndex = $state(findEditIndex());
 
   let body = $state<{ providerId?: string; modelName?: string; baseURL?: string; apiKey?: string }>(
     {
@@ -30,66 +22,30 @@
 
   let chatService = new ChatService({
     // @ts-expect-error message type mismatch
-    initialMessages: data.response.messages,
-    editing: editIndex ? { index: editIndex } : undefined,
+    initialMessages: data.revision.messages,
+    editing: editIndex != null ? { index: editIndex } : undefined,
     body,
     onError: (e) => {
       toast.error(e.message);
     },
     onFinish: (message) => {
       console.log("onFinish", message);
+      // todo save new revision and load it
       // updateMessages(data.response.id, $state.snapshot(chatService.messages));
     },
   });
 
-  $inspect("input", chatService.input);
+  $inspect("input", chatService.input, editIndex);
 
-  let assistantMessage = $derived(getAssistantMessage());
-
-  // let userMessage = $derived(getUserMessage());
-  // let assistantMessage = $derived(userMessage ? getAssistantMessage(userMessage) : null);
-  // // problem: cannot bind content since codemirror resets cursor position when content is updated by loader
-  // // solution: uncontrolled prompt using state, does not update until navigation
-  // let prompt = $state(userMessage ? userMessage.content : "");
-  //
-  // $inspect("revise", data.response.messages, userMessage, assistantMessage, prompt);
-  //
-  // const input$ = new Subject();
-  // input$
-  //   .pipe(
-  //     throttleTime(100, undefined, { leading: true, trailing: true }),
-  //     concatMap(async (newValue) => {
-  //       if (userMessage) {
-  //         await updateResponseMessage(userMessage.id, { content: newValue });
-  //       } else {
-  //         await insertResponseMessage({
-  //           id: nanoid(),
-  //           responseId: data.response.id,
-  //           role: "user",
-  //           content: newValue,
-  //         });
-  //       }
-  //       // will reload messages so that next change will update instead of creating a new message.
-  //       await invalidate("view:messages");
-  //     }),
-  //   )
-  //   .subscribe();
-  //
-  // function getNextIndex() {
-  //   const nextIndex = data.response.messages.length
-  //     ? data.response.messages.reduce((localMax, curr) => Math.max(localMax, curr.index), 0) + 1
-  //     : 0;
-  //   console.log("nextIndex", data.response.messages.length, nextIndex);
-  //   return nextIndex;
-  // }
+  let assistantMessage = $derived(findAssistantMessage());
 
   function findEditIndex() {
-    const editIndex = data.response.messages.findLastIndex((m) => m.role === "user");
+    const editIndex = data.revision.messages.findLastIndex((m) => m.role === "user");
     return editIndex === -1 ? undefined : editIndex;
   }
 
-  function getAssistantMessage() {
-    return editIndex
+  function findAssistantMessage() {
+    return editIndex != null
       ? chatService.messages.find((m, index) => m.role === "assistant" && index > editIndex!)
       : undefined;
   }
@@ -118,7 +74,7 @@
 <div class="grid grid-cols-2 gap-3 overflow-y-auto px-4">
   <div class="flex flex-col gap-2 overflow-y-auto py-4">
     {#each chatService.messages as message, index (message.id)}
-      {#if !editIndex || index < editIndex}
+      {#if editIndex == null || index < editIndex}
         <MessageCard {message} />
       {/if}
     {/each}

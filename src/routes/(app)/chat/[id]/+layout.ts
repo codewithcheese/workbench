@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
-import { chatTable, registerModel, responseTable, serviceTable, useDb } from "@/database";
+import { chatTable, registerModel, revisionTable, serviceTable, useDb } from "@/database";
 import { error } from "@sveltejs/kit";
-import { createResponse, getLatestResponse, loadServices } from "./$data";
+import { createRevision, getLatestRevision, loadServices } from "./$data";
 
 export async function load({ route, url, params, depends }) {
   // evaluate tab using route id
@@ -27,14 +27,12 @@ export async function load({ route, url, params, depends }) {
   const services = await loadServices();
   registerModel(serviceTable, services, depends);
 
-  const response = (await getLatestResponse(params.id)) || (await createResponse(params.id));
-  if (!response) {
+  const revision = (await getLatestRevision(params.id)) || (await createRevision(params.id));
+  if (!revision) {
     return error(500, "Error loading chat");
   }
-  registerModel(responseTable, response!, depends);
+  registerModel(revisionTable, revision, depends);
   depends("view:messages");
-
   depends("view:chat");
-
-  return { chat, services, tab, response };
+  return { chat, services, tab, revision };
 }

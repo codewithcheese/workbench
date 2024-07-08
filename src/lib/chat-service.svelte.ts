@@ -10,6 +10,7 @@ import type {
   ToolCallHandler,
 } from "@ai-sdk/ui-utils";
 import { callChatApi, generateId as generateIdFunc, processChatStream } from "@ai-sdk/ui-utils";
+import { nanoid } from "nanoid";
 
 // todo remove tool and function calling until the library is stable and we need it
 
@@ -73,6 +74,8 @@ export type ChatOptions = {
   }: {
     toolCall: ToolCall$1<string, unknown>;
   }) => void | Promise<unknown> | unknown;
+  /** Callback function to be called when an input is submitted */
+  onSubmit?: (message: Message) => void | Promise<void>;
   /**
    * Callback function to be called when the API response is received.
    */
@@ -233,6 +236,7 @@ export class ChatService {
   private experimental_onFunctionCall: FunctionCallHandler | undefined;
   private experimental_onToolCall: ToolCallHandler | undefined;
   private streamMode: "stream-data" | "text" | undefined;
+  private onSubmit: ((message: Message) => void | Promise<void>) | undefined;
   private onResponse: ((response: Response) => void | Promise<void>) | undefined;
   private onFinish: ((message: Message) => void) | undefined;
   private onError: ((error: Error) => void) | undefined;
@@ -252,6 +256,7 @@ export class ChatService {
     experimental_onFunctionCall,
     experimental_onToolCall,
     streamMode,
+    onSubmit,
     onResponse,
     onFinish,
     onError,
@@ -259,7 +264,7 @@ export class ChatService {
     credentials,
     headers,
     body,
-    generateId = generateIdFunc,
+    generateId = () => nanoid(10),
     fetch,
   }: ChatOptions) {
     // assign options
@@ -270,6 +275,7 @@ export class ChatService {
     this.experimental_onFunctionCall = experimental_onFunctionCall;
     this.experimental_onToolCall = experimental_onToolCall;
     this.streamMode = streamMode;
+    this.onSubmit = onSubmit;
     this.onResponse = onResponse;
     this.onFinish = onFinish;
     this.onError = onError;
@@ -287,6 +293,7 @@ export class ChatService {
     this.editing = editing;
     this.fetch = fetch;
     // if editing, set initial input to the content of the message at the given index
+    console.log("editing", editing);
     if (editing && initialMessages) {
       this.input = initialMessages[editing.index].content;
       console.log("initial input", this.input);
@@ -410,7 +417,6 @@ export class ChatService {
   /** Form submission handler to automatically reset input and append a user message  */
   handleSubmit(event?: { preventDefault?: () => void }, chatRequestOptions?: ChatRequestOptions) {
     try {
-      console.log("handleSubmit", this.input, this.editing);
       event?.preventDefault?.();
       const inputValue = this.input;
       if (!inputValue) return;
@@ -425,7 +431,6 @@ export class ChatService {
           {
             content: inputValue,
             role: "user",
-            createdAt: new Date(),
           },
           chatRequestOptions,
         );

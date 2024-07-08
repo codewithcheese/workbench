@@ -1,20 +1,20 @@
 <script lang="ts">
   import { ChatService } from "$lib/chat-service.svelte.js";
   import { toast } from "svelte-french-toast";
-  import { updateMessages } from "./revise/$data";
   import MessageInput from "./MessageInput.svelte";
   import { store } from "$lib/store.svelte";
-  import { getModelService } from "./$data";
-  import type { Chat, ResponseMessage } from "@/database";
+  import { appendMessage, getModelService } from "./$data";
+  import type { Chat, Message } from "@/database";
   import MessageCard from "./MessageCard.svelte";
   import ChatTitlebar from "./ChatTitlebar.svelte";
+  import { nanoid } from "nanoid";
 
   type Props = {
     chat: Chat;
-    responseId: string;
-    messages: ResponseMessage[];
+    revisionId: string;
+    messages: Message[];
   };
-  let { chat, responseId, messages }: Props = $props();
+  let { chat, revisionId, messages }: Props = $props();
   let bottomRef: HTMLDivElement;
 
   let body = $state<{ providerId?: string; modelName?: string; baseURL?: string; apiKey?: string }>(
@@ -34,7 +34,7 @@
       toast.error(e.message);
     },
     onFinish: (message) => {
-      updateMessages(responseId, $state.snapshot(chatService.messages));
+      appendMessage({ ...message, revisionId });
     },
     onMessageUpdate: (messages) => {
       bottomRef.scrollIntoView({ behavior: "smooth" });
@@ -51,6 +51,7 @@
       toast.error("Selected model not found");
       return;
     }
+    appendMessage({ id: nanoid(10), role: "user", content: value, revisionId });
     Object.assign(body, {
       providerId: model.service.providerId,
       modelName: model.name,

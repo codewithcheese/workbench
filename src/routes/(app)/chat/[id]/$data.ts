@@ -2,16 +2,16 @@ import {
   type Chat,
   chatTable,
   documentTable,
+  type InsertMessage,
+  messageTable,
   modelTable,
-  responseMessageTable,
-  responseTable,
+  revisionTable,
   useDb,
 } from "@/database";
 import { desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { invalidate } from "$app/navigation";
-import { toast } from "svelte-french-toast";
 import { invalidateModel } from "@/database/model";
+import { sql } from "drizzle-orm/sql";
 
 export type ServicesView = Awaited<ReturnType<typeof loadServices>>;
 
@@ -23,21 +23,14 @@ export function loadServices() {
   });
 }
 
-export async function getLatestResponse(chatId: string) {
-  // get latest revision
-  const response = await useDb().query.responseTable.findFirst({
-    where: eq(responseTable.chatId, chatId),
+export function getLatestRevision(chatId: string) {
+  return useDb().query.revisionTable.findFirst({
+    where: eq(revisionTable.chatId, chatId),
     with: {
       messages: true,
-      model: {
-        with: {
-          service: true,
-        },
-      },
     },
-    orderBy: [desc(responseTable.createdAt)],
+    orderBy: [desc(revisionTable.version)],
   });
-  return response;
 }
 
 export function getModelService(modelId: string) {
@@ -49,20 +42,19 @@ export function getModelService(modelId: string) {
   });
 }
 
-export async function createResponse(chatId: string) {
-  const model = await useDb().query.modelTable.findFirst({ where: eq(modelTable.visible, 1) });
-  const responseId = nanoid(10);
+export async function createRevision(chatId: string) {
+  const revisionId = nanoid(10);
   await useDb()
-    .insert(responseTable)
+    .insert(revisionTable)
     .values({
-      id: responseId,
+      id: revisionId,
+      version: sql`(SELECT COUNT(id) + 1 FROM ${revisionTable} WHERE ${eq(revisionTable.chatId, chatId)})`,
       chatId,
-      modelId: model?.id || "none",
       error: null,
       createdAt: new Date().toISOString(),
     })
     .execute();
-  return getLatestResponse(chatId);
+  return getLatestRevision(chatId);
 }
 
 export async function updateChat(chatId: string, updates: Partial<Chat>) {
@@ -74,45 +66,6 @@ export async function updateChat(chatId: string, updates: Partial<Chat>) {
     .returning();
   console.log(result);
   await invalidateModel(chatTable, { id: chatId });
-}
-
-export async function updateResponsePrompt(id: string) {
-  try {
-    console.time("updateResponsePrompt");
-    const response = await useDb().query.responseTable.findFirst({
-      where: eq(responseTable.id, id),
-    });
-    if (!response) {
-      return toast.error("Response not found");
-    }
-    // get first message
-    const message = await useDb().query.responseMessageTable.findFirst({
-      where: eq(responseMessageTable.responseId, id),
-    });
-    if (!message) {
-      return toast.error("Message not found");
-    }
-    const chat = await useDb().query.chatTable.findFirst({
-      where: eq(chatTable.id, response.chatId),
-    });
-    if (!chat) {
-      return toast.error("Chat not found");
-    }
-    // interpolate documents into prompt
-    const content = await interpolateDocuments(chat.prompt);
-    console.log("updated prompt", content);
-    await useDb()
-      .update(responseMessageTable)
-      .set({ content })
-      .where(eq(responseMessageTable.id, message.id));
-  } catch (e) {
-    if (e instanceof Error) {
-      toast.error(e.message);
-    }
-    console.error(e);
-  } finally {
-    console.timeEnd("updateResponsePrompt");
-  }
 }
 
 export async function interpolateDocuments(prompt: string) {
@@ -137,42 +90,20 @@ export async function interpolateDocuments(prompt: string) {
   return interpolatedPrompt;
 }
 
-export async function submitPrompt(chat: Chat, modelId: string | null) {
+export async function appendMessage(message: Omit<InsertMessage, "index" | "createdAt">) {
   try {
-    if (!modelId) {
-      throw new Error("No model selected");
-    }
-    const model = await useDb().query.modelTable.findFirst({
-      where: eq(modelTable.id, modelId),
-    });
-    if (!model) {
-      throw new Error("Selected model not found");
-    }
-    // const model = db.models.get(store.selected.modelId);
-    // interpolate documents into prompt
-    const content = await interpolateDocuments(chat.prompt);
-    console.log("content", content);
-    await useDb().transaction(async (tx) => {
-      const responseId = nanoid(10);
-      await tx.insert(responseTable).values({
-        id: responseId,
-        chatId: chat.id,
-        modelId: model.id,
-        error: null,
-      });
-      await tx.insert(responseMessageTable).values({
-        id: nanoid(),
-        index: 0,
-        responseId,
-        role: "user",
-        content,
-      });
-    });
-    await invalidate("view:responses");
+    return await useDb()
+      .insert(messageTable)
+      .values({
+        id: message.id,
+        revisionId: message.revisionId,
+        role: message.role,
+        content: message.content,
+        index: sql`(SELECT COUNT(id) FROM ${messageTable} WHERE ${eq(messageTable.revisionId, message.revisionId)})`,
+      })
+      .execute();
   } catch (e) {
-    if (e instanceof Error) {
-      toast.error(e.message);
-    }
     console.error(e);
+    throw e;
   }
 }
