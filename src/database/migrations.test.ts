@@ -566,4 +566,85 @@ describe("Migration Tests", () => {
     ).count;
     expect(totalRemainingMessageCount).toBe(messageCount - 2); // 'project2' had 2 messages
   });
+
+  it("0004_skinny_machine_man", async () => {
+    await applyMigrationsUpTo("0004_skinny_machine_man");
+
+    // Verify that the 'response' table has been dropped
+    const responseTable = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='table' AND name='response'`,
+    );
+    expect(responseTable).toBeFalsy();
+
+    // Verify that the 'responseMessage' table has been dropped
+    const responseMessageTable = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='table' AND name='responseMessage'`,
+    );
+    expect(responseMessageTable).toBeFalsy();
+
+    // Verify that the 'revision' and 'message' tables still exist and contain the migrated data
+    const revisionCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM revision`,
+    ).count;
+    expect(revisionCount).toBe(initialResponseCount);
+
+    const messageCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM message`,
+    ).count;
+    expect(messageCount).toBe(initialMessageCount);
+
+    // Verify that the data in the 'revision' and 'message' tables is still correct
+    const revisionData = db.all<{ id: string; version: number; chatId: string }>(
+      sql`SELECT id, version, chatId FROM revision ORDER BY chatId, createdAt`,
+    );
+
+    const chatVersions = new Map<string, number>();
+    const expectedRevisionData = testData.responses
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      .map(({ id, projectId: chatId }) => {
+        const currentVersion = (chatVersions.get(chatId) || 0) + 1;
+        chatVersions.set(chatId, currentVersion);
+        return { id, version: currentVersion, chatId };
+      });
+
+    expect(revisionData).toEqual(expectedRevisionData);
+
+    const messageData = db.all<{ id: string; revisionId: string; role: string; content: string }>(
+      sql`SELECT id, revisionId, role, content FROM message ORDER BY id`,
+    );
+
+    const expectedMessageData = testData.responseMessages.map(
+      ({ id, responseId: revisionId, role, content }) => ({
+        id,
+        revisionId,
+        role,
+        content,
+      }),
+    );
+
+    expect(messageData).toEqual(expectedMessageData);
+
+    // Verify that the foreign key relationships are still intact
+    await db.run(sql`DELETE FROM chat WHERE id = 'project1'`);
+    const remainingRevisionCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM revision WHERE chatId = 'project1'`,
+    ).count;
+    expect(remainingRevisionCount).toBe(0);
+
+    const remainingMessageCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM message WHERE revisionId IN (SELECT id FROM revision WHERE chatId = 'project1')`,
+    ).count;
+    expect(remainingMessageCount).toBe(0);
+
+    // Final check on the total remaining data
+    const finalRevisionCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM revision`,
+    ).count;
+    expect(finalRevisionCount).toBe(revisionCount - 2); // 'project1' had 2 revisions
+
+    const finalMessageCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM message`,
+    ).count;
+    expect(finalMessageCount).toBe(messageCount - 3); // 'project1' had 3 messages
+  });
 });
