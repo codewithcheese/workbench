@@ -3,13 +3,18 @@
   import { DialogHeader } from "@/components/ui/dialog/index.js";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
+  import { route } from "$lib/route";
+
+  let { data } = $props();
 </script>
 
 <Dialog
   open={true}
   onOpenChange={(isOpen) => {
     if (!isOpen) {
-      goto(`/chat/${$page.params.id}`);
+      goto(
+        route(`/chat/[id]`, { id: $page.params.id, $query: { version: data.revision.version } }),
+      );
     }
   }}
 >

@@ -6,6 +6,7 @@
   import { toast } from "svelte-french-toast";
   import { goto } from "$app/navigation";
   import { DialogHeader, DialogTitle } from "@/components/ui/dialog/index.js";
+  import { route } from "$lib/route";
 
   async function onSelect(provider: Provider) {
     try {
@@ -13,7 +14,13 @@
       if (!service) {
         return toast.error("Failed to add service");
       }
-      await goto(`/chat/${$page.params.id}/config/${service.id}`);
+      await goto(
+        route(`/chat/[id]/[...rest]/config/[serviceId]`, {
+          id: $page.params.id,
+          rest: "",
+          serviceId: service.id,
+        }),
+      );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Unknown error");
     }

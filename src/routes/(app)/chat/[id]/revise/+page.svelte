@@ -5,6 +5,8 @@
   let { data } = $props();
 </script>
 
-{#key ($page.params.id, data.version)}
-  <RevisePage chat={data.chat} revision={data.revision} />
+{#key $page.params.id}
+  {#key data.version}
+    <RevisePage chat={data.chat} revision={data.revision} />
+  {/key}
 {/key}

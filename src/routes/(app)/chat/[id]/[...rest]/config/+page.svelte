@@ -1,12 +1,13 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
+  import { route } from "$lib/route";
 
   let { data } = $props();
 
   if (data.services.length > 0) {
-    goto(`/chat/${$page.params.id}/config/select`);
+    goto(route(`/chat/[id]/[...rest]/config/select`, { id: $page.params.id, rest: "" }));
   } else {
-    goto(`/chat/${$page.params.id}/config/create`);
+    goto(route(`/chat/[id]/[...rest]/config/create`, { id: $page.params.id, rest: "" }));
   }
 </script>

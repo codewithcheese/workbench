@@ -13,8 +13,19 @@ import { and, desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { invalidateModel } from "@/database/model";
 import { sql } from "drizzle-orm/sql";
+import type { RouteId } from "$lib/route";
 
 export type ServicesView = Awaited<ReturnType<typeof loadServices>>;
+
+export type Tab = "chat" | "eval" | "revise";
+
+export function isTab(tab: any): tab is Tab {
+  return tab === "chat" || tab === "eval" || tab === "revise";
+}
+
+export function tabRouteId(tab: Tab): RouteId {
+  return tab === "chat" ? `/chat/[id]` : `/chat/[id]/${tab}`;
+}
 
 export function loadServices() {
   return useDb().query.serviceTable.findMany({

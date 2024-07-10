@@ -10,6 +10,7 @@
   import { toast } from "svelte-french-toast";
   import { useDb } from "@/database/client";
   import { invalidateModel } from "@/database";
+  import { route } from "$lib/route";
 
   let { data } = $props();
 
@@ -54,7 +55,7 @@
             <Table.Cell
               onclick={() => {
                 console.log("name clicked", document.name);
-                goto(`/document/${document.id}`);
+                goto(route(`/document/[id]`, { id: document.id }));
               }}
               class="p-2 "
             >
@@ -63,7 +64,7 @@
             <Table.Cell
               onclick={() => {
                 console.log("description clicked", document.description);
-                goto(`/document/${document.id}`);
+                goto(route(`/document/[id]`, { id: document.id }));
               }}
               class="p-2 "
             >

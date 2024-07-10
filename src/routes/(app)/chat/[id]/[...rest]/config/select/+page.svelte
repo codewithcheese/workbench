@@ -9,15 +9,22 @@
   import { DialogHeader } from "@/components/ui/dialog/index.js";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
+  import { route } from "$lib/route";
 
   let { data } = $props();
 
   function onSelect(service: ServicesView[number]) {
-    goto(`/chat/${$page.params.id}/config/${service.id}`);
+    goto(
+      route(`/chat/[id]/[...rest]/config/[serviceId]`, {
+        id: $page.params.id,
+        rest: "",
+        serviceId: service.id,
+      }),
+    );
   }
 
   function onAdd() {
-    goto(`/chat/${$page.params.id}/config/create`);
+    goto(route(`/chat/[id]/[...rest]/config/create`, { id: $page.params.id, rest: "" }));
   }
 </script>
 

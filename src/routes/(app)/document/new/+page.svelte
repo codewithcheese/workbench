@@ -8,6 +8,7 @@
   import { page } from "$app/stores";
   import { documentTable } from "@/database/schema";
   import { useDb } from "@/database/client";
+  import { route } from "$lib/route";
 
   let queryParams = $state($page.url.searchParams);
   let name = $state(queryParams.get("name") ?? "");
@@ -32,7 +33,7 @@
         description,
         content,
       });
-    await goto(`/document`);
+    await goto(route(`/document`));
   }
 </script>
 

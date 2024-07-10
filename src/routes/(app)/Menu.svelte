@@ -10,6 +10,7 @@
   import PersistenceAlert from "@/components/PersistenceAlert.svelte";
   import { type Chat } from "@/database";
   import { duplicateChat, newChat, removeChat } from "./$data";
+  import { route } from "$lib/route";
 
   let { chats }: { chats: Chat[] } = $props();
 
@@ -35,7 +36,7 @@
     variant="outline"
     onclick={async () => {
       const id = await newChat();
-      goto(`/chat/${id}`);
+      await goto(route(`/chat/[id]`, { id }));
     }}
   >
     <PlusIcon class="text-gray-600" />
@@ -100,7 +101,7 @@
               <DropdownMenu.Item
                 onclick={async () => {
                   const newId = await duplicateChat(chat.id);
-                  await goto(`/chat/${newId}`);
+                  await goto(route(`/chat/[id]`, { id: newId }));
                 }}>Duplicate</DropdownMenu.Item
               >
             </DropdownMenu.Content>
@@ -117,7 +118,7 @@
     onConfirm={async () => {
       if (chatToDelete) {
         const nextId = await removeChat(chatToDelete.id);
-        await goto(`/chat/${nextId}`);
+        await goto(route(`/chat/[id]`, { id: nextId }));
       }
     }}
     onCancel={() => {

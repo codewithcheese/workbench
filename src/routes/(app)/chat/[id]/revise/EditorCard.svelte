@@ -18,6 +18,7 @@
   import { goto } from "$app/navigation";
   import { documentTable, type Chat, useDb } from "@/database";
   import { eq, like } from "drizzle-orm";
+  import { route } from "$lib/route";
 
   type Props = {
     chat: Chat;
@@ -39,7 +40,7 @@
       span.innerHTML =
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-symlink"><path d="m10 18 3-3-3-3"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M4 11V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h7"/></svg>';
       span.onclick = () => {
-        goto(`/document/${this.id}`);
+        goto(route(`/document/[id]`, { id: this.id }));
       };
       return span;
     }
@@ -55,7 +56,7 @@
       span.innerHTML =
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus-2"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M3 15h6"/><path d="M6 12v6"/></svg>';
       span.onclick = () => {
-        goto(`/document/new?name=${encodeURIComponent(this.name)}`);
+        goto(route(`/document/new`, { $query: { name: encodeURIComponent(this.name) } }));
       };
       return span;
     }

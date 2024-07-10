@@ -19,6 +19,7 @@
   } from "../$data";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
+  import { route } from "$lib/route";
 
   let { data } = $props();
   let service = $state(data.service);
@@ -37,7 +38,7 @@
   }
 
   async function onBack() {
-    await goto(`/chat/${$page.params.id}/config/select`);
+    await goto(route(`/chat/[id]/[...rest]/config/select`, { id: $page.params.id, rest: "" }));
   }
 
   async function onDelete() {

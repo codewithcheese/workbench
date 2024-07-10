@@ -6,6 +6,7 @@
   import type { Chat, Revision } from "@/database";
   import { untrack } from "svelte";
   import { Badge } from "@/components/ui/badge";
+  import { route } from "$lib/route";
 
   type Props = {
     chat: Chat & {
@@ -20,15 +21,18 @@
   let name = $state(chat.name);
 
   let versions = $derived.by(() => {
-    let previous = revision.version > 1 ? revision.version - 1 : undefined;
-    let next = revision.version < chat.revisions.length ? revision.version + 1 : undefined;
+    let previous = revision.version > 1 ? String(revision.version - 1) : undefined;
+    let next = revision.version < chat.revisions.length ? String(revision.version + 1) : undefined;
+    let previousOptions = { id: chat.id, $query: { version: previous } };
+    let nextOptions = { id: chat.id, $query: { version: next } };
+    const routeId = tab;
     return {
       previous,
       next,
       previousLink: previous
         ? tab === "revise"
-          ? `/chat/${chat.id}/revise/?version=${previous}`
-          : `/chat/${chat.id}/?version=${previous}`
+          ? route(`/chat/[id]/${tab}`, { id: chat.id, $query: { version: String(previous) } })
+          : route(`/chat/[id]`, { id: chat.id, $query: { version: String(previous) } })
         : undefined,
       nextLink: next
         ? tab === "revise"

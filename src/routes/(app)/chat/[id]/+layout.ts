@@ -9,18 +9,20 @@ import {
   useDb,
 } from "@/database";
 import { error } from "@sveltejs/kit";
-import { createRevision, getLatestRevision, getRevision, loadServices } from "./$data";
+import { createRevision, getLatestRevision, getRevision, loadServices, type Tab } from "./$data";
+import { match } from "$lib/route";
 
 export async function load({ route, url, params, depends }) {
   // evaluate tab using route id
-  let tab;
-  if (route.id.includes(`[id]/eval`)) {
+  let tab: Tab;
+  if (match(`/chat/[id]/eval`, route.id)) {
+    console.log("tab is eval", route.id);
     tab = "eval";
-    // } else if (route.id.includes(`[id]/eval`)) {
-    //   tab = "chat";
-  } else if (route.id.includes(`[id]/revise`)) {
+  } else if (match(`/chat/[id]/revise`, route.id)) {
+    console.log("tab is revise", route.id);
     tab = "revise";
   } else {
+    console.log("tab is chat", route.id);
     tab = "chat";
   }
 

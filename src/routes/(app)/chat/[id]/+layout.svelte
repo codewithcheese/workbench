@@ -4,21 +4,26 @@
   import SelectModel from "./SelectModel.svelte";
   import { Button } from "@/components/ui/button";
   import { PlayIcon, SettingsIcon } from "lucide-svelte";
-  import { updateChat } from "./$data";
+  import { isTab, tabRouteId, updateChat } from "./$data";
   import { Input } from "@/components/ui/input";
+  import { route } from "$lib/route";
+  import { toast } from "svelte-french-toast";
 
   let { data } = $props();
   let services = $derived(data.services);
   let chat = $derived(data.chat);
 
-  function tabClick(value?: string) {
-    if (!value) {
+  async function tabClick(value?: string) {
+    if (!isTab(value)) {
+      toast.error(`Unexpected tab ${value}`);
       return;
     }
     if (value === "chat") {
-      goto(`/chat/${chat.id}`);
-    } else {
-      goto(`/chat/${chat.id}/${value}`);
+      await goto(route(`/chat/[id]`, { id: chat.id, $query: { version: data.revision.version } }));
+    } else if (value === "revise" || value === "eval") {
+      await goto(
+        route(`/chat/[id]/${value}`, { id: chat.id, $query: { version: data.revision.version } }),
+      );
     }
   }
 
@@ -48,7 +53,10 @@
   <div class="relative ml-auto flex-1 md:grow-0">
     <div class="flex flex-row">
       <SelectModel {services} />
-      <Button variant="ghost" onclick={() => goto(`/chat/${chat.id}/config`)}>
+      <Button
+        variant="ghost"
+        onclick={() => goto(route(`/chat/[id]/[...rest]/config`, { id: chat.id, rest: "" }))}
+      >
         <SettingsIcon size={16} />
       </Button>
     </div>
