@@ -23,7 +23,7 @@
   let chatService = new ChatService({
     // @ts-expect-error message type mismatch
     initialMessages: data.revision.messages,
-    editing: editIndex != null ? { index: editIndex } : undefined,
+    mode: editIndex != null ? { type: "edit", index: editIndex } : { type: "append" },
     body,
     onError: (e) => {
       toast.error(e.message);

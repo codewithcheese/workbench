@@ -16,6 +16,8 @@ import { nanoid } from "nanoid";
 
 export type { CreateMessage };
 
+type Mode = { type: "edit"; index: number } | { type: "append" };
+
 interface ToolCall$1<NAME extends string, ARGS> {
   toolCallId: string;
   toolName: NAME;
@@ -43,9 +45,9 @@ export type ChatOptions = {
    */
   initialInput?: string;
   /**
-   * Edit index, is set then input will be set to the content of the message at the given index
+   * Mode of the chat. Can be "edit" or "append". If "edit" then index is required.
    */
-  editing?: { index: number };
+  mode?: Mode;
   /**
    * @deprecated Use AI SDK 3.1 `streamText` and `onToolCall` instead.
    *
@@ -229,7 +231,7 @@ export class ChatService {
 
   private id: string;
   private api: string;
-  private editing: { index: number } | undefined;
+  private mode: { type: "edit"; index: number } | { type: "append" };
   private generateId: IdGenerator;
   private abortController: AbortController | null;
   private sendExtraMessageFields: boolean | undefined;
@@ -251,7 +253,7 @@ export class ChatService {
     id,
     initialMessages = [],
     initialInput = "",
-    editing,
+    mode = { type: "append" },
     sendExtraMessageFields,
     experimental_onFunctionCall,
     experimental_onToolCall,
@@ -270,7 +272,7 @@ export class ChatService {
     // assign options
     this.api = api;
     this.id = id || `chat-${uniqueId++}`;
-    this.editing = editing;
+    this.mode = mode;
     this.sendExtraMessageFields = sendExtraMessageFields;
     this.experimental_onFunctionCall = experimental_onFunctionCall;
     this.experimental_onToolCall = experimental_onToolCall;
@@ -290,16 +292,12 @@ export class ChatService {
     this.error = undefined;
     this.abortController = new AbortController();
     this.generateId = generateId;
-    this.editing = editing;
     this.fetch = fetch;
-    // if editing, set initial input to the content of the message at the given index
-    console.log("editing", editing);
-    if (editing && initialMessages) {
-      this.input = initialMessages[editing.index].content;
-      console.log("initial input", this.input);
-    } else {
-      this.input = initialInput || "";
+    console.log("mode", mode);
+    if (mode.type === "edit" && !initialMessages[mode.index]) {
+      throw new Error(`Message to edit at index ${mode.index} not found`);
     }
+    this.input = mode.type === "edit" ? initialMessages[mode.index].content : initialInput;
   }
 
   get key() {
@@ -421,10 +419,10 @@ export class ChatService {
       const inputValue = this.input;
       if (!inputValue) return;
 
-      if (this.editing) {
-        let message = this.messages[this.editing.index];
+      if (this.mode.type === "edit") {
+        let message = this.messages[this.mode.index];
         message.content = inputValue;
-        return this.edit(inputValue, this.editing.index, chatRequestOptions);
+        return this.edit(inputValue, this.mode.index, chatRequestOptions);
       } else {
         this.input = "";
         return this.append(
