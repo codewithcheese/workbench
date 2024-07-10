@@ -1,7 +1,15 @@
 import { eq } from "drizzle-orm";
-import { chatTable, registerModel, revisionTable, serviceTable, useDb } from "@/database";
+import {
+  chatTable,
+  registerModel,
+  type Revision,
+  type Message,
+  revisionTable,
+  serviceTable,
+  useDb,
+} from "@/database";
 import { error } from "@sveltejs/kit";
-import { createRevision, getLatestRevision, loadServices } from "./$data";
+import { createRevision, getLatestRevision, getRevision, loadServices } from "./$data";
 
 export async function load({ route, url, params, depends }) {
   // evaluate tab using route id
@@ -18,6 +26,9 @@ export async function load({ route, url, params, depends }) {
 
   const chat = await useDb().query.chatTable.findFirst({
     where: eq(chatTable.id, params.id),
+    with: {
+      revisions: true,
+    },
   });
   if (!chat) {
     return error(404, `Chat ${params.id} not found`);
@@ -27,12 +38,23 @@ export async function load({ route, url, params, depends }) {
   const services = await loadServices();
   registerModel(serviceTable, services, depends);
 
-  const revision = (await getLatestRevision(params.id)) || (await createRevision(params.id));
-  if (!revision) {
-    return error(500, "Error loading chat");
+  const version = url.searchParams.get("version");
+  let revision: Revision & { messages: Message[] };
+  if (version) {
+    const result = await getRevision(params.id, parseInt(version));
+    if (!result) {
+      return error(404, `Revision ${version} not found`);
+    }
+    revision = result;
+  } else {
+    const result = (await getLatestRevision(params.id)) || (await createRevision(params.id));
+    if (!result) {
+      return error(500, "Error loading chat revision");
+    }
+    revision = result;
   }
   registerModel(revisionTable, revision, depends);
   depends("view:messages");
   depends("view:chat");
-  return { chat, services, tab, revision };
+  return { chat, services, tab, revision, version };
 }

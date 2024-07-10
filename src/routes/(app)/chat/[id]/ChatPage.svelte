@@ -4,17 +4,16 @@
   import MessageInput from "./MessageInput.svelte";
   import { store } from "$lib/store.svelte";
   import { appendMessage, getModelService } from "./$data";
-  import type { Chat, Message } from "@/database";
+  import type { Chat, Message, Revision } from "@/database";
   import MessageCard from "./MessageCard.svelte";
   import ChatTitlebar from "./ChatTitlebar.svelte";
   import { nanoid } from "nanoid";
 
   type Props = {
-    chat: Chat;
-    revisionId: string;
-    messages: Message[];
+    chat: Chat & { revisions: Revision[] };
+    revision: Revision & { messages: Message[] };
   };
-  let { chat, revisionId, messages }: Props = $props();
+  let { chat, revision }: Props = $props();
   let bottomRef: HTMLDivElement;
 
   let body = $state<{ providerId?: string; modelName?: string; baseURL?: string; apiKey?: string }>(
@@ -28,13 +27,13 @@
 
   let chatService = new ChatService({
     // @ts-expect-error message type mismatch
-    initialMessages: messages,
+    initialMessages: revision.messages,
     body,
     onError: (e) => {
       toast.error(e.message);
     },
     onFinish: (message) => {
-      appendMessage({ ...message, revisionId });
+      appendMessage({ ...message, revisionId: revision.id });
     },
     onMessageUpdate: (messages) => {
       bottomRef.scrollIntoView({ behavior: "smooth" });
@@ -51,7 +50,7 @@
       toast.error("Selected model not found");
       return;
     }
-    appendMessage({ id: nanoid(10), role: "user", content: value, revisionId });
+    appendMessage({ id: nanoid(10), role: "user", content: value, revisionId: revision.id });
     Object.assign(body, {
       providerId: model.service.providerId,
       modelName: model.name,
@@ -64,7 +63,7 @@
   }
 </script>
 
-<ChatTitlebar {chat} tab="chat" />
+<ChatTitlebar {chat} {revision} tab="chat" />
 <div class="flex flex-1 flex-col gap-2 p-4">
   {#each chatService.messages as message (message.id)}
     <MessageCard {message} />

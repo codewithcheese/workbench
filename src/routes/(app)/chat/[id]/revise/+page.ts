@@ -1,3 +1,3 @@
-export async function load({ params, depends }) {
+export async function load({ params, depends, url }) {
   return {};
 }

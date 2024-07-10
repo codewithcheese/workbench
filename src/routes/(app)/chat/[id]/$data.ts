@@ -5,10 +5,11 @@ import {
   type InsertMessage,
   messageTable,
   modelTable,
+  type Revision,
   revisionTable,
   useDb,
 } from "@/database";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { invalidateModel } from "@/database/model";
 import { sql } from "drizzle-orm/sql";
@@ -19,6 +20,15 @@ export function loadServices() {
   return useDb().query.serviceTable.findMany({
     with: {
       models: true,
+    },
+  });
+}
+
+export function getRevision(chatId: string, version: number) {
+  return useDb().query.revisionTable.findFirst({
+    where: and(eq(revisionTable.chatId, chatId), eq(revisionTable.version, version)),
+    with: {
+      messages: true,
     },
   });
 }
@@ -106,4 +116,38 @@ export async function appendMessage(message: Omit<InsertMessage, "index" | "crea
     console.error(e);
     throw e;
   }
+}
+
+export async function newRevision(
+  chatId: string,
+  messages: Omit<InsertMessage, "index" | "revisionId" | "createdAt">[],
+): Promise<Revision> {
+  const revisionId = nanoid(10);
+  await useDb().transaction(async (tx) => {
+    await tx
+      .insert(revisionTable)
+      .values({
+        id: revisionId,
+        version: sql`(SELECT COUNT(id) + 1 FROM ${revisionTable} WHERE ${eq(revisionTable.chatId, chatId)})`,
+        chatId,
+        error: null,
+      })
+      .execute();
+    for (const message of messages) {
+      await tx
+        .insert(messageTable)
+        .values({
+          id: nanoid(10),
+          revisionId,
+          role: message.role,
+          content: message.content,
+          index: sql`(SELECT COUNT(id) FROM ${messageTable} WHERE ${eq(messageTable.revisionId, revisionId)})`,
+        })
+        .execute();
+    }
+  });
+  const revision = await useDb().query.revisionTable.findFirst({
+    where: eq(revisionTable.id, revisionId),
+  });
+  return revision!;
 }
