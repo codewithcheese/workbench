@@ -4,6 +4,8 @@
   import { Button } from "@/components/ui/button";
   import { Textarea } from "@/components/ui/textarea";
   import { Send, Plus, HardDriveUpload, CloudUpload, Clipboard } from "lucide-svelte";
+  import type { AttachmentInput } from "./$data";
+  import Attachment from "./Attachment.svelte";
 
   type Props = {
     onSubmit: (value: string) => void;
@@ -12,6 +14,7 @@
   let isUploadOpen = $state(false);
   let textareaElement: HTMLTextAreaElement;
   let content = $state("");
+  let attachments = $state<AttachmentInput[]>([]);
 
   function resize() {
     textareaElement.style.height = "auto";
@@ -35,6 +38,17 @@
     onSubmit(content);
   }
 
+  function handlePaste(event: ClipboardEvent) {
+    if (!event.clipboardData) {
+      return;
+    }
+    const content = event.clipboardData.getData("text/plain");
+    if (content.length > 1000) {
+      event.preventDefault();
+      attachments.push({ type: "pasted", content });
+    }
+  }
+
   function toggleUploadOptions() {
     isUploadOpen = !isUploadOpen;
   }
@@ -46,9 +60,20 @@
 
 <div class="sticky bottom-0 mx-auto w-full max-w-3xl">
   <Card class="w-full rounded-b-none border-b-0">
-    <CardContent class="p-4">
+    <CardContent class="flex flex-col gap-3 p-4">
+      {#if attachments.length > 0}
+        <div class="flex max-w-full flex-row gap-2 overflow-y-auto">
+          {#each attachments as attachment, index (index)}
+            <Attachment
+              type={attachment.type}
+              content={attachment.content}
+              onRemove={() => (attachments = attachments.filter((a, i) => i !== index))}
+            />
+          {/each}
+        </div>
+      {/if}
       {#if isUploadOpen}
-        <div class="mb-4 flex items-center justify-start gap-2">
+        <div class="flex items-center justify-start gap-2">
           <Button variant="outline" size="sm" on:click={() => handleUpload("Browse")}>
             <HardDriveUpload class="mr-2 h-4 w-4" />
             Browse
@@ -71,9 +96,10 @@
           bind:element={textareaElement}
           placeholder="What's on your mind?"
           bind:value={content}
-          on:input={resize}
+          oninput={resize}
           class=" max-h-[200px] min-h-1 flex-1 resize-none overflow-y-auto border-none bg-muted/50 focus-visible:ring-0"
           onkeydown={handleKeydown}
+          onpaste={handlePaste}
         />
         <Button variant="default" size="icon" onclick={handleSubmit}>
           <Send class="h-4 w-4" />

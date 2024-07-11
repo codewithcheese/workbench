@@ -1,4 +1,5 @@
 import {
+  attachmentTable,
   type Chat,
   chatTable,
   documentTable,
@@ -14,6 +15,11 @@ import { nanoid } from "nanoid";
 import { invalidateModel } from "@/database/model";
 import { sql } from "drizzle-orm/sql";
 import type { RouteId } from "$lib/route";
+
+export type AttachmentInput = {
+  type: "pasted";
+  content: string;
+};
 
 export type ServicesView = Awaited<ReturnType<typeof loadServices>>;
 
@@ -39,7 +45,15 @@ export function getRevision(chatId: string, version: number) {
   return useDb().query.revisionTable.findFirst({
     where: and(eq(revisionTable.chatId, chatId), eq(revisionTable.version, version)),
     with: {
-      messages: true,
+      messages: {
+        with: {
+          attachments: {
+            with: {
+              document: true,
+            },
+          },
+        },
+      },
     },
   });
 }
@@ -48,7 +62,15 @@ export function getLatestRevision(chatId: string) {
   return useDb().query.revisionTable.findFirst({
     where: eq(revisionTable.chatId, chatId),
     with: {
-      messages: true,
+      messages: {
+        with: {
+          attachments: {
+            with: {
+              document: true,
+            },
+          },
+        },
+      },
     },
     orderBy: [desc(revisionTable.version)],
   });
@@ -111,18 +133,41 @@ export async function interpolateDocuments(prompt: string) {
   return interpolatedPrompt;
 }
 
-export async function appendMessage(message: Omit<InsertMessage, "index" | "createdAt">) {
+export async function appendMessage(
+  message: Omit<InsertMessage, "index" | "createdAt">,
+  attachments: AttachmentInput[] = [],
+) {
   try {
-    return await useDb()
-      .insert(messageTable)
-      .values({
-        id: message.id,
-        revisionId: message.revisionId,
-        role: message.role,
-        content: message.content,
-        index: sql`(SELECT COUNT(id) FROM ${messageTable} WHERE ${eq(messageTable.revisionId, message.revisionId)})`,
-      })
-      .execute();
+    return await useDb().transaction(async (tx) => {
+      await tx
+        .insert(messageTable)
+        .values({
+          id: message.id,
+          revisionId: message.revisionId,
+          role: message.role,
+          content: message.content,
+          index: sql`(SELECT COUNT(id) FROM ${messageTable} WHERE ${eq(messageTable.revisionId, message.revisionId)})`,
+        })
+        .execute();
+      for (const attachment of attachments) {
+        const documentId = nanoid(10);
+        await tx
+          .insert(documentTable)
+          .values({
+            id: documentId,
+            type: attachment.type,
+            name: `Pasted ${new Date().toLocaleString()}`,
+            description: "",
+            content: attachment.content,
+          })
+          .execute();
+        await tx.insert(attachmentTable).values({
+          id: nanoid(10),
+          documentId,
+          messageId: message.id,
+        });
+      }
+    });
   } catch (e) {
     console.error(e);
     throw e;

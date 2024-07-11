@@ -9,6 +9,9 @@ import { sql } from "drizzle-orm/sql";
 export const documentTable = sqliteTable("document", {
   id: text("id").primaryKey(),
   name: text("name").notNull().unique(),
+  type: text("type", { enum: ["document", "pasted"] })
+    .notNull()
+    .default("document"),
   description: text("description").notNull(),
   content: text("content").notNull(),
   // data: text("data").notNull(),
@@ -41,10 +44,31 @@ export const messageTable = sqliteTable(
       .references(() => revisionTable.id, { onDelete: "cascade" }),
     role: text("role").notNull(),
     content: text("content").notNull(),
+    // attachments: text("attachments", { mode: "json" })
+    //   .$type<{ documentId: string }[]>()
+    //   .default([]),
     createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
   },
   (table) => ({
     revisionIdIdx: index("message_revisionId_idx").on(table.revisionId),
+  }),
+);
+
+export const attachmentTable = sqliteTable(
+  "attachment",
+  {
+    id: text("id").primaryKey(),
+    messageId: text("messageId")
+      .notNull()
+      .references(() => messageTable.id, { onDelete: "cascade" }),
+    documentId: text("documentId")
+      .notNull()
+      .references(() => documentTable.id, { onDelete: "cascade" }),
+    createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
+  },
+  (table) => ({
+    messageDocumentUnique: unique("messageDocument_unique").on(table.messageId, table.documentId),
+    messageIdIdx: index("attachment_messageId_idx").on(table.messageId),
   }),
 );
 
@@ -125,5 +149,17 @@ export const messageRelations = relations(messageTable, ({ one, many }) => ({
   revision: one(revisionTable, {
     fields: [messageTable.revisionId],
     references: [revisionTable.id],
+  }),
+  attachments: many(attachmentTable),
+}));
+
+export const attachmentRelations = relations(attachmentTable, ({ one, many }) => ({
+  message: one(messageTable, {
+    fields: [attachmentTable.messageId],
+    references: [messageTable.id],
+  }),
+  document: one(documentTable, {
+    fields: [attachmentTable.documentId],
+    references: [documentTable.id],
   }),
 }));

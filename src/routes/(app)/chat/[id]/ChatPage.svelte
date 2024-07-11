@@ -3,7 +3,7 @@
   import { toast } from "svelte-french-toast";
   import MessageInput from "./MessageInput.svelte";
   import { store } from "$lib/store.svelte";
-  import { appendMessage, getModelService } from "./$data";
+  import { appendMessage, getModelService, type AttachmentInput } from "./$data";
   import type { Chat, Message, Revision } from "@/database";
   import MessageCard from "./MessageCard.svelte";
   import ChatTitlebar from "./ChatTitlebar.svelte";
@@ -40,7 +40,7 @@
     },
   });
 
-  async function handleSubmit(value: string) {
+  async function handleSubmit(value: string, attachments: AttachmentInput[]) {
     if (!store.selected.modelId) {
       toast.error("No model selected");
       return;
@@ -50,7 +50,7 @@
       toast.error("Selected model not found");
       return;
     }
-    appendMessage({ id: nanoid(10), role: "user", content: value, revisionId: revision.id });
+    await appendMessage({ id: nanoid(10), role: "user", content: value, revisionId: revision.id });
     Object.assign(body, {
       providerId: model.service.providerId,
       modelName: model.name,

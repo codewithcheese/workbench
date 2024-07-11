@@ -98,6 +98,14 @@ beforeEach(async () => {
   await db
     .insert(schema.documentTable)
     .values([{ id: "doc1", name: "doc1", description: "Test doc", content: "Test content" }]);
+
+  await db.insert(schema.attachmentTable).values([
+    {
+      id: "attachment1",
+      messageId: "message1",
+      documentId: "doc1",
+    },
+  ]);
 });
 
 afterEach(() => {
@@ -154,7 +162,13 @@ describe("getRevision", () => {
       id: "revision1",
       version: 1,
       chatId: "chat1",
-      messages: [{ id: "message1", content: "Original content" }],
+      messages: [
+        {
+          id: "message1",
+          content: "Original content",
+          attachments: [{ id: "attachment1", documentId: "doc1", document: { id: "doc1" } }],
+        },
+      ],
     });
   });
 });
