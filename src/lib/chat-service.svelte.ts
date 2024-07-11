@@ -404,7 +404,6 @@ export class ChatService {
    * manually to regenerate the AI response.
    */
   setMessages(key: string, messages: Message[]): void {
-    console.log("setMessages", key, messages);
     store[key] = messages;
     this.messages = messages;
     if (this.onMessageUpdate) {

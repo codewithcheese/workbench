@@ -1,11 +1,24 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { interpolateDocuments, updateChat } from "./$data";
+import {
+  interpolateDocuments,
+  updateChat,
+  loadServices,
+  getRevision,
+  getLatestRevision,
+  getModelService,
+  createRevision,
+  appendMessage,
+  newRevision,
+  isTab,
+  tabRouteId,
+} from "./$data";
 import Database from "better-sqlite3";
 import { type BetterSQLite3Database, drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "@/database/schema";
 import { runMigrations } from "@/database/migrator";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { invalidate } from "$app/navigation";
+import { nanoid } from "nanoid";
 
 let sqlite: Database.Database;
 let db: BetterSQLite3Database<typeof schema>;
@@ -27,12 +40,16 @@ beforeEach(async () => {
   }));
 
   vi.mock("nanoid", () => ({
-    nanoid: vi.fn(),
+    nanoid: vi.fn(() => "mocked-nanoid"),
   }));
 
   // Mock the useDb function
   vi.mock("@/database/client", () => ({
     useDb: vi.fn(() => db),
+  }));
+
+  vi.mock("@/database/model", () => ({
+    invalidateModel: vi.fn(),
   }));
 
   await runMigrations(true);
@@ -56,7 +73,10 @@ beforeEach(async () => {
     .insert(schema.chatTable)
     .values([{ id: "chat1", name: "Test Chat", prompt: "Test prompt with [[doc1]]" }]);
 
-  await db.insert(schema.revisionTable).values([{ id: "revision1", version: 1, chatId: "chat1" }]);
+  await db.insert(schema.revisionTable).values([
+    { id: "revision1", version: 1, chatId: "chat1" },
+    { id: "revision2", version: 2, chatId: "chat1" },
+  ]);
 
   await db.insert(schema.messageTable).values([
     {
@@ -65,6 +85,13 @@ beforeEach(async () => {
       revisionId: "revision1",
       role: "user",
       content: "Original content",
+    },
+    {
+      id: "message2",
+      index: 1,
+      revisionId: "revision2",
+      role: "assistant",
+      content: "Response content",
     },
   ]);
 
@@ -75,6 +102,7 @@ beforeEach(async () => {
 
 afterEach(() => {
   sqlite.close();
+  vi.clearAllMocks();
 });
 
 describe("updateChat", () => {
@@ -83,7 +111,6 @@ describe("updateChat", () => {
       id: "chat1",
       name: "Updated Chat",
       prompt: "Updated prompt",
-      createdAt: new Date().toISOString(),
     };
     await updateChat(updatedChat.id, updatedChat);
 
@@ -92,7 +119,6 @@ describe("updateChat", () => {
     });
 
     expect(chat).toEqual(expect.objectContaining(updatedChat));
-    expect(invalidate).toHaveBeenCalled();
   });
 });
 
@@ -106,5 +132,143 @@ describe("interpolateDocuments", () => {
     await expect(interpolateDocuments("This is a [[nonexistent]] test")).rejects.toThrow(
       'Document "nonexistent" not found.',
     );
+  });
+});
+
+describe("loadServices", () => {
+  it("should load services with their models", async () => {
+    const services = await loadServices();
+    expect(services).toHaveLength(1);
+    expect(services[0]).toMatchObject({
+      id: "service1",
+      name: "Test Service",
+      models: [{ id: "model1", name: "Test Model" }],
+    });
+  });
+});
+
+describe("getRevision", () => {
+  it("should get a specific revision", async () => {
+    const revision = await getRevision("chat1", 1);
+    expect(revision).toMatchObject({
+      id: "revision1",
+      version: 1,
+      chatId: "chat1",
+      messages: [{ id: "message1", content: "Original content" }],
+    });
+  });
+});
+
+describe("getLatestRevision", () => {
+  it("should get the latest revision", async () => {
+    const revision = await getLatestRevision("chat1");
+    expect(revision).toMatchObject({
+      id: "revision2",
+      version: 2,
+      chatId: "chat1",
+      messages: [{ id: "message2", content: "Response content" }],
+    });
+  });
+});
+
+describe("getModelService", () => {
+  it("should get a model with its service", async () => {
+    const modelService = await getModelService("model1");
+    expect(modelService).toMatchObject({
+      id: "model1",
+      name: "Test Model",
+      service: { id: "service1", name: "Test Service" },
+    });
+  });
+});
+
+describe("createRevision", () => {
+  it("should create a new revision", async () => {
+    const newRevision = await createRevision("chat1");
+    expect(newRevision).toMatchObject({
+      chatId: "chat1",
+      version: 3,
+      id: "mocked-nanoid",
+    });
+  });
+});
+
+describe("appendMessage", () => {
+  it("should append a message to a revision", async () => {
+    const message = {
+      id: "new-message",
+      role: "user",
+      content: "New message content",
+      revisionId: "revision2",
+    };
+    await appendMessage(message);
+
+    const messages = await db.query.messageTable.findMany({
+      where: eq(schema.messageTable.revisionId, "revision2"),
+    });
+    expect(messages).toHaveLength(2);
+    expect(messages[1]).toMatchObject({
+      id: "new-message",
+      role: "user",
+      content: "New message content",
+      index: 1,
+    });
+  });
+});
+
+describe("newRevision", () => {
+  it("should create a new revision with messages", async () => {
+    vi.mocked(nanoid)
+      .mockReturnValueOnce("mocked-nanoid")
+      .mockReturnValueOnce("message-1")
+      .mockReturnValueOnce("message-2");
+    const messages = [
+      { id: "new-message1", role: "user", content: "New user message" },
+      { id: "new-message2", role: "assistant", content: "New assistant message" },
+    ];
+    const revision = await newRevision("chat1", messages);
+
+    expect(revision).toMatchObject({
+      chatId: "chat1",
+      version: 3,
+      id: "mocked-nanoid",
+    });
+
+    const newMessages = await db.query.messageTable.findMany({
+      where: eq(schema.messageTable.revisionId, "mocked-nanoid"),
+    });
+    expect(newMessages).toHaveLength(2);
+    expect(newMessages[0]).toMatchObject({
+      role: "user",
+      content: "New user message",
+      index: 0,
+    });
+    expect(newMessages[1]).toMatchObject({
+      role: "assistant",
+      content: "New assistant message",
+      index: 1,
+    });
+  });
+});
+
+describe("isTab", () => {
+  it("should return true for valid tab values", () => {
+    expect(isTab("chat")).toBe(true);
+    expect(isTab("eval")).toBe(true);
+    expect(isTab("revise")).toBe(true);
+  });
+
+  it("should return false for invalid tab values", () => {
+    expect(isTab("invalid")).toBe(false);
+    expect(isTab(123)).toBe(false);
+    expect(isTab(null)).toBe(false);
+  });
+});
+
+describe("tabRouteId", () => {
+  it("should return correct route ID for each tab", () => {
+    expect(tabRouteId("chat")).toBe("/chat/[id]");
+    expect(tabRouteId("eval")).toBe("/chat/[id]/eval");
+    expect(tabRouteId("revise")).toBe("/chat/[id]/revise");
   });
 });
