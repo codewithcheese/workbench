@@ -317,9 +317,10 @@ export class ChatService {
     if (!message.id) {
       message.id = this.generateId();
     }
+    this.messages.push(message as Message);
 
     const chatRequest: ChatRequest = {
-      messages: this.messages.concat(message as Message),
+      messages: this.messages,
       options,
       data,
       ...(functions !== undefined && { functions }),
@@ -413,27 +414,23 @@ export class ChatService {
 
   /** Form submission handler to automatically reset input and append a user message  */
   handleSubmit(event?: { preventDefault?: () => void }, chatRequestOptions?: ChatRequestOptions) {
-    try {
-      event?.preventDefault?.();
-      const inputValue = this.input;
-      if (!inputValue) return;
+    event?.preventDefault?.();
+    const inputValue = this.input;
+    if (!inputValue) return;
 
-      if (this.mode.type === "edit") {
-        let message = this.messages[this.mode.index];
-        message.content = inputValue;
-        return this.edit(inputValue, this.mode.index, chatRequestOptions);
-      } else {
-        this.input = "";
-        return this.append(
-          {
-            content: inputValue,
-            role: "user",
-          },
-          chatRequestOptions,
-        );
-      }
-    } catch (e) {
-      console.error(e);
+    if (this.mode.type === "edit") {
+      let message = this.messages[this.mode.index];
+      message.content = inputValue;
+      return this.edit(inputValue, this.mode.index, chatRequestOptions);
+    } else {
+      this.input = "";
+      return this.append(
+        {
+          content: inputValue,
+          role: "user",
+        },
+        chatRequestOptions,
+      );
     }
   }
 
