@@ -144,4 +144,32 @@ describe("ChatService", () => {
     // Verify that messages after the edit were removed
     expect(chatService.messages.length).toBe(2);
   });
+
+  it("should handle reload functionality correctly", async () => {
+    // Initialize ChatService with some existing messages
+    chatService = new ChatService({
+      api: "/api/chat",
+      initialMessages: [
+        { role: "user", content: "Hello", id: "1" },
+        { role: "assistant", content: "Hi there!", id: "2" },
+      ],
+    });
+
+    // Test reloading the last AI response
+    await chatService.reload();
+    await vi.waitUntil(() => chatService.isLoading === false, { timeout: 1000 });
+
+    expect(chatService.messages[0].content).toBe("Hello");
+    expect(chatService.messages[1].content).toBe("Hello, world.");
+    expect(chatService.error).toBeUndefined();
+
+    // Test reloading after a new user message
+    chatService.input = "New user message";
+    await chatService.handleSubmit();
+    await chatService.reload();
+    await vi.waitUntil(() => chatService.isLoading === false, { timeout: 1000 });
+
+    expect(chatService.messages[3].content).toBe("Hello, world.");
+    expect(chatService.error).toBeUndefined();
+  });
 });

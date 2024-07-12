@@ -6,13 +6,18 @@ import type {
   FunctionCallHandler,
   IdGenerator,
   JSONValue,
-  Message,
+  Message as AIMessage,
   ToolCallHandler,
 } from "@ai-sdk/ui-utils";
 import { callChatApi, generateId as generateIdFunc, processChatStream } from "@ai-sdk/ui-utils";
 import { nanoid } from "nanoid";
+import type { AttachmentInput } from "../routes/(app)/chat/[id]/$data";
 
 // todo remove tool and function calling until the library is stable and we need it
+
+type Message = AIMessage & {
+  attachments?: AttachmentInput[];
+};
 
 export type { CreateMessage };
 
@@ -157,7 +162,7 @@ const getStreamedResponse = async (
 ) => {
   // Do an optimistic update to the chat state to show the updated messages
   // immediately.
-  mutate(chatRequest.messages);
+  // mutate(chatRequest.messages);
 
   const constructedMessagesPayload = sendExtraMessageFields
     ? chatRequest.messages
@@ -336,14 +341,12 @@ export class ChatService {
     index: number,
     { options, functions, function_call, tools, tool_choice, data }: ChatRequestOptions = {},
   ) {
-    console.log("edit", content, index, this.messages);
-    let messagesSnapshot = structuredClone($state.snapshot(this.messages));
-    messagesSnapshot[index].content = content;
+    // update message content at index
+    this.messages[index].content = content;
     // remove messages after edit
-    messagesSnapshot = messagesSnapshot.slice(0, index + 1);
-    console.log("edit", messagesSnapshot);
+    this.messages.splice(index + 1);
     const chatRequest: ChatRequest = {
-      messages: messagesSnapshot,
+      messages: this.messages,
       options,
       data,
       ...(functions !== undefined && { functions }),
@@ -365,27 +368,21 @@ export class ChatService {
     function_call,
     tools,
     tool_choice,
+    data,
   }: ChatRequestOptions = {}): Promise<string | null | undefined> {
-    let messagesSnapshot = structuredClone(this.messages);
-    if (messagesSnapshot.length === 0) {
-      return null;
+    // remove messages after edit
+    if (this.messages[this.messages.length - 1].role === "assistant") {
+      this.messages.splice(this.messages.length - 1);
     }
-
-    // Remove last assistant message and retry last user message.
-    const lastMessage = messagesSnapshot.at(-1);
-    if (lastMessage?.role === "assistant") {
-      messagesSnapshot = messagesSnapshot.slice(0, -1);
-    }
-
     const chatRequest: ChatRequest = {
-      messages: messagesSnapshot,
+      messages: this.messages,
       options,
+      data,
       ...(functions !== undefined && { functions }),
       ...(function_call !== undefined && { function_call }),
       ...(tools !== undefined && { tools }),
       ...(tool_choice !== undefined && { tool_choice }),
     };
-
     return this.triggerRequest(chatRequest);
   }
 
@@ -419,8 +416,6 @@ export class ChatService {
     if (!inputValue) return;
 
     if (this.mode.type === "edit") {
-      let message = this.messages[this.mode.index];
-      message.content = inputValue;
       return this.edit(inputValue, this.mode.index, chatRequestOptions);
     } else {
       this.input = "";
