@@ -3,7 +3,13 @@
   import { toast } from "svelte-french-toast";
   import MessageInput from "./MessageInput.svelte";
   import { store } from "$lib/store.svelte";
-  import { appendMessage, getModelService, type AttachmentInput, type RevisionView } from "./$data";
+  import {
+    appendMessage,
+    getModelService,
+    type AttachmentInput,
+    type RevisionView,
+    toChatMessage,
+  } from "./$data";
   import type { Chat, Message, Revision } from "@/database";
   import MessageCard from "./MessageCard.svelte";
   import ChatTitlebar from "./ChatTitlebar.svelte";
@@ -26,11 +32,7 @@
   );
 
   let chatService = new ChatService({
-    // @ts-expect-error message type mismatch
-    initialMessages: revision.messages.map((m) => ({
-      ...m,
-      attachments: m.attachments.map((a) => ({ type: a.type, content: a.content })),
-    })),
+    initialMessages: revision.messages.map(toChatMessage),
     body,
     onError: (e) => {
       toast.error(e.message);

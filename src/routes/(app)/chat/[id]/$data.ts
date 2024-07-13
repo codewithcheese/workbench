@@ -46,20 +46,17 @@ export function loadServices() {
 }
 
 export function toChatMessage(message: RevisionView["messages"][number]): ChatMessage {
-  let attachments: AttachmentInput[] = [];
-  message.attachments.forEach((a) => {
-    attachments.push({
-      type: a.document.type,
-      content: a.document.content,
-      // todo add document attributes to schema
-      attributes: {},
-    });
-  });
   return {
     ...message,
     role: message.role as ChatMessage["role"],
     createdAt: message.createdAt ? new Date(message.createdAt) : undefined,
-    attachments,
+    attachments: message.attachments.map((a) => {
+      return {
+        type: a.document.type,
+        content: a.document.content,
+        attributes: a.document.attributes,
+      };
+    }),
   };
 }
 

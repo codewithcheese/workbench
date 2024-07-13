@@ -48,7 +48,7 @@
     const content = event.clipboardData.getData("text/plain");
     if (content.length > 1000) {
       event.preventDefault();
-      attachments.push({ type: "pasted", content });
+      attachments.push({ type: "pasted", content, attributes: {} });
     }
   }
 

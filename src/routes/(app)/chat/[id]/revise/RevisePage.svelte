@@ -1,7 +1,7 @@
 <script lang="ts">
   import EditorCard from "./EditorCard.svelte";
   import MessageCard from "../MessageCard.svelte";
-  import { getModelService, newRevision } from "../$data";
+  import { getModelService, newRevision, type RevisionView, toChatMessage } from "../$data";
   import { store } from "$lib/store.svelte";
   import { ChatService } from "$lib/chat-service.svelte.js";
   import { toast } from "svelte-french-toast";
@@ -11,7 +11,7 @@
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
-    revision: Revision & { messages: Message[] };
+    revision: RevisionView;
   };
   let { chat, revision }: Props = $props();
 
@@ -27,8 +27,7 @@
   );
 
   let chatService = new ChatService({
-    // @ts-expect-error message type mismatch
-    initialMessages: revision.messages,
+    initialMessages: revision.messages.map(toChatMessage),
     mode: editIndex != null ? { type: "edit", index: editIndex } : { type: "append" },
     body,
     onError: (e) => {
@@ -77,6 +76,10 @@
     });
     chatService.handleSubmit();
   }
+
+  async function handleRemoveAttachment(index: number) {
+    toast.error("Not implemented");
+  }
 </script>
 
 <ChatTitlebar {chat} {revision} tab="revise" onRunClick={handleSubmit} />
@@ -84,14 +87,14 @@
   <div class="flex flex-col gap-2 overflow-y-auto py-4">
     {#each chatService.messages as message, index (message.id)}
       {#if editIndex == null || index < editIndex}
-        <MessageCard {message} />
+        <MessageCard {message} onRemoveAttachment={handleRemoveAttachment} />
       {/if}
     {/each}
     <EditorCard bind:prompt={chatService.input} {chat} onSubmit={handleSubmit} />
   </div>
-  <div class="flex flex-col gap-3 py-4">
+  <div class="flex flex-col gap-3 overflow-y-auto py-4">
     {#if assistantMessage}
-      <MessageCard message={assistantMessage} />
+      <MessageCard message={assistantMessage} onRemoveAttachment={handleRemoveAttachment} />
     {/if}
   </div>
 </div>

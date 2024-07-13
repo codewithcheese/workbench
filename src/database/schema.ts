@@ -12,6 +12,10 @@ export const documentTable = sqliteTable("document", {
   type: text("type").notNull().default("document"),
   description: text("description").notNull(),
   content: text("content").notNull(),
+  attributes: text("attributes", { mode: "json" })
+    .$type<Record<string, any>>()
+    .notNull()
+    .default({}),
   // data: text("data").notNull(),
   createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
