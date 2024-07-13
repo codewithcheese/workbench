@@ -8,7 +8,7 @@
   import Attachment from "./Attachment.svelte";
 
   type Props = {
-    onSubmit: (value: string) => void;
+    onSubmit: (content: string, attachments: AttachmentInput[]) => Promise<boolean>;
   };
   let { onSubmit }: Props = $props();
   let isUploadOpen = $state(false);
@@ -33,9 +33,12 @@
     }
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     console.log("handleSubmit", content);
-    onSubmit(content);
+    if (await onSubmit(content, attachments)) {
+      content = "";
+      attachments = [];
+    }
   }
 
   function handlePaste(event: ClipboardEvent) {

@@ -9,9 +9,7 @@ import { sql } from "drizzle-orm/sql";
 export const documentTable = sqliteTable("document", {
   id: text("id").primaryKey(),
   name: text("name").notNull().unique(),
-  type: text("type", { enum: ["document", "pasted"] })
-    .notNull()
-    .default("document"),
+  type: text("type").notNull().default("document"),
   description: text("description").notNull(),
   content: text("content").notNull(),
   // data: text("data").notNull(),

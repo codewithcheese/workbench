@@ -215,7 +215,7 @@ describe("appendMessage", () => {
       content: "New message content",
       revisionId: "revision2",
     };
-    await appendMessage(message);
+    await appendMessage(message, []);
 
     const messages = await db.query.messageTable.findMany({
       where: eq(schema.messageTable.revisionId, "revision2"),
@@ -228,6 +228,9 @@ describe("appendMessage", () => {
       index: 1,
     });
   });
+
+  // todo
+  it("should append attachments to the message");
 });
 
 describe("newRevision", () => {

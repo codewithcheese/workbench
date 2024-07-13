@@ -12,10 +12,11 @@ import type {
 import { callChatApi, generateId as generateIdFunc, processChatStream } from "@ai-sdk/ui-utils";
 import { nanoid } from "nanoid";
 import type { AttachmentInput } from "../routes/(app)/chat/[id]/$data";
+import { toTitleCase } from "$lib/string";
 
 // todo remove tool and function calling until the library is stable and we need it
 
-type Message = AIMessage & {
+export type ChatMessage = AIMessage & {
   attachments?: AttachmentInput[];
 };
 
@@ -44,7 +45,7 @@ export type ChatOptions = {
   /**
    * Initial messages of the chat. Useful to load an existing chat history.
    */
-  initialMessages?: Message[];
+  initialMessages?: ChatMessage[];
   /**
    * Initial input of the chat.
    */
@@ -82,7 +83,7 @@ export type ChatOptions = {
     toolCall: ToolCall$1<string, unknown>;
   }) => void | Promise<unknown> | unknown;
   /** Callback function to be called when an input is submitted */
-  onSubmit?: (message: Message) => void | Promise<void>;
+  onSubmit?: (message: ChatMessage) => void | Promise<void>;
   /**
    * Callback function to be called when the API response is received.
    */
@@ -90,13 +91,13 @@ export type ChatOptions = {
   /**
    * Callback function to be called when the chat is finished streaming.
    */
-  onFinish?: (message: Message) => void;
+  onFinish?: (message: ChatMessage) => void;
   /**
    * Callback function to be called when an error is encountered.
    */
   onError?: (error: Error) => void;
   /** Callback function to be called when a message is updated */
-  onMessageUpdate?: (messages: Message[]) => void;
+  onMessageUpdate?: (messages: ChatMessage[]) => void;
   /**
    * A way to provide a function that is going to be used for ids for messages.
    * If not provided nanoid is used by default.
@@ -143,7 +144,7 @@ export type ChatOptions = {
 const getStreamedResponse = async (
   api: string,
   chatRequest: ChatRequest,
-  mutate: (messages: Message[]) => void,
+  mutate: (messages: ChatMessage[]) => void,
   mutateStreamData: (data: JSONValue[] | undefined) => void,
   existingData: JSONValue[] | undefined,
   extraMetadata: {
@@ -151,11 +152,11 @@ const getStreamedResponse = async (
     headers?: Record<string, string> | Headers;
     body?: any;
   },
-  previousMessages: Message[],
+  previousMessages: ChatMessage[],
   abortControllerRef: AbortController | null,
   generateId: IdGenerator,
   streamMode: "stream-data" | "text" | undefined,
-  onFinish: ((message: Message) => void) | undefined,
+  onFinish: ((message: ChatMessage) => void) | undefined,
   onResponse: ((response: Response) => void | Promise<void>) | undefined,
   sendExtraMessageFields: boolean | undefined,
   fetch: FetchFunction | undefined,
@@ -212,7 +213,7 @@ const getStreamedResponse = async (
     },
     onResponse,
     onUpdate(merged, data) {
-      mutate([...chatRequest.messages, ...merged]);
+      mutate([...previousMessages, ...merged]);
       mutateStreamData([...(existingData || []), ...(data || [])]);
     },
     onFinish,
@@ -224,12 +225,13 @@ const getStreamedResponse = async (
 
 let uniqueId = 0;
 
-const store: Record<string, Message[] | undefined> = {};
+const store: Record<string, ChatMessage[] | undefined> = {};
 
 export class ChatService {
-  messages: Message[] = $state([]);
+  messages: ChatMessage[] = $state([]);
   error: undefined | Error = $state(undefined);
   input: string = $state("");
+  attachments: AttachmentInput[] = [];
   isLoading: boolean | undefined = $state(undefined);
   data: JSONValue[] | undefined = $state(undefined);
   metadata?: Object;
@@ -243,11 +245,11 @@ export class ChatService {
   private experimental_onFunctionCall: FunctionCallHandler | undefined;
   private experimental_onToolCall: ToolCallHandler | undefined;
   private streamMode: "stream-data" | "text" | undefined;
-  private onSubmit: ((message: Message) => void | Promise<void>) | undefined;
+  private onSubmit: ((message: ChatMessage) => void | Promise<void>) | undefined;
   private onResponse: ((response: Response) => void | Promise<void>) | undefined;
-  private onFinish: ((message: Message) => void) | undefined;
+  private onFinish: ((message: ChatMessage) => void) | undefined;
   private onError: ((error: Error) => void) | undefined;
-  private onMessageUpdate: ((messages: Message[]) => void) | undefined;
+  private onMessageUpdate: ((messages: ChatMessage[]) => void) | undefined;
   private credentials: RequestCredentials | undefined;
   private headers: Record<string, string> | Headers | undefined;
   private body: object | undefined;
@@ -316,45 +318,23 @@ export class ChatService {
    * @param chatRequestOptions Additional options to pass to the API call
    */
   append(
-    message: Message | CreateMessage,
-    { options, functions, function_call, tools, tool_choice, data }: ChatRequestOptions = {},
+    message: ChatMessage | CreateMessage,
+    requestOptions: ChatRequestOptions = {},
   ): Promise<string | null | undefined> {
     if (!message.id) {
       message.id = this.generateId();
     }
-    this.messages.push(message as Message);
+    this.messages.push(message as ChatMessage);
 
-    const chatRequest: ChatRequest = {
-      messages: this.messages,
-      options,
-      data,
-      ...(functions !== undefined && { functions }),
-      ...(function_call !== undefined && { function_call }),
-      ...(tools !== undefined && { tools }),
-      ...(tool_choice !== undefined && { tool_choice }),
-    };
-    return this.triggerRequest(chatRequest);
+    return this.triggerRequest(this.createChatRequest(requestOptions));
   }
 
-  edit(
-    content: string,
-    index: number,
-    { options, functions, function_call, tools, tool_choice, data }: ChatRequestOptions = {},
-  ) {
+  edit(content: string, index: number, requestOptions: ChatRequestOptions = {}) {
     // update message content at index
     this.messages[index].content = content;
     // remove messages after edit
     this.messages.splice(index + 1);
-    const chatRequest: ChatRequest = {
-      messages: this.messages,
-      options,
-      data,
-      ...(functions !== undefined && { functions }),
-      ...(function_call !== undefined && { function_call }),
-      ...(tools !== undefined && { tools }),
-      ...(tool_choice !== undefined && { tool_choice }),
-    };
-    return this.triggerRequest(chatRequest);
+    return this.triggerRequest(this.createChatRequest(requestOptions));
   }
 
   /**
@@ -362,28 +342,12 @@ export class ChatService {
    * message isn't from the assistant, it will request the API to generate a
    * new response.
    */
-  async reload({
-    options,
-    functions,
-    function_call,
-    tools,
-    tool_choice,
-    data,
-  }: ChatRequestOptions = {}): Promise<string | null | undefined> {
+  async reload(requestOptions: ChatRequestOptions = {}): Promise<string | null | undefined> {
     // remove messages after edit
     if (this.messages[this.messages.length - 1].role === "assistant") {
       this.messages.splice(this.messages.length - 1);
     }
-    const chatRequest: ChatRequest = {
-      messages: this.messages,
-      options,
-      data,
-      ...(functions !== undefined && { functions }),
-      ...(function_call !== undefined && { function_call }),
-      ...(tools !== undefined && { tools }),
-      ...(tool_choice !== undefined && { tool_choice }),
-    };
-    return this.triggerRequest(chatRequest);
+    return this.triggerRequest(this.createChatRequest(requestOptions));
   }
 
   /**
@@ -401,7 +365,7 @@ export class ChatService {
    * edit the messages on the client, and then trigger the `reload` method
    * manually to regenerate the AI response.
    */
-  setMessages(key: string, messages: Message[]): void {
+  setMessages(key: string, messages: ChatMessage[]): void {
     store[key] = messages;
     this.messages = messages;
     if (this.onMessageUpdate) {
@@ -409,20 +373,61 @@ export class ChatService {
     }
   }
 
+  createChatRequest({
+    options,
+    functions,
+    function_call,
+    tools,
+    tool_choice,
+    data,
+  }: ChatRequestOptions = {}) {
+    // inline attachments into message content surrounded by tags
+    const messages = this.messages.map((message) => {
+      let content = message.content;
+      if (message.attachments) {
+        const attachmentContent = message.attachments
+          .filter((attachment) => attachment.content.trim() !== "") // Exclude empty attachments
+          .map((attachment) => {
+            const escapedContent = attachment.content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            const attributes = Object.entries(attachment.attributes)
+              .map(([key, value]) => `${key}="${value}"`)
+              .join(" ");
+            return `<${toTitleCase(attachment.type)}${attributes ? " " : ""}${attributes}>\n${escapedContent}\n</${toTitleCase(attachment.type)}>`;
+          })
+          .join("\n\n");
+        if (attachmentContent.length > 0) {
+          content = `${attachmentContent}\n\n${content}`;
+        }
+      }
+      return { ...message, content };
+    });
+    return {
+      messages,
+      options,
+      data,
+      ...(functions !== undefined && { functions }),
+      ...(function_call !== undefined && { function_call }),
+      ...(tools !== undefined && { tools }),
+      ...(tool_choice !== undefined && { tool_choice }),
+    };
+  }
+
   /** Form submission handler to automatically reset input and append a user message  */
   handleSubmit(event?: { preventDefault?: () => void }, chatRequestOptions?: ChatRequestOptions) {
     event?.preventDefault?.();
-    const inputValue = this.input;
-    if (!inputValue) return;
+    const inputContent = this.input;
+    const inputAttachments = this.attachments;
+    if (!inputContent) return;
 
     if (this.mode.type === "edit") {
-      return this.edit(inputValue, this.mode.index, chatRequestOptions);
+      return this.edit(inputContent, this.mode.index, chatRequestOptions);
     } else {
       this.input = "";
       return this.append(
         {
-          content: inputValue,
+          content: inputContent,
           role: "user",
+          attachments: inputAttachments,
         },
         chatRequestOptions,
       );
@@ -446,7 +451,7 @@ export class ChatService {
           getStreamedResponse(
             this.api || "/api/chat",
             chatRequest,
-            (messages: Message[]) => this.setMessages(this.key, messages),
+            (messages: ChatMessage[]) => this.setMessages(this.key, messages),
             (data) => {
               this.data = data;
             },

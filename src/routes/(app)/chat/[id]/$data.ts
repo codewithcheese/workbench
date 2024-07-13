@@ -15,13 +15,17 @@ import { nanoid } from "nanoid";
 import { invalidateModel } from "@/database/model";
 import { sql } from "drizzle-orm/sql";
 import type { RouteId } from "$lib/route";
+import type { ChatMessage } from "$lib/chat-service.svelte";
 
 export type AttachmentInput = {
-  type: "pasted";
+  type: string;
   content: string;
+  attributes: {};
 };
 
 export type ServicesView = Awaited<ReturnType<typeof loadServices>>;
+
+export type RevisionView = NonNullable<Awaited<ReturnType<typeof getRevision>>>;
 
 export type Tab = "chat" | "eval" | "revise";
 
@@ -39,6 +43,24 @@ export function loadServices() {
       models: true,
     },
   });
+}
+
+export function toChatMessage(message: RevisionView["messages"][number]): ChatMessage {
+  let attachments: AttachmentInput[] = [];
+  message.attachments.forEach((a) => {
+    attachments.push({
+      type: a.document.type,
+      content: a.document.content,
+      // todo add document attributes to schema
+      attributes: {},
+    });
+  });
+  return {
+    ...message,
+    role: message.role as ChatMessage["role"],
+    createdAt: message.createdAt ? new Date(message.createdAt) : undefined,
+    attachments,
+  };
 }
 
 export function getRevision(chatId: string, version: number) {

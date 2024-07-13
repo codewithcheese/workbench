@@ -1,6 +1,7 @@
 <script lang="ts">
   import { XIcon } from "lucide-svelte";
   import { Button } from "@/components/ui/button";
+  import { toTitleCase } from "$lib/string";
 
   type Props = {
     type: string;
@@ -8,13 +9,6 @@
     onRemove: () => void;
   };
   let { type, content, onRemove }: Props = $props();
-
-  function toTitleCase(input: string): string {
-    return input
-      .split(/[^a-zA-Z0-9]+/)
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join("");
-  }
 </script>
 
 <div

@@ -3,7 +3,7 @@
   import { toast } from "svelte-french-toast";
   import MessageInput from "./MessageInput.svelte";
   import { store } from "$lib/store.svelte";
-  import { appendMessage, getModelService, type AttachmentInput } from "./$data";
+  import { appendMessage, getModelService, type AttachmentInput, type RevisionView } from "./$data";
   import type { Chat, Message, Revision } from "@/database";
   import MessageCard from "./MessageCard.svelte";
   import ChatTitlebar from "./ChatTitlebar.svelte";
@@ -11,7 +11,7 @@
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
-    revision: Revision & { messages: Message[] };
+    revision: RevisionView;
   };
   let { chat, revision }: Props = $props();
   let bottomRef: HTMLDivElement;
@@ -27,30 +27,36 @@
 
   let chatService = new ChatService({
     // @ts-expect-error message type mismatch
-    initialMessages: revision.messages,
+    initialMessages: revision.messages.map((m) => ({
+      ...m,
+      attachments: m.attachments.map((a) => ({ type: a.type, content: a.content })),
+    })),
     body,
     onError: (e) => {
       toast.error(e.message);
     },
     onFinish: (message) => {
-      appendMessage({ ...message, revisionId: revision.id });
+      appendMessage({ ...message, revisionId: revision.id }, message.attachments);
     },
     onMessageUpdate: (messages) => {
       bottomRef.scrollIntoView({ behavior: "smooth" });
     },
   });
 
-  async function handleSubmit(value: string, attachments: AttachmentInput[]) {
+  async function handleSubmit(value: string, attachments: AttachmentInput[]): Promise<boolean> {
     if (!store.selected.modelId) {
       toast.error("No model selected");
-      return;
+      return false;
     }
     const model = await getModelService(store.selected.modelId);
     if (!model) {
       toast.error("Selected model not found");
-      return;
+      return false;
     }
-    await appendMessage({ id: nanoid(10), role: "user", content: value, revisionId: revision.id });
+    await appendMessage(
+      { id: nanoid(10), role: "user", content: value, revisionId: revision.id },
+      attachments,
+    );
     Object.assign(body, {
       providerId: model.service.providerId,
       modelName: model.name,
@@ -59,7 +65,9 @@
     });
     console.log("calling chat.handleSubmit", value);
     chatService.input = value;
+    chatService.attachments = attachments;
     chatService.handleSubmit();
+    return true;
   }
 </script>
 
