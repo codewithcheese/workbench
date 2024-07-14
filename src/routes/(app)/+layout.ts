@@ -2,6 +2,7 @@ import "../../app.css";
 import "@fontsource-variable/inter";
 import { exposeDb, chatTable, registerModel, useDb } from "@/database";
 import { sql } from "drizzle-orm/sql";
+import { desc } from "drizzle-orm";
 
 export const ssr = false;
 let migrated = false;
@@ -21,7 +22,10 @@ export async function load({ depends }) {
   } catch (err) {
     console.error(err);
   }
-  const chats = await useDb().query.chatTable.findMany({});
+  const chats = await useDb().query.chatTable.findMany({
+    // limit: 10,
+    orderBy: [desc(chatTable.createdAt)],
+  });
   console.log("chats", chats);
   registerModel(chatTable, chats, depends);
   depends("view:chats");

@@ -70,7 +70,7 @@
     </div>
     <div class="mt-6 overflow-x-hidden">
       <h3 class="mb-2 overflow-hidden text-ellipsis break-all px-4 text-xs font-medium">Recent</h3>
-      {#each chats.toReversed() as chat (chat.id)}
+      {#each chats as chat (chat.id)}
         <div
           class:bg-accent={chat.id === chatId}
           class="group flex flex-row items-center overflow-x-hidden px-4"
