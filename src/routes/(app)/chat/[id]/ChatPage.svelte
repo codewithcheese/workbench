@@ -36,7 +36,7 @@
       appendMessage({ ...message, revisionId: revision.id }, message.attachments);
     },
     onMessageUpdate: (messages) => {
-      bottomRef.scrollIntoView({ behavior: "smooth" });
+      bottomRef.scrollIntoView({ behavior: "instant" });
     },
   });
 
@@ -76,6 +76,6 @@
   {#if chatService.isLoading}
     <RobotLoader />
   {/if}
-  <div bind:this={bottomRef} id="bottom-anchor"></div>
+  <div bind:this={bottomRef}></div>
 </div>
 <MessageInput onSubmit={handleSubmit} />

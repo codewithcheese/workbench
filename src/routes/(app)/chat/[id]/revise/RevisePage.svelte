@@ -8,12 +8,14 @@
   import ChatTitlebar from "../ChatTitlebar.svelte";
   import { goto } from "$app/navigation";
   import type { Chat, Revision, Message } from "@/database";
+  import RobotLoader from "@/components/RobotLoader.svelte";
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
     revision: RevisionView;
   };
   let { chat, revision }: Props = $props();
+  let bottomRef: HTMLDivElement;
 
   let editIndex = $state(findEditIndex());
 
@@ -40,6 +42,9 @@
         return;
       }
       await goto(`/chat/${chat.id}/revise/?version=${revision.version}`);
+    },
+    onMessageUpdate: (messages) => {
+      bottomRef.scrollIntoView({ behavior: "instant" });
     },
   });
 
@@ -96,5 +101,9 @@
     {#if assistantMessage}
       <MessageCard message={assistantMessage} onRemoveAttachment={handleRemoveAttachment} />
     {/if}
+    {#if chatService.isLoading}
+      <RobotLoader />
+    {/if}
+    <div bind:this={bottomRef}></div>
   </div>
 </div>
