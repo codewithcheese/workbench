@@ -16,6 +16,7 @@
   };
   let { chat, revision }: Props = $props();
   let bottomRef: HTMLDivElement;
+  let responseContainer: HTMLDivElement;
 
   let editIndex = $state(findEditIndex());
 
@@ -32,6 +33,9 @@
     initialMessages: revision.messages.map(toChatMessage),
     mode: editIndex != null ? { type: "edit", index: editIndex } : { type: "append" },
     body,
+    onLoading: () => {
+      bottomRef.scrollIntoView({ behavior: "instant" });
+    },
     onError: (e) => {
       toast.error(e.message);
     },
@@ -41,10 +45,12 @@
       if (!revision) {
         return;
       }
-      await goto(`/chat/${chat.id}/revise/?version=${revision.version}`);
+      await goto(`/chat/${chat.id}/revise/?version=${revision.version}`, { noScroll: true });
     },
-    onMessageUpdate: (messages) => {
-      bottomRef.scrollIntoView({ behavior: "instant" });
+    onMessageUpdate: () => {
+      if (checkIfUserIsNearBottom()) {
+        bottomRef.scrollIntoView({ behavior: "instant" });
+      }
     },
   });
 
@@ -61,6 +67,21 @@
     return editIndex != null
       ? chatService.messages.find((m, index) => m.role === "assistant" && index > editIndex!)
       : undefined;
+  }
+
+  function checkIfUserIsNearBottom() {
+    if (!responseContainer) return false;
+    const threshold = 0.05; // 1% from the bottom
+    const position = responseContainer.scrollTop + responseContainer.clientHeight;
+    const height = responseContainer.scrollHeight;
+    console.log(
+      "checkIfUserIsNearBottom",
+      position,
+      height,
+      threshold,
+      (height - position) / height,
+    );
+    return (height - position) / height < threshold;
   }
 
   async function handleSubmit() {
@@ -97,7 +118,7 @@
     {/each}
     <EditorCard bind:prompt={chatService.input} {chat} onSubmit={handleSubmit} />
   </div>
-  <div class="flex flex-col gap-3 overflow-y-auto py-4">
+  <div class="flex flex-col gap-3 overflow-y-auto py-4" bind:this={responseContainer}>
     {#if assistantMessage}
       <MessageCard message={assistantMessage} onRemoveAttachment={handleRemoveAttachment} />
     {/if}

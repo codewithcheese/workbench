@@ -42,7 +42,7 @@
     <PlusIcon class="text-gray-600" />
   </Button>
 </div>
-<div class="flex-1">
+<div class="flex-1 overflow-y-auto">
   <nav class="grid items-start text-sm font-medium">
     <div class="p-2 pt-0">
       <PersistenceAlert />

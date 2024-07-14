@@ -16,6 +16,7 @@
   };
   let { chat, revision }: Props = $props();
   let bottomRef: HTMLDivElement;
+  let chatContainer: HTMLDivElement;
 
   let body = $state<{ providerId?: string; modelName?: string; baseURL?: string; apiKey?: string }>(
     {
@@ -29,6 +30,9 @@
   let chatService = new ChatService({
     initialMessages: revision.messages.map(toChatMessage),
     body,
+    onLoading: () => {
+      bottomRef.scrollIntoView({ behavior: "instant" });
+    },
     onError: (e) => {
       toast.error(e.message);
     },
@@ -36,9 +40,26 @@
       appendMessage({ ...message, revisionId: revision.id }, message.attachments);
     },
     onMessageUpdate: (messages) => {
-      bottomRef.scrollIntoView({ behavior: "instant" });
+      if (checkIfUserIsNearBottom()) {
+        bottomRef.scrollIntoView({ behavior: "instant" });
+      }
     },
   });
+
+  function checkIfUserIsNearBottom() {
+    if (!chatContainer) return false;
+    const threshold = 0.05; // 1% from the bottom
+    const position = chatContainer.scrollTop + chatContainer.clientHeight;
+    const height = chatContainer.scrollHeight;
+    console.log(
+      "checkIfUserIsNearBottom",
+      position,
+      height,
+      threshold,
+      (height - position) / height,
+    );
+    return (height - position) / height < threshold;
+  }
 
   async function handleSubmit(value: string, attachments: MessageAttachment[]): Promise<boolean> {
     if (!store.selected.modelId) {
@@ -69,13 +90,15 @@
 </script>
 
 <ChatTitlebar {chat} {revision} tab="chat" />
-<div class="flex flex-1 flex-col gap-2 p-4">
-  {#each chatService.messages as message (message.id)}
-    <MessageCard {message} />
-  {/each}
-  {#if chatService.isLoading}
-    <RobotLoader />
-  {/if}
-  <div bind:this={bottomRef}></div>
+<div class="flex flex-1 flex-col overflow-y-auto" bind:this={chatContainer}>
+  <div class="flex flex-1 flex-col gap-2 p-4">
+    {#each chatService.messages as message (message.id)}
+      <MessageCard {message} />
+    {/each}
+    {#if chatService.isLoading}
+      <RobotLoader />
+    {/if}
+    <div bind:this={bottomRef}></div>
+  </div>
+  <MessageInput onSubmit={handleSubmit} />
 </div>
-<MessageInput onSubmit={handleSubmit} />

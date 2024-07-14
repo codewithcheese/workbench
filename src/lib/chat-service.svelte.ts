@@ -88,8 +88,10 @@ export type ChatOptions = {
   }: {
     toolCall: ToolCall$1<string, unknown>;
   }) => void | Promise<unknown> | unknown;
-  /** Callback function to be called when an input is submitted */
-  onSubmit?: (message: ChatMessage) => void | Promise<void>;
+  /**
+   * Callback function to be called when the chat starts loading.
+   */
+  onLoading?: () => void;
   /**
    * Callback function to be called when the API response is received.
    */
@@ -251,7 +253,7 @@ export class ChatService {
   private experimental_onFunctionCall: FunctionCallHandler | undefined;
   private experimental_onToolCall: ToolCallHandler | undefined;
   private streamMode: "stream-data" | "text" | undefined;
-  private onSubmit: ((message: ChatMessage) => void | Promise<void>) | undefined;
+  private onLoading: (() => void) | undefined;
   private onResponse: ((response: Response) => void | Promise<void>) | undefined;
   private onFinish: ((message: ChatMessage) => void) | undefined;
   private onError: ((error: Error) => void) | undefined;
@@ -271,7 +273,7 @@ export class ChatService {
     experimental_onFunctionCall,
     experimental_onToolCall,
     streamMode,
-    onSubmit,
+    onLoading,
     onResponse,
     onFinish,
     onError,
@@ -290,7 +292,7 @@ export class ChatService {
     this.experimental_onFunctionCall = experimental_onFunctionCall;
     this.experimental_onToolCall = experimental_onToolCall;
     this.streamMode = streamMode;
-    this.onSubmit = onSubmit;
+    this.onLoading = onLoading;
     this.onResponse = onResponse;
     this.onFinish = onFinish;
     this.onError = onError;
@@ -444,6 +446,12 @@ export class ChatService {
     try {
       this.error = undefined;
       this.isLoading = true;
+
+      // Call the onLoading handler if it is defined
+      if (this.onLoading) {
+        this.onLoading();
+      }
+
       this.abortController = new AbortController();
 
       const extraMetadata = {
