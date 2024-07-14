@@ -50,7 +50,7 @@
   });
 </script>
 
-<div class="flex flex-row gap-4 px-3">
+<div class="flex flex-row gap-4 border-b border-gray-200 px-3 py-2">
   <Input
     class="border-none p-1 text-xl focus-visible:ring-0 focus-visible:ring-offset-0"
     bind:value={name}
