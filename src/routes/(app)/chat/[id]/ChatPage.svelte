@@ -9,14 +9,14 @@
   import ChatTitlebar from "./ChatTitlebar.svelte";
   import { nanoid } from "nanoid";
   import RobotLoader from "@/components/RobotLoader.svelte";
+  import { AutoScroller } from "$lib/auto-scroller";
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
     revision: RevisionView;
   };
   let { chat, revision }: Props = $props();
-  let bottomRef: HTMLDivElement;
-  let chatContainer: HTMLDivElement;
+  let autoScroller = new AutoScroller();
 
   let body = $state<{ providerId?: string; modelName?: string; baseURL?: string; apiKey?: string }>(
     {
@@ -31,7 +31,7 @@
     initialMessages: revision.messages.map(toChatMessage),
     body,
     onLoading: () => {
-      bottomRef.scrollIntoView({ behavior: "instant" });
+      autoScroller.onLoading();
     },
     onError: (e) => {
       toast.error(e.message);
@@ -40,26 +40,9 @@
       appendMessage({ ...message, revisionId: revision.id }, message.attachments);
     },
     onMessageUpdate: (messages) => {
-      if (checkIfUserIsNearBottom()) {
-        bottomRef.scrollIntoView({ behavior: "instant" });
-      }
+      autoScroller.onMessageUpdate();
     },
   });
-
-  function checkIfUserIsNearBottom() {
-    if (!chatContainer) return false;
-    const threshold = 0.05; // 1% from the bottom
-    const position = chatContainer.scrollTop + chatContainer.clientHeight;
-    const height = chatContainer.scrollHeight;
-    console.log(
-      "checkIfUserIsNearBottom",
-      position,
-      height,
-      threshold,
-      (height - position) / height,
-    );
-    return (height - position) / height < threshold;
-  }
 
   async function handleSubmit(value: string, attachments: MessageAttachment[]): Promise<boolean> {
     if (!store.selected.modelId) {
@@ -81,7 +64,6 @@
       baseURL: model.service.baseURL,
       apiKey: model.service.apiKey,
     });
-    console.log("calling chat.handleSubmit", value);
     chatService.input = value;
     chatService.attachments = attachments;
     chatService.handleSubmit();
@@ -90,7 +72,7 @@
 </script>
 
 <ChatTitlebar {chat} {revision} tab="chat" />
-<div class="flex flex-1 flex-col overflow-y-auto" bind:this={chatContainer}>
+<div class="flex flex-1 flex-col overflow-y-auto" use:autoScroller.action>
   <div class="flex flex-1 flex-col gap-2 p-4">
     {#each chatService.messages as message (message.id)}
       <MessageCard {message} />
@@ -98,7 +80,6 @@
     {#if chatService.isLoading}
       <RobotLoader />
     {/if}
-    <div bind:this={bottomRef}></div>
   </div>
   <MessageInput onSubmit={handleSubmit} />
 </div>

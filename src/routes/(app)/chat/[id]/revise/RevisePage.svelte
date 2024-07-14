@@ -9,14 +9,14 @@
   import { goto } from "$app/navigation";
   import type { Chat, Revision, Message } from "@/database";
   import RobotLoader from "@/components/RobotLoader.svelte";
+  import { AutoScroller } from "$lib/auto-scroller";
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
     revision: RevisionView;
   };
   let { chat, revision }: Props = $props();
-  let bottomRef: HTMLDivElement;
-  let responseContainer: HTMLDivElement;
+  let autoScroller = new AutoScroller(true);
 
   let editIndex = $state(findEditIndex());
 
@@ -34,7 +34,7 @@
     mode: editIndex != null ? { type: "edit", index: editIndex } : { type: "append" },
     body,
     onLoading: () => {
-      bottomRef.scrollIntoView({ behavior: "instant" });
+      autoScroller.onLoading();
     },
     onError: (e) => {
       toast.error(e.message);
@@ -48,9 +48,7 @@
       await goto(`/chat/${chat.id}/revise/?version=${revision.version}`, { noScroll: true });
     },
     onMessageUpdate: () => {
-      if (checkIfUserIsNearBottom()) {
-        bottomRef.scrollIntoView({ behavior: "instant" });
-      }
+      autoScroller.onMessageUpdate();
     },
   });
 
@@ -67,21 +65,6 @@
     return editIndex != null
       ? chatService.messages.find((m, index) => m.role === "assistant" && index > editIndex!)
       : undefined;
-  }
-
-  function checkIfUserIsNearBottom() {
-    if (!responseContainer) return false;
-    const threshold = 0.05; // 1% from the bottom
-    const position = responseContainer.scrollTop + responseContainer.clientHeight;
-    const height = responseContainer.scrollHeight;
-    console.log(
-      "checkIfUserIsNearBottom",
-      position,
-      height,
-      threshold,
-      (height - position) / height,
-    );
-    return (height - position) / height < threshold;
   }
 
   async function handleSubmit() {
@@ -118,13 +101,12 @@
     {/each}
     <EditorCard bind:prompt={chatService.input} {chat} onSubmit={handleSubmit} />
   </div>
-  <div class="flex flex-col gap-3 overflow-y-auto py-4" bind:this={responseContainer}>
+  <div class="flex flex-col gap-3 overflow-y-auto py-4" use:autoScroller.action>
     {#if assistantMessage}
       <MessageCard message={assistantMessage} onRemoveAttachment={handleRemoveAttachment} />
     {/if}
     {#if chatService.isLoading}
       <RobotLoader />
     {/if}
-    <div bind:this={bottomRef}></div>
   </div>
 </div>
