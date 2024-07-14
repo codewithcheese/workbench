@@ -19,6 +19,7 @@ import { runMigrations } from "@/database/migrator";
 import { and, eq } from "drizzle-orm";
 import { invalidate } from "$app/navigation";
 import { nanoid } from "nanoid";
+import type { ChatMessage } from "$lib/chat-service.svelte";
 
 let sqlite: Database.Database;
 let db: BetterSQLite3Database<typeof schema>;
@@ -239,9 +240,9 @@ describe("newRevision", () => {
       .mockReturnValueOnce("mocked-nanoid")
       .mockReturnValueOnce("message-1")
       .mockReturnValueOnce("message-2");
-    const messages = [
-      { id: "new-message1", role: "user", content: "New user message" },
-      { id: "new-message2", role: "assistant", content: "New assistant message" },
+    const messages: ChatMessage[] = [
+      { id: "new-message1", role: "user", content: "New user message", attachments: [] },
+      { id: "new-message2", role: "assistant", content: "New assistant message", attachments: [] },
     ];
     const revision = await newRevision("chat1", messages);
 

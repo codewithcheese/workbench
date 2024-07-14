@@ -15,13 +15,7 @@ import { nanoid } from "nanoid";
 import { invalidateModel } from "@/database/model";
 import { sql } from "drizzle-orm/sql";
 import type { RouteId } from "$lib/route";
-import type { ChatMessage } from "$lib/chat-service.svelte";
-
-export type AttachmentInput = {
-  type: string;
-  content: string;
-  attributes: {};
-};
+import type { MessageAttachment, ChatMessage } from "$lib/chat-service.svelte";
 
 export type ServicesView = Awaited<ReturnType<typeof loadServices>>;
 
@@ -52,7 +46,9 @@ export function toChatMessage(message: RevisionView["messages"][number]): ChatMe
     createdAt: message.createdAt ? new Date(message.createdAt) : undefined,
     attachments: message.attachments.map((a) => {
       return {
+        id: a.document.id,
         type: a.document.type,
+        name: a.document.name,
         content: a.document.content,
         attributes: a.document.attributes,
       };
@@ -154,7 +150,7 @@ export async function interpolateDocuments(prompt: string) {
 
 export async function appendMessage(
   message: Omit<InsertMessage, "index" | "createdAt">,
-  attachments: AttachmentInput[] = [],
+  attachments: MessageAttachment[] = [],
 ) {
   try {
     return await useDb().transaction(async (tx) => {
@@ -169,7 +165,7 @@ export async function appendMessage(
         })
         .execute();
       for (const attachment of attachments) {
-        const documentId = nanoid(10);
+        const documentId = attachment.id;
         await tx
           .insert(documentTable)
           .values({
@@ -193,10 +189,7 @@ export async function appendMessage(
   }
 }
 
-export async function newRevision(
-  chatId: string,
-  messages: Omit<InsertMessage, "index" | "revisionId" | "createdAt">[],
-): Promise<Revision> {
+export async function newRevision(chatId: string, messages: ChatMessage[]): Promise<Revision> {
   const revisionId = nanoid(10);
   await useDb().transaction(async (tx) => {
     await tx
@@ -209,16 +202,24 @@ export async function newRevision(
       })
       .execute();
     for (const message of messages) {
+      const newMessageId = nanoid(10);
       await tx
         .insert(messageTable)
         .values({
-          id: nanoid(10),
+          id: newMessageId,
           revisionId,
           role: message.role,
           content: message.content,
           index: sql`(SELECT COUNT(id) FROM ${messageTable} WHERE ${eq(messageTable.revisionId, revisionId)})`,
         })
         .execute();
+      for (const attachment of message.attachments) {
+        await tx.insert(attachmentTable).values({
+          id: nanoid(10),
+          documentId: attachment.id,
+          messageId: newMessageId,
+        });
+      }
     }
   });
   const revision = await useDb().query.revisionTable.findFirst({

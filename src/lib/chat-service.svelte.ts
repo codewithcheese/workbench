@@ -9,15 +9,21 @@ import type {
   Message as AIMessage,
   ToolCallHandler,
 } from "@ai-sdk/ui-utils";
-import { callChatApi, generateId as generateIdFunc, processChatStream } from "@ai-sdk/ui-utils";
+import { callChatApi, processChatStream } from "@ai-sdk/ui-utils";
 import { nanoid } from "nanoid";
-import type { AttachmentInput } from "../routes/(app)/chat/[id]/$data";
 import { toTitleCase } from "$lib/string";
 
 // todo remove tool and function calling until the library is stable and we need it
 
+export type MessageAttachment = {
+  id: string;
+  type: string;
+  name: string;
+  content: string;
+  attributes: {};
+};
 export type ChatMessage = AIMessage & {
-  attachments?: AttachmentInput[];
+  attachments: MessageAttachment[];
 };
 
 export type { CreateMessage };
@@ -213,10 +219,10 @@ const getStreamedResponse = async (
     },
     onResponse,
     onUpdate(merged, data) {
-      mutate([...previousMessages, ...merged]);
+      mutate([...previousMessages, ...merged.map((m) => ({ ...m, attachments: [] }))]);
       mutateStreamData([...(existingData || []), ...(data || [])]);
     },
-    onFinish,
+    onFinish: (message) => onFinish && onFinish({ ...message, attachments: [] }),
     generateId,
     onToolCall: undefined, // not implemented yet
     fetch,
@@ -231,7 +237,7 @@ export class ChatService {
   messages: ChatMessage[] = $state([]);
   error: undefined | Error = $state(undefined);
   input: string = $state("");
-  attachments: AttachmentInput[] = [];
+  attachments: MessageAttachment[] = [];
   isLoading: boolean | undefined = $state(undefined);
   data: JSONValue[] | undefined = $state(undefined);
   metadata?: Object;

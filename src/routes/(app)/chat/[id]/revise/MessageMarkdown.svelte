@@ -76,3 +76,9 @@
     {/if}
   {/each}
 </div>
+
+<style lang="postcss">
+  :global(.prose pre) {
+    @apply whitespace-break-spaces;
+  }
+</style>

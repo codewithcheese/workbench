@@ -1,15 +1,9 @@
 <script lang="ts">
-  import { ChatService } from "$lib/chat-service.svelte.js";
+  import { type MessageAttachment, ChatService } from "$lib/chat-service.svelte.js";
   import { toast } from "svelte-french-toast";
   import MessageInput from "./MessageInput.svelte";
   import { store } from "$lib/store.svelte";
-  import {
-    appendMessage,
-    getModelService,
-    type AttachmentInput,
-    type RevisionView,
-    toChatMessage,
-  } from "./$data";
+  import { appendMessage, getModelService, type RevisionView, toChatMessage } from "./$data";
   import type { Chat, Message, Revision } from "@/database";
   import MessageCard from "./MessageCard.svelte";
   import ChatTitlebar from "./ChatTitlebar.svelte";
@@ -45,7 +39,7 @@
     },
   });
 
-  async function handleSubmit(value: string, attachments: AttachmentInput[]): Promise<boolean> {
+  async function handleSubmit(value: string, attachments: MessageAttachment[]): Promise<boolean> {
     if (!store.selected.modelId) {
       toast.error("No model selected");
       return false;

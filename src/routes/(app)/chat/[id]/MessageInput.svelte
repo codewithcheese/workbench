@@ -4,17 +4,18 @@
   import { Button } from "@/components/ui/button";
   import { Textarea } from "@/components/ui/textarea";
   import { Send, Plus, HardDriveUpload, CloudUpload, Clipboard } from "lucide-svelte";
-  import type { AttachmentInput } from "./$data";
   import Attachment from "./Attachment.svelte";
+  import type { MessageAttachment } from "$lib/chat-service.svelte";
+  import { nanoid } from "nanoid";
 
   type Props = {
-    onSubmit: (content: string, attachments: AttachmentInput[]) => Promise<boolean>;
+    onSubmit: (content: string, attachments: MessageAttachment[]) => Promise<boolean>;
   };
   let { onSubmit }: Props = $props();
   let isUploadOpen = $state(false);
   let textareaElement: HTMLTextAreaElement;
   let content = $state("");
-  let attachments = $state<AttachmentInput[]>([]);
+  let attachments = $state<MessageAttachment[]>([]);
 
   function resize() {
     textareaElement.style.height = "auto";
@@ -48,7 +49,13 @@
     const content = event.clipboardData.getData("text/plain");
     if (content.length > 1000) {
       event.preventDefault();
-      attachments.push({ type: "pasted", content, attributes: {} });
+      attachments.push({
+        id: nanoid(10),
+        type: "pasted",
+        name: `Pasted ${new Date().toLocaleString()}`,
+        content,
+        attributes: {},
+      });
     }
   }
 

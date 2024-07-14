@@ -9,7 +9,14 @@ import {
   useDb,
 } from "@/database";
 import { error } from "@sveltejs/kit";
-import { createRevision, getLatestRevision, getRevision, loadServices, type Tab } from "./$data";
+import {
+  createRevision,
+  getLatestRevision,
+  getRevision,
+  loadServices,
+  type RevisionView,
+  type Tab,
+} from "./$data";
 import { match } from "$lib/route";
 
 export async function load({ route, url, params, depends }) {
@@ -41,7 +48,7 @@ export async function load({ route, url, params, depends }) {
   registerModel(serviceTable, services, depends);
 
   const version = url.searchParams.get("version");
-  let revision: Revision & { messages: Message[] };
+  let revision: RevisionView;
   if (version) {
     const result = await getRevision(params.id, parseInt(version));
     if (!result) {
