@@ -12,7 +12,7 @@
 </script>
 
 <div
-  class="h-32 w-28 min-w-28 cursor-pointer overflow-hidden rounded-lg border border-gray-300 bg-white text-gray-700"
+  class="h-32 min-h-28 w-28 min-w-28 cursor-pointer overflow-hidden rounded-lg border border-gray-300 bg-white text-gray-700"
 >
   <div class="relative h-full border-0">
     {#if onRemove}

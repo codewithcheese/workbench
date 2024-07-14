@@ -8,6 +8,7 @@
   import MessageCard from "./MessageCard.svelte";
   import ChatTitlebar from "./ChatTitlebar.svelte";
   import { nanoid } from "nanoid";
+  import RobotLoader from "@/components/RobotLoader.svelte";
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
@@ -72,6 +73,9 @@
   {#each chatService.messages as message (message.id)}
     <MessageCard {message} />
   {/each}
+  {#if chatService.isLoading}
+    <RobotLoader />
+  {/if}
   <div bind:this={bottomRef} id="bottom-anchor"></div>
 </div>
 <MessageInput onSubmit={handleSubmit} />
