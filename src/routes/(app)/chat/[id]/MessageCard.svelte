@@ -39,7 +39,7 @@
 <Card class={cn("", message.role === "user" && "border-none bg-muted/100")}>
   <CardContent class="p-4">
     {#if editable}
-      <MessageEditor bind:content={message.content} onKeyPress={handleKeyPress} />
+      <MessageEditor id={message.id} bind:content={message.content} onKeyPress={handleKeyPress} />
     {:else if format === "markdown"}
       <MessageMarkdown content={message.content} />
     {:else}

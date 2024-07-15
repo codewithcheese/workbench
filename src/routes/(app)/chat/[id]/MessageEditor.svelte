@@ -16,14 +16,14 @@
   import { registerPlainText } from "@lexical/plain-text";
 
   type Props = {
+    id: string;
     content: string;
     onKeyPress?: (event: KeyboardEvent) => boolean;
   };
-  let { content = $bindable(""), onKeyPress }: Props = $props();
+  let { id, content = $bindable(""), onKeyPress }: Props = $props();
 
   const config: CreateEditorArgs = {
-    namespace: "editor",
-    // Register nodes specific for @lexical/rich-text
+    namespace: `editor-${id}`,
     nodes: [],
     onError: (error: Error) => {
       toast.error(error.message);
