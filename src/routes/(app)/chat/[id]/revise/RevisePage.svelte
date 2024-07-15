@@ -1,5 +1,4 @@
 <script lang="ts">
-  import EditorCard from "./EditorCard.svelte";
   import MessageCard from "../MessageCard.svelte";
   import { getModelService, newRevision, type RevisionView, toChatMessage } from "../$data";
   import { store } from "$lib/store.svelte";
@@ -7,7 +6,7 @@
   import { toast } from "svelte-french-toast";
   import ChatTitlebar from "../ChatTitlebar.svelte";
   import { goto } from "$app/navigation";
-  import type { Chat, Revision, Message } from "@/database";
+  import type { Chat, Revision } from "@/database";
   import RobotLoader from "@/components/RobotLoader.svelte";
   import { AutoScroller } from "$lib/auto-scroller";
   import { nanoid } from "nanoid";
