@@ -10,6 +10,7 @@
   import type { Chat, Revision, Message } from "@/database";
   import RobotLoader from "@/components/RobotLoader.svelte";
   import { AutoScroller } from "$lib/auto-scroller";
+  import { nanoid } from "nanoid";
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
@@ -18,11 +19,10 @@
   let { chat, revision }: Props = $props();
   let autoScroller = new AutoScroller(true);
 
-  let editIndex = $state(findEditIndex());
-
   let chatService = new ChatService({
-    initialMessages: revision.messages.map(toChatMessage),
-    mode: editIndex != null ? { type: "edit", index: editIndex } : { type: "append" },
+    initialMessages: revision.messages.length
+      ? revision.messages.map(toChatMessage)
+      : [{ id: nanoid(10), role: "user", content: "", attachments: [] }],
     onLoading: () => {
       autoScroller.onLoading();
     },
@@ -42,20 +42,7 @@
     },
   });
 
-  $inspect("input", chatService.input, editIndex);
-
-  let assistantMessage = $derived(findAssistantMessage());
-
-  function findEditIndex() {
-    const editIndex = revision.messages.findLastIndex((m) => m.role === "user");
-    return editIndex === -1 ? undefined : editIndex;
-  }
-
-  function findAssistantMessage() {
-    return editIndex != null
-      ? chatService.messages.find((m, index) => m.role === "assistant" && index > editIndex!)
-      : undefined;
-  }
+  $inspect("RevisePage", chatService.messages);
 
   async function handleSubmit() {
     if (!store.selected.modelId) {
@@ -67,7 +54,7 @@
       toast.error("Selected model not found");
       return;
     }
-    chatService.submit({
+    return chatService.revise({
       providerId: model.service.providerId,
       modelName: model.name,
       baseURL: model.service.baseURL,
@@ -78,21 +65,30 @@
   async function handleRemoveAttachment(index: number) {
     toast.error("Not implemented");
   }
+
+  $inspect("chatService", chatService.messages);
 </script>
 
 <ChatTitlebar {chat} {revision} tab="revise" onRunClick={handleSubmit} />
 <div class="grid grid-cols-2 gap-3 overflow-y-auto px-4">
   <div class="flex flex-col gap-2 overflow-y-auto py-4">
     {#each chatService.messages as message, index (message.id)}
-      {#if editIndex == null || index < editIndex}
-        <MessageCard {message} onRemoveAttachment={handleRemoveAttachment} />
+      {#if chatService.messages[chatService.messages.length - 1].role === "assistant" ? index < chatService.messages.length - 1 : true}
+        <MessageCard
+          bind:message={chatService.messages[index]}
+          editable={true}
+          onSubmit={handleSubmit}
+          onRemoveAttachment={handleRemoveAttachment}
+        />
       {/if}
     {/each}
-    <EditorCard bind:prompt={chatService.input} {chat} onSubmit={handleSubmit} />
   </div>
   <div class="flex flex-col gap-3 overflow-y-auto py-4" use:autoScroller.action>
-    {#if assistantMessage}
-      <MessageCard message={assistantMessage} onRemoveAttachment={handleRemoveAttachment} />
+    {#if chatService.messages.length > 0 && chatService.messages[chatService.messages.length - 1].role === "assistant"}
+      <MessageCard
+        message={chatService.messages[chatService.messages.length - 1]}
+        onRemoveAttachment={handleRemoveAttachment}
+      />
     {/if}
     {#if chatService.isLoading}
       <RobotLoader />

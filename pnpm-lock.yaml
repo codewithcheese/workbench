@@ -41,15 +41,18 @@ importers:
       '@fontsource-variable/inter':
         specifier: ^5.0.18
         version: 5.0.18
-      '@tailwindcss/typography':
-        specifier: ^0.5.13
-        version: 0.5.13(tailwindcss@3.4.3)
-      '@types/lodash':
-        specifier: ^4.17.1
-        version: 4.17.1
-      '@vitest/browser':
-        specifier: ^1.6.0
-        version: 1.6.0(playwright@1.44.0)(vitest@1.6.0)(webdriverio@8.36.1(typescript@5.4.5))
+      '@lexical/history':
+        specifier: ^0.16.0
+        version: 0.16.1
+      '@lexical/plain-text':
+        specifier: ^0.16.0
+        version: 0.16.1
+      '@lexical/text':
+        specifier: ^0.16.0
+        version: 0.16.1
+      '@lexical/utils':
+        specifier: ^0.16.0
+        version: 0.16.1
       ai:
         specifier: ^3.1.12
         version: 3.1.12(react@18.3.1)(solid-js@1.8.17)(svelte@5.0.0-next.123)(vue@3.4.26(typescript@5.4.5))(zod@3.23.6)
@@ -65,9 +68,6 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
-      drizzle-kit:
-        specifier: ^0.21.2
-        version: 0.21.2
       drizzle-orm:
         specifier: ^0.30.10
         version: 0.30.10(@cloudflare/workers-types@4.20240502.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3)
@@ -77,9 +77,9 @@ importers:
       highlight.js:
         specifier: ^11.7.0
         version: 11.9.0
-      kysely:
-        specifier: ^0.27.3
-        version: 0.27.3
+      lexical:
+        specifier: ^0.16.1
+        version: 0.16.1
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -98,9 +98,6 @@ importers:
       nanoid:
         specifier: ^5.0.7
         version: 5.0.7
-      rxjs:
-        specifier: ^7.8.1
-        version: 7.8.1
       sqlocal:
         specifier: ^0.9.0
         version: 0.9.0(drizzle-orm@0.30.10(@cloudflare/workers-types@4.20240502.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3))(kysely@0.27.3)
@@ -119,12 +116,6 @@ importers:
       tailwind-variants:
         specifier: ^0.2.1
         version: 0.2.1(tailwindcss@3.4.3)
-      vitest:
-        specifier: ^1.6.0
-        version: 1.6.0(@types/node@20.14.9)(@vitest/browser@1.6.0)(@vitest/ui@1.6.0)(jsdom@24.0.0)
-      webdriverio:
-        specifier: ^8.36.1
-        version: 8.36.1(typescript@5.4.5)
       zod:
         specifier: ^3.23.6
         version: 3.23.6
@@ -153,6 +144,9 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.0
         version: 3.1.0(svelte@5.0.0-next.123)(vite@5.2.11(@types/node@20.14.9))
+      '@tailwindcss/typography':
+        specifier: ^0.5.13
+        version: 0.5.13(tailwindcss@3.4.3)
       '@testing-library/jest-dom':
         specifier: ^6.4.5
         version: 6.4.5(vitest@1.6.0(@types/node@20.14.9)(@vitest/browser@1.6.0)(@vitest/ui@1.6.0)(jsdom@24.0.0))
@@ -162,6 +156,12 @@ importers:
       '@types/better-sqlite3':
         specifier: ^7.6.11
         version: 7.6.11
+      '@types/lodash':
+        specifier: ^4.17.1
+        version: 4.17.1
+      '@vitest/browser':
+        specifier: ^1.6.0
+        version: 1.6.0(playwright@1.44.0)(vitest@1.6.0)(webdriverio@8.36.1(typescript@5.4.5))
       '@vitest/ui':
         specifier: ^1.6.0
         version: 1.6.0(vitest@1.6.0)
@@ -171,6 +171,9 @@ importers:
       better-sqlite3:
         specifier: ^10.0.0
         version: 10.0.0
+      drizzle-kit:
+        specifier: ^0.21.2
+        version: 0.21.2
       jsdom:
         specifier: ^24.0.0
         version: 24.0.0
@@ -204,6 +207,9 @@ importers:
       vite:
         specifier: ^5.0.3
         version: 5.2.11(@types/node@20.14.9)
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@20.14.9)(@vitest/browser@1.6.0)(@vitest/ui@1.6.0)(jsdom@24.0.0)
       wrangler:
         specifier: ^3.53.1
         version: 3.53.1(@cloudflare/workers-types@4.20240502.0)
@@ -1092,6 +1098,33 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
+
+  '@lexical/clipboard@0.16.1':
+    resolution: {integrity: sha512-0dWs/SwKS5KPpuf6fUVVt9vSCl6HAqcDGhSITw/okv0rrIlXTUT6WhVsMJtXfFxTyVvwMeOecJHvQH3i/jRQtA==}
+
+  '@lexical/history@0.16.1':
+    resolution: {integrity: sha512-WQhScx0TJeKSQAnEkRpIaWdUXqirrNrom2MxbBUc/32zEUMm9FzV7nRGknvUabEFUo7vZq6xTZpOExQJqHInQA==}
+
+  '@lexical/html@0.16.1':
+    resolution: {integrity: sha512-vbtAdCvQ3PaAqa5mFmtmrvbiAvjCu1iXBAJ0bsHqFXCF2Sba5LwHVe8dUAOTpfEZEMbiHfjul6b5fj4vNPGF2A==}
+
+  '@lexical/list@0.16.1':
+    resolution: {integrity: sha512-i9YhLAh5N6YO9dP+R1SIL9WEdCKeTiQQYVUzj84vDvX5DIBxMPUjTmMn3LXu9T+QO3h1s2L/vJusZASrl45eAw==}
+
+  '@lexical/plain-text@0.16.1':
+    resolution: {integrity: sha512-GjY4ylrBZIaAVIF8IFnmW0XGyHAuRmWA6gKB8iTTlsjgFrCHFIYC74EeJSp309O0Hflg9rRBnKoX1TYruFHVwA==}
+
+  '@lexical/selection@0.16.1':
+    resolution: {integrity: sha512-+nK3RvXtyQvQDq7AZ46JpphmM33pwuulwiRfeXR5T9iFQTtgWOEjsAi/KKX7vGm70BxACfiSxy5QCOgBWFwVJg==}
+
+  '@lexical/table@0.16.1':
+    resolution: {integrity: sha512-GWb0/MM1sVXpi1p2HWWOBldZXASMQ4c6WRNYnRmq7J/aB5N66HqQgJGKp3m66Kz4k1JjhmZfPs7F018qIBhnFQ==}
+
+  '@lexical/text@0.16.1':
+    resolution: {integrity: sha512-Os/nKQegORTrKKN6vL3/FMVszyzyqaotlisPynvTaHTUC+yY4uyjM2hlF93i5a2ixxyiPLF9bDroxUP96TMPXg==}
+
+  '@lexical/utils@0.16.1':
+    resolution: {integrity: sha512-BVyJxDQi/rIxFTDjf2zE7rMDKSuEaeJ4dybHRa/hRERt85gavGByQawSLeQlTjLaYLVsy+x7wCcqh2fNhlLf0g==}
 
   '@lezer/common@1.2.1':
     resolution: {integrity: sha512-yemX0ZD2xS/73llMZIK6KplkjIjf2EvAHcinDi/TfJ9hS25G0388+ClHt6/3but0oOxinTcQHJLDXh6w1crzFQ==}
@@ -2386,6 +2419,7 @@ packages:
   fstream@1.0.12:
     resolution: {integrity: sha512-WvJ193OHa0GHPEL+AycEJgxvBEwyfRkN1vhjca23OaPVMCaLCXTd5qAu82AjTcgP1UJmytkOKb63Ypde7raDIg==}
     engines: {node: '>=0.6'}
+    deprecated: This package is no longer supported.
 
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
@@ -2679,6 +2713,9 @@ packages:
   lazystream@1.0.1:
     resolution: {integrity: sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw==}
     engines: {node: '>= 0.6.3'}
+
+  lexical@0.16.1:
+    resolution: {integrity: sha512-+R05d3+N945OY8pTUjTqQrWoApjC+ctzvjnmNETtx9WmVAaiW0tQVG+AYLt5pDGY8dQXtd4RPorvnxBTECt9SA==}
 
   lilconfig@2.1.0:
     resolution: {integrity: sha512-utWOt/GHzuUxnLKxB6dk81RoOeoNeHgbrXiuGk4yyF5qlRz+iIVWu56E2fqGHFrXz0QNUhLB/8nKqvRH66JKGQ==}
@@ -3361,9 +3398,6 @@ packages:
 
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
-
-  rxjs@7.8.1:
-    resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
 
   sade@1.8.1:
     resolution: {integrity: sha512-xal3CZX1Xlo/k4ApwCFrHVACi9fBqJ7V+mwhBsuf/1IOKbBy098Fex+Wa/5QMubw09pSZ/u8EY8PWgevJsXp1A==}
@@ -4885,6 +4919,57 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
 
+  '@lexical/clipboard@0.16.1':
+    dependencies:
+      '@lexical/html': 0.16.1
+      '@lexical/list': 0.16.1
+      '@lexical/selection': 0.16.1
+      '@lexical/utils': 0.16.1
+      lexical: 0.16.1
+
+  '@lexical/history@0.16.1':
+    dependencies:
+      '@lexical/utils': 0.16.1
+      lexical: 0.16.1
+
+  '@lexical/html@0.16.1':
+    dependencies:
+      '@lexical/selection': 0.16.1
+      '@lexical/utils': 0.16.1
+      lexical: 0.16.1
+
+  '@lexical/list@0.16.1':
+    dependencies:
+      '@lexical/utils': 0.16.1
+      lexical: 0.16.1
+
+  '@lexical/plain-text@0.16.1':
+    dependencies:
+      '@lexical/clipboard': 0.16.1
+      '@lexical/selection': 0.16.1
+      '@lexical/utils': 0.16.1
+      lexical: 0.16.1
+
+  '@lexical/selection@0.16.1':
+    dependencies:
+      lexical: 0.16.1
+
+  '@lexical/table@0.16.1':
+    dependencies:
+      '@lexical/utils': 0.16.1
+      lexical: 0.16.1
+
+  '@lexical/text@0.16.1':
+    dependencies:
+      lexical: 0.16.1
+
+  '@lexical/utils@0.16.1':
+    dependencies:
+      '@lexical/list': 0.16.1
+      '@lexical/selection': 0.16.1
+      '@lexical/table': 0.16.1
+      lexical: 0.16.1
+
   '@lezer/common@1.2.1': {}
 
   '@lezer/cpp@1.1.2':
@@ -5051,6 +5136,7 @@ snapshots:
       moment: 2.30.1
       prettier: 2.8.1
       spacetrim: 0.11.24
+    optional: true
 
   '@puppeteer/browsers@1.4.6(typescript@5.4.5)':
     dependencies:
@@ -5065,6 +5151,7 @@ snapshots:
       typescript: 5.4.5
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@puppeteer/browsers@1.9.1':
     dependencies:
@@ -5077,6 +5164,7 @@ snapshots:
       yargs: 17.7.2
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@rollup/rollup-android-arm-eabi@4.17.2':
     optional: true
@@ -5128,7 +5216,8 @@ snapshots:
 
   '@sinclair/typebox@0.27.8': {}
 
-  '@sindresorhus/is@5.6.0': {}
+  '@sindresorhus/is@5.6.0':
+    optional: true
 
   '@sqlite.org/sqlite-wasm@3.45.3-build1': {}
 
@@ -5193,6 +5282,7 @@ snapshots:
   '@szmarczak/http-timer@5.0.1':
     dependencies:
       defer-to-connect: 2.0.1
+    optional: true
 
   '@tailwindcss/typography@0.5.13(tailwindcss@3.4.3)':
     dependencies:
@@ -5234,7 +5324,8 @@ snapshots:
       vite: 5.2.11(@types/node@20.14.9)
       vitest: 1.6.0(@types/node@20.14.9)(@vitest/browser@1.6.0)(@vitest/ui@1.6.0)(jsdom@24.0.0)
 
-  '@tootallnate/quickjs-emscripten@0.23.0': {}
+  '@tootallnate/quickjs-emscripten@0.23.0':
+    optional: true
 
   '@types/aria-query@5.0.4': {}
 
@@ -5251,7 +5342,8 @@ snapshots:
 
   '@types/estree@1.0.5': {}
 
-  '@types/http-cache-semantics@4.0.4': {}
+  '@types/http-cache-semantics@4.0.4':
+    optional: true
 
   '@types/katex@0.16.7': {}
 
@@ -5283,17 +5375,19 @@ snapshots:
 
   '@types/statuses@2.0.5': {}
 
-  '@types/which@2.0.2': {}
+  '@types/which@2.0.2':
+    optional: true
 
   '@types/wrap-ansi@3.0.0': {}
 
   '@types/ws@8.5.10':
     dependencies:
-      '@types/node': 20.12.8
+      '@types/node': 20.14.9
+    optional: true
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 20.12.8
+      '@types/node': 20.14.9
     optional: true
 
   '@ungap/structured-clone@1.2.0': {}
@@ -5414,6 +5508,7 @@ snapshots:
       import-meta-resolve: 4.1.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@wdio/logger@8.28.0':
     dependencies:
@@ -5421,16 +5516,20 @@ snapshots:
       loglevel: 1.9.1
       loglevel-plugin-prefix: 0.8.4
       strip-ansi: 7.1.0
+    optional: true
 
-  '@wdio/protocols@8.32.0': {}
+  '@wdio/protocols@8.32.0':
+    optional: true
 
   '@wdio/repl@8.24.12':
     dependencies:
-      '@types/node': 20.12.8
+      '@types/node': 20.14.9
+    optional: true
 
   '@wdio/types@8.36.1':
     dependencies:
-      '@types/node': 20.12.8
+      '@types/node': 20.14.9
+    optional: true
 
   '@wdio/utils@8.36.1':
     dependencies:
@@ -5449,10 +5548,12 @@ snapshots:
       wait-port: 1.1.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   abort-controller@3.0.0:
     dependencies:
       event-target-shim: 5.0.1
+    optional: true
 
   acorn-typescript@1.4.13(acorn@8.11.3):
     dependencies:
@@ -5526,6 +5627,7 @@ snapshots:
       lodash: 4.17.21
       normalize-path: 3.0.0
       readable-stream: 4.5.2
+    optional: true
 
   archiver@7.0.1:
     dependencies:
@@ -5536,6 +5638,7 @@ snapshots:
       readdir-glob: 1.1.3
       tar-stream: 3.1.7
       zip-stream: 6.0.1
+    optional: true
 
   arg@5.0.2: {}
 
@@ -5552,8 +5655,10 @@ snapshots:
   ast-types@0.13.4:
     dependencies:
       tslib: 2.6.2
+    optional: true
 
-  async@3.2.5: {}
+  async@3.2.5:
+    optional: true
 
   asynckit@0.4.0: {}
 
@@ -5571,7 +5676,8 @@ snapshots:
     dependencies:
       dequal: 2.0.3
 
-  b4a@1.6.6: {}
+  b4a@1.6.6:
+    optional: true
 
   balanced-match@1.0.2: {}
 
@@ -5600,14 +5706,16 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  basic-ftp@5.0.5: {}
+  basic-ftp@5.0.5:
+    optional: true
 
   better-sqlite3@10.0.0:
     dependencies:
       bindings: 1.5.0
       prebuild-install: 7.1.2
 
-  big-integer@1.6.52: {}
+  big-integer@1.6.52:
+    optional: true
 
   binary-extensions@2.3.0: {}
 
@@ -5630,7 +5738,8 @@ snapshots:
 
   blake3-wasm@2.1.5: {}
 
-  bluebird@3.4.7: {}
+  bluebird@3.4.7:
+    optional: true
 
   brace-expansion@1.1.11:
     dependencies:
@@ -5654,7 +5763,8 @@ snapshots:
 
   buffer-crc32@0.2.13: {}
 
-  buffer-crc32@1.0.0: {}
+  buffer-crc32@1.0.0:
+    optional: true
 
   buffer-from@1.1.2: {}
 
@@ -5667,10 +5777,12 @@ snapshots:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
+    optional: true
 
   cac@6.7.14: {}
 
-  cacheable-lookup@7.0.0: {}
+  cacheable-lookup@7.0.0:
+    optional: true
 
   cacheable-request@10.2.14:
     dependencies:
@@ -5681,6 +5793,7 @@ snapshots:
       mimic-response: 4.0.0
       normalize-url: 8.0.1
       responselike: 3.0.0
+    optional: true
 
   callsites@3.1.0: {}
 
@@ -5745,6 +5858,7 @@ snapshots:
     dependencies:
       devtools-protocol: 0.0.1147663
       mitt: 3.0.0
+    optional: true
 
   class-variance-authority@0.7.0:
     dependencies:
@@ -5825,6 +5939,7 @@ snapshots:
       is-stream: 2.0.1
       normalize-path: 3.0.0
       readable-stream: 4.5.2
+    optional: true
 
   concat-map@0.0.1: {}
 
@@ -5834,14 +5949,17 @@ snapshots:
 
   cookie@0.6.0: {}
 
-  core-util-is@1.0.3: {}
+  core-util-is@1.0.3:
+    optional: true
 
-  crc-32@1.2.2: {}
+  crc-32@1.2.2:
+    optional: true
 
   crc32-stream@6.0.0:
     dependencies:
       crc-32: 1.2.2
       readable-stream: 4.5.2
+    optional: true
 
   crelt@1.0.6: {}
 
@@ -5850,6 +5968,7 @@ snapshots:
       node-fetch: 2.7.0
     transitivePeerDependencies:
       - encoding
+    optional: true
 
   cross-spawn@7.0.3:
     dependencies:
@@ -5857,9 +5976,11 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  css-shorthand-properties@1.1.1: {}
+  css-shorthand-properties@1.1.1:
+    optional: true
 
-  css-value@0.0.1: {}
+  css-value@0.0.1:
+    optional: true
 
   css.escape@1.5.1: {}
 
@@ -5878,9 +5999,11 @@ snapshots:
 
   data-uri-to-buffer@2.0.2: {}
 
-  data-uri-to-buffer@4.0.1: {}
+  data-uri-to-buffer@4.0.1:
+    optional: true
 
-  data-uri-to-buffer@6.0.2: {}
+  data-uri-to-buffer@6.0.2:
+    optional: true
 
   data-urls@5.0.0:
     dependencies:
@@ -5891,7 +6014,8 @@ snapshots:
     dependencies:
       ms: 2.1.2
 
-  decamelize@6.0.0: {}
+  decamelize@6.0.0:
+    optional: true
 
   decimal.js@10.4.3: {}
 
@@ -5905,17 +6029,20 @@ snapshots:
 
   deep-extend@0.6.0: {}
 
-  deepmerge-ts@5.1.0: {}
+  deepmerge-ts@5.1.0:
+    optional: true
 
   deepmerge@4.3.1: {}
 
-  defer-to-connect@2.0.1: {}
+  defer-to-connect@2.0.1:
+    optional: true
 
   degenerator@5.0.1:
     dependencies:
       ast-types: 0.13.4
       escodegen: 2.1.0
       esprima: 4.0.1
+    optional: true
 
   delayed-stream@1.0.0: {}
 
@@ -5927,9 +6054,11 @@ snapshots:
 
   devalue@5.0.0: {}
 
-  devtools-protocol@0.0.1147663: {}
+  devtools-protocol@0.0.1147663:
+    optional: true
 
-  devtools-protocol@0.0.1282316: {}
+  devtools-protocol@0.0.1282316:
+    optional: true
 
   didyoumean@1.2.2: {}
 
@@ -5980,6 +6109,7 @@ snapshots:
   duplexer2@0.1.4:
     dependencies:
       readable-stream: 2.3.8
+    optional: true
 
   eastasianwidth@0.2.0: {}
 
@@ -5987,6 +6117,7 @@ snapshots:
     dependencies:
       '@types/which': 2.0.2
       which: 2.0.2
+    optional: true
 
   edgedriver@5.4.0:
     dependencies:
@@ -5996,6 +6127,7 @@ snapshots:
       node-fetch: 3.3.2
       unzipper: 0.11.6
       which: 4.0.0
+    optional: true
 
   electron-to-chromium@1.4.754: {}
 
@@ -6160,6 +6292,7 @@ snapshots:
       esutils: 2.0.3
     optionalDependencies:
       source-map: 0.6.1
+    optional: true
 
   esm-env@1.0.0: {}
 
@@ -6170,14 +6303,16 @@ snapshots:
       event-emitter: 0.3.5
       type: 2.7.2
 
-  esprima@4.0.1: {}
+  esprima@4.0.1:
+    optional: true
 
   esrap@1.2.2:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.15
       '@types/estree': 1.0.5
 
-  estraverse@5.3.0: {}
+  estraverse@5.3.0:
+    optional: true
 
   estree-walker@0.6.1: {}
 
@@ -6187,16 +6322,19 @@ snapshots:
     dependencies:
       '@types/estree': 1.0.5
 
-  esutils@2.0.3: {}
+  esutils@2.0.3:
+    optional: true
 
   event-emitter@0.3.5:
     dependencies:
       d: 1.0.2
       es5-ext: 0.10.64
 
-  event-target-shim@5.0.1: {}
+  event-target-shim@5.0.1:
+    optional: true
 
-  events@3.3.0: {}
+  events@3.3.0:
+    optional: true
 
   eventsource-parser@1.1.2: {}
 
@@ -6229,10 +6367,13 @@ snapshots:
       '@types/yauzl': 2.10.3
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
-  fast-deep-equal@2.0.1: {}
+  fast-deep-equal@2.0.1:
+    optional: true
 
-  fast-fifo@1.3.2: {}
+  fast-fifo@1.3.2:
+    optional: true
 
   fast-glob@3.3.2:
     dependencies:
@@ -6249,11 +6390,13 @@ snapshots:
   fd-slicer@1.1.0:
     dependencies:
       pend: 1.2.0
+    optional: true
 
   fetch-blob@3.2.0:
     dependencies:
       node-domexception: 1.0.0
       web-streams-polyfill: 3.3.3
+    optional: true
 
   fflate@0.8.2: {}
 
@@ -6276,7 +6419,8 @@ snapshots:
       cross-spawn: 7.0.3
       signal-exit: 4.1.0
 
-  form-data-encoder@2.1.4: {}
+  form-data-encoder@2.1.4:
+    optional: true
 
   form-data@4.0.0:
     dependencies:
@@ -6287,6 +6431,7 @@ snapshots:
   formdata-polyfill@4.0.10:
     dependencies:
       fetch-blob: 3.2.0
+    optional: true
 
   fraction.js@4.3.7: {}
 
@@ -6297,6 +6442,7 @@ snapshots:
       graceful-fs: 4.2.11
       jsonfile: 6.1.0
       universalify: 2.0.1
+    optional: true
 
   fs.realpath@1.0.0: {}
 
@@ -6312,6 +6458,7 @@ snapshots:
       inherits: 2.0.4
       mkdirp: 0.5.6
       rimraf: 2.7.1
+    optional: true
 
   function-bind@1.1.2: {}
 
@@ -6329,12 +6476,14 @@ snapshots:
       which: 4.0.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   get-caller-file@2.0.5: {}
 
   get-func-name@2.0.2: {}
 
-  get-port@7.1.0: {}
+  get-port@7.1.0:
+    optional: true
 
   get-source@2.0.12:
     dependencies:
@@ -6344,8 +6493,10 @@ snapshots:
   get-stream@5.2.0:
     dependencies:
       pump: 3.0.0
+    optional: true
 
-  get-stream@6.0.1: {}
+  get-stream@6.0.1:
+    optional: true
 
   get-stream@8.0.1: {}
 
@@ -6361,6 +6512,7 @@ snapshots:
       fs-extra: 11.2.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   github-from-package@0.0.0: {}
 
@@ -6416,10 +6568,12 @@ snapshots:
       lowercase-keys: 3.0.0
       p-cancelable: 3.0.0
       responselike: 3.0.0
+    optional: true
 
   graceful-fs@4.2.11: {}
 
-  grapheme-splitter@1.0.4: {}
+  grapheme-splitter@1.0.4:
+    optional: true
 
   graphql@16.9.0: {}
 
@@ -6446,7 +6600,8 @@ snapshots:
     dependencies:
       whatwg-encoding: 3.1.1
 
-  http-cache-semantics@4.1.1: {}
+  http-cache-semantics@4.1.1:
+    optional: true
 
   http-proxy-agent@7.0.2:
     dependencies:
@@ -6459,6 +6614,7 @@ snapshots:
     dependencies:
       quick-lru: 5.1.1
       resolve-alpn: 1.2.1
+    optional: true
 
   https-proxy-agent@7.0.4:
     dependencies:
@@ -6497,6 +6653,7 @@ snapshots:
     dependencies:
       jsbn: 1.1.0
       sprintf-js: 1.1.3
+    optional: true
 
   is-binary-path@2.1.0:
     dependencies:
@@ -6518,7 +6675,8 @@ snapshots:
 
   is-number@7.0.0: {}
 
-  is-plain-obj@4.1.0: {}
+  is-plain-obj@4.1.0:
+    optional: true
 
   is-potential-custom-element-name@1.0.1: {}
 
@@ -6528,15 +6686,18 @@ snapshots:
     dependencies:
       '@types/estree': 1.0.5
 
-  is-stream@2.0.1: {}
+  is-stream@2.0.1:
+    optional: true
 
   is-stream@3.0.0: {}
 
-  isarray@1.0.0: {}
+  isarray@1.0.0:
+    optional: true
 
   isexe@2.0.0: {}
 
-  isexe@3.1.1: {}
+  isexe@3.1.1:
+    optional: true
 
   jackspeak@2.3.6:
     dependencies:
@@ -6550,7 +6711,8 @@ snapshots:
 
   js-tokens@9.0.0: {}
 
-  jsbn@1.1.0: {}
+  jsbn@1.1.0:
+    optional: true
 
   jsdom@24.0.0:
     dependencies:
@@ -6580,7 +6742,8 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  json-buffer@3.0.1: {}
+  json-buffer@3.0.1:
+    optional: true
 
   json-diff@0.9.0:
     dependencies:
@@ -6601,6 +6764,7 @@ snapshots:
       universalify: 2.0.1
     optionalDependencies:
       graceful-fs: 4.2.11
+    optional: true
 
   katex@0.16.10:
     dependencies:
@@ -6609,16 +6773,22 @@ snapshots:
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
+    optional: true
 
   kleur@4.1.5: {}
 
-  ky@0.33.3: {}
+  ky@0.33.3:
+    optional: true
 
-  kysely@0.27.3: {}
+  kysely@0.27.3:
+    optional: true
 
   lazystream@1.0.1:
     dependencies:
       readable-stream: 2.3.8
+    optional: true
+
+  lexical@0.16.1: {}
 
   lilconfig@2.1.0: {}
 
@@ -6636,12 +6806,14 @@ snapshots:
       '@promptbook/utils': 0.49.0
       type-fest: 2.13.0
       userhome: 1.0.0
+    optional: true
 
   locate-character@3.0.0: {}
 
   lodash.castarray@4.4.0: {}
 
-  lodash.clonedeep@4.5.0: {}
+  lodash.clonedeep@4.5.0:
+    optional: true
 
   lodash.isplainobject@4.0.6: {}
 
@@ -6649,13 +6821,16 @@ snapshots:
 
   lodash.throttle@4.1.1: {}
 
-  lodash.zip@4.2.0: {}
+  lodash.zip@4.2.0:
+    optional: true
 
   lodash@4.17.21: {}
 
-  loglevel-plugin-prefix@0.8.4: {}
+  loglevel-plugin-prefix@0.8.4:
+    optional: true
 
-  loglevel@1.9.1: {}
+  loglevel@1.9.1:
+    optional: true
 
   loose-envify@1.4.0:
     dependencies:
@@ -6665,11 +6840,13 @@ snapshots:
     dependencies:
       get-func-name: 2.0.2
 
-  lowercase-keys@3.0.0: {}
+  lowercase-keys@3.0.0:
+    optional: true
 
   lru-cache@10.2.2: {}
 
-  lru-cache@7.18.3: {}
+  lru-cache@7.18.3:
+    optional: true
 
   lru-queue@0.1.0:
     dependencies:
@@ -6729,7 +6906,8 @@ snapshots:
 
   mimic-response@3.1.0: {}
 
-  mimic-response@4.0.0: {}
+  mimic-response@4.0.0:
+    optional: true
 
   min-indent@1.0.1: {}
 
@@ -6768,7 +6946,8 @@ snapshots:
 
   minipass@7.0.4: {}
 
-  mitt@3.0.0: {}
+  mitt@3.0.0:
+    optional: true
 
   mkdirp-classic@0.5.3: {}
 
@@ -6783,7 +6962,8 @@ snapshots:
       pkg-types: 1.1.1
       ufo: 1.5.3
 
-  moment@2.30.1: {}
+  moment@2.30.1:
+    optional: true
 
   mri@1.2.0: {}
 
@@ -6831,7 +7011,8 @@ snapshots:
 
   napi-build-utils@1.0.2: {}
 
-  netmask@2.0.2: {}
+  netmask@2.0.2:
+    optional: true
 
   next-tick@1.1.0: {}
 
@@ -6839,17 +7020,20 @@ snapshots:
     dependencies:
       semver: 7.6.2
 
-  node-domexception@1.0.0: {}
+  node-domexception@1.0.0:
+    optional: true
 
   node-fetch@2.7.0:
     dependencies:
       whatwg-url: 5.0.0
+    optional: true
 
   node-fetch@3.3.2:
     dependencies:
       data-uri-to-buffer: 4.0.1
       fetch-blob: 3.2.0
       formdata-polyfill: 4.0.10
+    optional: true
 
   node-forge@1.3.1: {}
 
@@ -6859,7 +7043,8 @@ snapshots:
 
   normalize-range@0.1.2: {}
 
-  normalize-url@8.0.1: {}
+  normalize-url@8.0.1:
+    optional: true
 
   npm-run-path@5.3.0:
     dependencies:
@@ -6881,7 +7066,8 @@ snapshots:
 
   outvariant@1.4.2: {}
 
-  p-cancelable@3.0.0: {}
+  p-cancelable@3.0.0:
+    optional: true
 
   p-limit@5.0.0:
     dependencies:
@@ -6899,11 +7085,13 @@ snapshots:
       socks-proxy-agent: 8.0.3
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   pac-resolver@7.0.1:
     dependencies:
       degenerator: 5.0.1
       netmask: 2.0.2
+    optional: true
 
   parent-module@1.0.1:
     dependencies:
@@ -6932,7 +7120,8 @@ snapshots:
 
   pathval@1.1.1: {}
 
-  pend@1.2.0: {}
+  pend@1.2.0:
+    optional: true
 
   picocolors@1.0.0: {}
 
@@ -7024,7 +7213,8 @@ snapshots:
     optionalDependencies:
       prettier-plugin-svelte: 3.2.3(prettier@3.2.5)(svelte@5.0.0-next.123)
 
-  prettier@2.8.1: {}
+  prettier@2.8.1:
+    optional: true
 
   prettier@3.2.5: {}
 
@@ -7042,11 +7232,14 @@ snapshots:
 
   printable-characters@1.0.42: {}
 
-  process-nextick-args@2.0.1: {}
+  process-nextick-args@2.0.1:
+    optional: true
 
-  process@0.11.10: {}
+  process@0.11.10:
+    optional: true
 
-  progress@2.0.3: {}
+  progress@2.0.3:
+    optional: true
 
   proxy-agent@6.3.0:
     dependencies:
@@ -7060,6 +7253,7 @@ snapshots:
       socks-proxy-agent: 8.0.3
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   proxy-agent@6.3.1:
     dependencies:
@@ -7073,8 +7267,10 @@ snapshots:
       socks-proxy-agent: 8.0.3
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
-  proxy-from-env@1.1.0: {}
+  proxy-from-env@1.1.0:
+    optional: true
 
   proxy-target@3.0.2: {}
 
@@ -7102,16 +7298,20 @@ snapshots:
       - encoding
       - supports-color
       - utf-8-validate
+    optional: true
 
-  query-selector-shadow-dom@1.0.1: {}
+  query-selector-shadow-dom@1.0.1:
+    optional: true
 
   querystringify@2.2.0: {}
 
   queue-microtask@1.2.3: {}
 
-  queue-tick@1.0.1: {}
+  queue-tick@1.0.1:
+    optional: true
 
-  quick-lru@5.1.1: {}
+  quick-lru@5.1.1:
+    optional: true
 
   rc@1.2.8:
     dependencies:
@@ -7141,6 +7341,7 @@ snapshots:
       safe-buffer: 5.1.2
       string_decoder: 1.1.1
       util-deprecate: 1.0.2
+    optional: true
 
   readable-stream@3.6.2:
     dependencies:
@@ -7155,10 +7356,12 @@ snapshots:
       events: 3.3.0
       process: 0.11.10
       string_decoder: 1.3.0
+    optional: true
 
   readdir-glob@1.1.3:
     dependencies:
       minimatch: 5.1.6
+    optional: true
 
   readdirp@3.6.0:
     dependencies:
@@ -7177,7 +7380,8 @@ snapshots:
 
   requires-port@1.0.0: {}
 
-  resolve-alpn@1.2.1: {}
+  resolve-alpn@1.2.1:
+    optional: true
 
   resolve-from@4.0.0: {}
 
@@ -7194,14 +7398,17 @@ snapshots:
   responselike@3.0.0:
     dependencies:
       lowercase-keys: 3.0.0
+    optional: true
 
   resq@1.11.0:
     dependencies:
       fast-deep-equal: 2.0.1
+    optional: true
 
   reusify@1.0.4: {}
 
-  rgb2hex@0.2.5: {}
+  rgb2hex@0.2.5:
+    optional: true
 
   rimraf@2.7.1:
     dependencies:
@@ -7249,17 +7456,15 @@ snapshots:
     dependencies:
       queue-microtask: 1.2.3
 
-  rxjs@7.8.1:
-    dependencies:
-      tslib: 2.6.2
-
   sade@1.8.1:
     dependencies:
       mri: 1.2.0
 
-  safaridriver@0.1.2: {}
+  safaridriver@0.1.2:
+    optional: true
 
-  safe-buffer@5.1.2: {}
+  safe-buffer@5.1.2:
+    optional: true
 
   safe-buffer@5.2.1: {}
 
@@ -7288,6 +7493,7 @@ snapshots:
   serialize-error@11.0.3:
     dependencies:
       type-fest: 2.19.0
+    optional: true
 
   seroval-plugins@1.0.5(seroval@1.0.5):
     dependencies:
@@ -7323,7 +7529,8 @@ snapshots:
 
   sisteransi@1.0.5: {}
 
-  smart-buffer@4.2.0: {}
+  smart-buffer@4.2.0:
+    optional: true
 
   socks-proxy-agent@8.0.3:
     dependencies:
@@ -7332,11 +7539,13 @@ snapshots:
       socks: 2.8.3
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   socks@2.8.3:
     dependencies:
       ip-address: 9.0.5
       smart-buffer: 4.2.0
+    optional: true
 
   solid-js@1.8.17:
     dependencies:
@@ -7367,11 +7576,14 @@ snapshots:
 
   sourcemap-codec@1.4.8: {}
 
-  spacetrim@0.11.24: {}
+  spacetrim@0.11.24:
+    optional: true
 
-  split2@4.2.0: {}
+  split2@4.2.0:
+    optional: true
 
-  sprintf-js@1.1.3: {}
+  sprintf-js@1.1.3:
+    optional: true
 
   sql.js@1.10.3:
     optional: true
@@ -7412,6 +7624,7 @@ snapshots:
       queue-tick: 1.0.1
     optionalDependencies:
       bare-events: 2.2.2
+    optional: true
 
   strict-event-emitter@0.5.1: {}
 
@@ -7430,6 +7643,7 @@ snapshots:
   string_decoder@1.1.1:
     dependencies:
       safe-buffer: 5.1.2
+    optional: true
 
   string_decoder@1.3.0:
     dependencies:
@@ -7617,6 +7831,7 @@ snapshots:
       mkdirp-classic: 0.5.3
       pump: 3.0.0
       tar-stream: 3.1.7
+    optional: true
 
   tar-fs@3.0.6:
     dependencies:
@@ -7625,6 +7840,7 @@ snapshots:
     optionalDependencies:
       bare-fs: 2.3.0
       bare-path: 2.1.2
+    optional: true
 
   tar-stream@2.2.0:
     dependencies:
@@ -7639,6 +7855,7 @@ snapshots:
       b4a: 1.6.6
       fast-fifo: 1.3.2
       streamx: 2.16.1
+    optional: true
 
   thenify-all@1.6.0:
     dependencies:
@@ -7648,7 +7865,8 @@ snapshots:
     dependencies:
       any-promise: 1.3.0
 
-  through@2.3.8: {}
+  through@2.3.8:
+    optional: true
 
   timers-ext@0.1.7:
     dependencies:
@@ -7681,7 +7899,8 @@ snapshots:
       universalify: 0.2.0
       url-parse: 1.5.10
 
-  tr46@0.0.3: {}
+  tr46@0.0.3:
+    optional: true
 
   tr46@5.0.0:
     dependencies:
@@ -7699,9 +7918,11 @@ snapshots:
 
   type-fest@0.21.3: {}
 
-  type-fest@2.13.0: {}
+  type-fest@2.13.0:
+    optional: true
 
-  type-fest@2.19.0: {}
+  type-fest@2.19.0:
+    optional: true
 
   type-fest@4.20.1: {}
 
@@ -7715,6 +7936,7 @@ snapshots:
     dependencies:
       buffer: 5.7.1
       through: 2.3.8
+    optional: true
 
   undici-types@5.26.5: {}
 
@@ -7724,7 +7946,8 @@ snapshots:
 
   universalify@0.2.0: {}
 
-  universalify@2.0.1: {}
+  universalify@2.0.1:
+    optional: true
 
   unzipper@0.11.6:
     dependencies:
@@ -7733,6 +7956,7 @@ snapshots:
       duplexer2: 0.1.4
       fstream: 1.0.12
       graceful-fs: 4.2.11
+    optional: true
 
   update-browserslist-db@1.0.14(browserslist@4.23.0):
     dependencies:
@@ -7749,7 +7973,8 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  userhome@1.0.0: {}
+  userhome@1.0.0:
+    optional: true
 
   util-deprecate@1.0.2: {}
 
@@ -7842,12 +8067,14 @@ snapshots:
       debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
-  web-streams-polyfill@3.3.3: {}
+  web-streams-polyfill@3.3.3:
+    optional: true
 
   webdriver@8.36.1:
     dependencies:
-      '@types/node': 20.12.8
+      '@types/node': 20.14.9
       '@types/ws': 8.5.10
       '@wdio/config': 8.36.1
       '@wdio/logger': 8.28.0
@@ -7862,10 +8089,11 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   webdriverio@8.36.1(typescript@5.4.5):
     dependencies:
-      '@types/node': 20.12.8
+      '@types/node': 20.14.9
       '@wdio/config': 8.36.1
       '@wdio/logger': 8.28.0
       '@wdio/protocols': 8.32.0
@@ -7895,8 +8123,10 @@ snapshots:
       - supports-color
       - typescript
       - utf-8-validate
+    optional: true
 
-  webidl-conversions@3.0.1: {}
+  webidl-conversions@3.0.1:
+    optional: true
 
   webidl-conversions@7.0.0: {}
 
@@ -7915,6 +8145,7 @@ snapshots:
     dependencies:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
+    optional: true
 
   which@2.0.2:
     dependencies:
@@ -7923,6 +8154,7 @@ snapshots:
   which@4.0.0:
     dependencies:
       isexe: 3.1.1
+    optional: true
 
   why-is-node-running@2.2.2:
     dependencies:
@@ -7988,7 +8220,8 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  ws@8.13.0: {}
+  ws@8.13.0:
+    optional: true
 
   ws@8.17.0: {}
 
@@ -8013,6 +8246,7 @@ snapshots:
       string-width: 4.2.3
       y18n: 5.0.8
       yargs-parser: 21.1.1
+    optional: true
 
   yargs@17.7.2:
     dependencies:
@@ -8028,6 +8262,7 @@ snapshots:
     dependencies:
       buffer-crc32: 0.2.13
       fd-slicer: 1.1.0
+    optional: true
 
   yocto-queue@1.0.0: {}
 
@@ -8046,6 +8281,7 @@ snapshots:
       archiver-utils: 5.0.2
       compress-commons: 6.0.2
       readable-stream: 4.5.2
+    optional: true
 
   zod-to-json-schema@3.22.5(zod@3.23.6):
     dependencies:

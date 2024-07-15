@@ -5,7 +5,7 @@
 </script>
 
 <svg
-  class={cn(`h-12 min-h-12 w-12 min-w-12 stroke-gray-700`, className)}
+  class={cn(`h-10 min-h-10 w-10 min-w-10 stroke-gray-700`, className)}
   viewBox="0 0 100 100"
   xmlns="http://www.w3.org/2000/svg"
 >

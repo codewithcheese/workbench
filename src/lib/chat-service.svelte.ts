@@ -321,12 +321,12 @@ export class ChatService {
     return this.triggerRequest(this.createChatRequest(requestOptions));
   }
 
-  edit(content: string, index: number, requestOptions: ChatRequestOptions = {}) {
-    // update message content at index
-    this.messages[index].content = content;
-    // remove messages after edit
-    this.messages.splice(index + 1);
-    return this.triggerRequest(this.createChatRequest(requestOptions));
+  revise(requestBody: Record<string, any>) {
+    if (this.messages[this.messages.length - 1].role === "assistant") {
+      this.messages.splice(-1);
+    }
+    console.log("revise", this.messages);
+    return this.triggerRequest(this.createChatRequest({ options: { body: requestBody } }));
   }
 
   /**
@@ -405,13 +405,12 @@ export class ChatService {
   }
 
   submit(requestBody: Record<string, any>) {
-    const inputContent = this.input;
-    const inputAttachments = this.attachments;
-    if (!inputContent) return;
-
     if (this.mode.type === "edit") {
-      return this.edit(inputContent, this.mode.index, { options: { body: requestBody } });
+      return this.revise(this.mode.index, { options: { body: requestBody } });
     } else {
+      const inputContent = this.input;
+      const inputAttachments = this.attachments;
+      if (!inputContent) return;
       this.input = "";
       return this.append(
         {
