@@ -8,7 +8,7 @@ import {
   getModelService,
   createRevision,
   appendMessage,
-  newRevision,
+  createRevision,
   isTab,
   tabRouteId,
 } from "./$data";
@@ -244,7 +244,7 @@ describe("newRevision", () => {
       { id: "new-message1", role: "user", content: "New user message", attachments: [] },
       { id: "new-message2", role: "assistant", content: "New assistant message", attachments: [] },
     ];
-    const revision = await newRevision("chat1", messages);
+    const revision = await createRevision("chat1", messages);
 
     expect(revision).toMatchObject({
       chatId: "chat1",

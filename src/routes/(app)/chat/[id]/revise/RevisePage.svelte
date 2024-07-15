@@ -1,6 +1,6 @@
 <script lang="ts">
   import MessageCard from "../MessageCard.svelte";
-  import { getModelService, newRevision, type RevisionView, toChatMessage } from "../$data";
+  import { getModelService, createRevision, type RevisionView, toChatMessage } from "../$data";
   import { store } from "$lib/store.svelte";
   import { ChatService } from "$lib/chat-service.svelte.js";
   import { toast } from "svelte-french-toast";
@@ -13,15 +13,16 @@
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
-    revision: RevisionView;
+    revision?: RevisionView;
   };
   let { chat, revision }: Props = $props();
   let autoScroller = new AutoScroller(true);
 
   let chatService = new ChatService({
-    initialMessages: revision.messages.length
-      ? revision.messages.map(toChatMessage)
-      : [{ id: nanoid(10), role: "user", content: "", attachments: [] }],
+    initialMessages:
+      revision && revision.messages.length
+        ? revision.messages.map(toChatMessage)
+        : [{ id: nanoid(10), role: "user", content: "", attachments: [] }],
     onLoading: () => {
       autoScroller.onLoading();
     },
@@ -30,11 +31,18 @@
     },
     onFinish: async (message) => {
       console.log("onFinish", message);
-      const revision = await newRevision(chat.id, $state.snapshot(chatService.messages));
-      if (!revision) {
-        return;
+      if (revision) {
+        const newRevision = await createRevision(chat.id, $state.snapshot(chatService.messages));
+        if (!newRevision) {
+          return toast.error("Failed to create revision");
+        }
+        await goto(`/chat/${chat.id}/revise/?version=${newRevision.version}`, { noScroll: true });
+      } else {
+        const newRevision = await createRevision(chat.id, $state.snapshot(chatService.messages));
+        if (!newRevision) {
+          return toast.error("Failed to create revision");
+        }
       }
-      await goto(`/chat/${chat.id}/revise/?version=${revision.version}`, { noScroll: true });
     },
     onMessageUpdate: () => {
       autoScroller.onMessageUpdate();

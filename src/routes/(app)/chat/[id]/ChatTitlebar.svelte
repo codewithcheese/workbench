@@ -12,7 +12,7 @@
     chat: Chat & {
       revisions: Revision[];
     };
-    revision: Revision;
+    revision?: Revision;
     tab: string;
     onRunClick?: () => void;
   };
@@ -21,11 +21,11 @@
   let name = $state(chat.name);
 
   let versions = $derived.by(() => {
-    let previous = revision.version > 1 ? String(revision.version - 1) : undefined;
-    let next = revision.version < chat.revisions.length ? String(revision.version + 1) : undefined;
-    let previousOptions = { id: chat.id, $query: { version: previous } };
-    let nextOptions = { id: chat.id, $query: { version: next } };
-    const routeId = tab;
+    let previous = revision && revision.version > 1 ? String(revision.version - 1) : undefined;
+    let next =
+      revision && revision.version < chat.revisions.length
+        ? String(revision.version + 1)
+        : undefined;
     return {
       previous,
       next,
@@ -36,8 +36,8 @@
         : undefined,
       nextLink: next
         ? tab === "revise"
-          ? `/chat/${chat.id}/revise/?version=${next}`
-          : `/chat/${chat.id}/?version=${next}`
+          ? route(`/chat/[id]/revise`, { id: chat.id, $query: { version: next } })
+          : route(`/chat/[id]`, { id: chat.id, $query: { version: next } })
         : undefined,
     };
   });
@@ -59,23 +59,25 @@
     }}
   />
   <div class="flex flex-row items-center">
-    <Button
-      href={versions.previousLink}
-      disabled={!versions.previousLink}
-      class="rounded-full p-0 text-gray-700"
-      variant="ghost"
-    >
-      <ArrowBigLeftIcon class="h-4 w-4" />
-    </Button>
-    <Badge variant="secondary">v{revision.version}</Badge>
-    <Button
-      href={versions.nextLink}
-      disabled={!versions.nextLink}
-      class="rounded-full p-0 text-gray-700"
-      variant="ghost"
-    >
-      <ArrowBigRightIcon class="h-4 w-4" />
-    </Button>
+    {#if revision}
+      <Button
+        href={versions.previousLink}
+        disabled={!versions.previousLink}
+        class="rounded-full p-0 text-gray-700"
+        variant="ghost"
+      >
+        <ArrowBigLeftIcon class="h-4 w-4" />
+      </Button>
+      <Badge variant="secondary">v{revision.version}</Badge>
+      <Button
+        href={versions.nextLink}
+        disabled={!versions.nextLink}
+        class="rounded-full p-0 text-gray-700"
+        variant="ghost"
+      >
+        <ArrowBigRightIcon class="h-4 w-4" />
+      </Button>
+    {/if}
   </div>
   {#if tab === "revise"}
     <Button

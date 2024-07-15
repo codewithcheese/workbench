@@ -3,7 +3,13 @@
   import { toast } from "svelte-french-toast";
   import MessageInput from "./MessageInput.svelte";
   import { store } from "$lib/store.svelte";
-  import { appendMessage, getModelService, type RevisionView, toChatMessage } from "./$data";
+  import {
+    appendMessage,
+    createRevision,
+    getModelService,
+    type RevisionView,
+    toChatMessage,
+  } from "./$data";
   import type { Chat, Message, Revision } from "@/database";
   import MessageCard from "./MessageCard.svelte";
   import ChatTitlebar from "./ChatTitlebar.svelte";
@@ -13,13 +19,13 @@
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
-    revision: RevisionView;
+    revision?: RevisionView;
   };
   let { chat, revision }: Props = $props();
   let autoScroller = new AutoScroller();
 
   let chatService = new ChatService({
-    initialMessages: revision.messages.map(toChatMessage),
+    initialMessages: revision ? revision.messages.map(toChatMessage) : [],
     onLoading: () => {
       autoScroller.onLoading();
     },
@@ -27,7 +33,7 @@
       toast.error(e.message);
     },
     onFinish: (message) => {
-      appendMessage({ ...message, revisionId: revision.id }, message.attachments);
+      appendMessage({ ...message, revisionId: revision!.id }, message.attachments);
     },
     onMessageUpdate: (messages) => {
       autoScroller.onMessageUpdate();
@@ -42,6 +48,13 @@
     const model = await getModelService(store.selected.modelId);
     if (!model) {
       toast.error("Selected model not found");
+      return false;
+    }
+    if (!revision) {
+      revision = await createRevision(chat.id, []);
+    }
+    if (!revision) {
+      toast.error("Failed to create revision");
       return false;
     }
     await appendMessage(

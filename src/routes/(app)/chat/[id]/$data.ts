@@ -100,20 +100,20 @@ export function getModelService(modelId: string) {
   });
 }
 
-export async function createRevision(chatId: string) {
-  const revisionId = nanoid(10);
-  await useDb()
-    .insert(revisionTable)
-    .values({
-      id: revisionId,
-      version: sql`(SELECT COUNT(id) + 1 FROM ${revisionTable} WHERE ${eq(revisionTable.chatId, chatId)})`,
-      chatId,
-      error: null,
-      createdAt: new Date().toISOString(),
-    })
-    .execute();
-  return getLatestRevision(chatId);
-}
+// export async function createRevision(chatId: string) {
+//   const revisionId = nanoid(10);
+//   await useDb()
+//     .insert(revisionTable)
+//     .values({
+//       id: revisionId,
+//       version: sql`(SELECT COUNT(id) + 1 FROM ${revisionTable} WHERE ${eq(revisionTable.chatId, chatId)})`,
+//       chatId,
+//       error: null,
+//       createdAt: new Date().toISOString(),
+//     })
+//     .execute();
+//   return getLatestRevision(chatId);
+// }
 
 export async function updateChat(chatId: string, updates: Partial<Chat>) {
   console.log("updateChat", chatId, updates);
@@ -189,7 +189,7 @@ export async function appendMessage(
   }
 }
 
-export async function newRevision(chatId: string, messages: ChatMessage[]): Promise<Revision> {
+export async function createRevision(chatId: string, messages: ChatMessage[] = []) {
   const revisionId = nanoid(10);
   await useDb().transaction(async (tx) => {
     await tx
@@ -224,6 +224,17 @@ export async function newRevision(chatId: string, messages: ChatMessage[]): Prom
   });
   const revision = await useDb().query.revisionTable.findFirst({
     where: eq(revisionTable.id, revisionId),
+    with: {
+      messages: {
+        with: {
+          attachments: {
+            with: {
+              document: true,
+            },
+          },
+        },
+      },
+    },
   });
   return revision!;
 }

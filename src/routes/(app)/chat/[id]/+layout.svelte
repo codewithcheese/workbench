@@ -12,18 +12,18 @@
   let { data } = $props();
   let services = $derived(data.services);
   let chat = $derived(data.chat);
+  let revision = $derived(data.revision);
 
   async function tabClick(value?: string) {
     if (!isTab(value)) {
       toast.error(`Unexpected tab ${value}`);
       return;
     }
+    const query = revision ? { version: revision.version } : undefined;
     if (value === "chat") {
-      await goto(route(`/chat/[id]`, { id: chat.id, $query: { version: data.revision.version } }));
+      await goto(route(`/chat/[id]`, { id: chat.id, $query: query }));
     } else if (value === "revise" || value === "eval") {
-      await goto(
-        route(`/chat/[id]/${value}`, { id: chat.id, $query: { version: data.revision.version } }),
-      );
+      await goto(route(`/chat/[id]/${value}`, { id: chat.id, $query: query }));
     }
   }
 

@@ -107,7 +107,7 @@
           placeholder="What's on your mind?"
           bind:value={content}
           oninput={resize}
-          class=" max-h-[200px] min-h-1 flex-1 resize-none overflow-y-auto border-none bg-muted/50 focus-visible:ring-0"
+          class="prose max-h-[200px] min-h-1 flex-1 resize-none overflow-y-auto border-none bg-muted/50 focus-visible:ring-0"
           onkeydown={handleKeydown}
           onpaste={handlePaste}
         />

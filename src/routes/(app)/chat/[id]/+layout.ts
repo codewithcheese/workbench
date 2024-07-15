@@ -48,7 +48,7 @@ export async function load({ route, url, params, depends }) {
   registerModel(serviceTable, services, depends);
 
   const version = url.searchParams.get("version");
-  let revision: RevisionView;
+  let revision: RevisionView | undefined;
   if (version) {
     const result = await getRevision(params.id, parseInt(version));
     if (!result) {
@@ -56,13 +56,11 @@ export async function load({ route, url, params, depends }) {
     }
     revision = result;
   } else {
-    const result = (await getLatestRevision(params.id)) || (await createRevision(params.id));
-    if (!result) {
-      return error(500, "Error loading chat revision");
-    }
-    revision = result;
+    revision = await getLatestRevision(params.id);
   }
-  registerModel(revisionTable, revision, depends);
+  if (revision) {
+    registerModel(revisionTable, revision, depends);
+  }
   depends("view:messages");
   depends("view:chat");
   return { chat, services, tab, revision, version };
