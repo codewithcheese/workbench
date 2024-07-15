@@ -19,8 +19,15 @@
     id: string;
     content: string;
     onKeyPress?: (event: KeyboardEvent) => boolean;
+    placeholder?: string;
   };
-  let { id, content = $bindable(""), onKeyPress }: Props = $props();
+  let {
+    id,
+    content = $bindable(""),
+    onKeyPress,
+    placeholder = "Enter your message",
+  }: Props = $props();
+  let showPlaceholder = $state(content === "");
 
   const config: CreateEditorArgs = {
     namespace: `editor-${id}`,
@@ -56,9 +63,28 @@
       editorState.read(() => {
         const root = getRoot();
         content = root.getTextContent();
+        showPlaceholder = content === "";
       });
     });
   });
 </script>
 
-<div class="focus:outline-none" bind:this={editorRef} contenteditable="true"></div>
+<div class="editor-container">
+  <div class="focus:outline-none" bind:this={editorRef} contenteditable="true"></div>
+  {#if showPlaceholder}
+    <div class="editor-placeholder">{placeholder}</div>
+  {/if}
+</div>
+
+<style lang="postcss">
+  .editor-container {
+    position: relative;
+  }
+  .editor-placeholder {
+    @apply absolute text-gray-500;
+    top: 0;
+    left: 0;
+    user-select: none;
+    pointer-events: none;
+  }
+</style>
