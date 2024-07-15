@@ -18,6 +18,7 @@
   let { chat, revision }: Props = $props();
   let autoScroller = new AutoScroller();
 
+  // todo initialize body state in ChatService
   let body = $state<{ providerId?: string; modelName?: string; baseURL?: string; apiKey?: string }>(
     {
       providerId: undefined,
@@ -29,7 +30,6 @@
 
   let chatService = new ChatService({
     initialMessages: revision.messages.map(toChatMessage),
-    body,
     onLoading: () => {
       autoScroller.onLoading();
     },
@@ -58,15 +58,14 @@
       { id: nanoid(10), role: "user", content: value, revisionId: revision.id },
       attachments,
     );
-    Object.assign(body, {
+    chatService.input = value;
+    chatService.attachments = attachments;
+    chatService.submit({
       providerId: model.service.providerId,
       modelName: model.name,
       baseURL: model.service.baseURL,
       apiKey: model.service.apiKey,
     });
-    chatService.input = value;
-    chatService.attachments = attachments;
-    chatService.handleSubmit();
     return true;
   }
 </script>

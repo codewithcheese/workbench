@@ -122,19 +122,6 @@ export type ChatOptions = {
    */
   headers?: Record<string, string> | Headers;
   /**
-   * Extra body object to be sent with the API request.
-   * @example
-   * Send a `sessionId` to the API along with the messages.
-   * ```js
-   * useChat({
-   *   body: {
-   *     sessionId: '123',
-   *   }
-   * })
-   * ```
-   */
-  body?: object;
-  /**
    * Whether to send extra message fields such as `message.id` and `message.createdAt` to the API.
    * Defaults to `false`. When set to `true`, the API endpoint might need to
    * handle the extra fields before forwarding the request to the AI service.
@@ -260,7 +247,6 @@ export class ChatService {
   private onMessageUpdate: ((messages: ChatMessage[]) => void) | undefined;
   private credentials: RequestCredentials | undefined;
   private headers: Record<string, string> | Headers | undefined;
-  private body: object | undefined;
   private fetch: FetchFunction | undefined;
 
   constructor({
@@ -280,7 +266,6 @@ export class ChatService {
     onMessageUpdate,
     credentials,
     headers,
-    body,
     generateId = () => nanoid(10),
     fetch,
   }: ChatOptions) {
@@ -299,7 +284,6 @@ export class ChatService {
     this.onMessageUpdate = onMessageUpdate;
     this.credentials = credentials;
     this.headers = headers;
-    this.body = body;
     this.messages = initialMessages || [];
     this.data = [];
     this.metadata = undefined;
@@ -420,15 +404,13 @@ export class ChatService {
     };
   }
 
-  /** Form submission handler to automatically reset input and append a user message  */
-  handleSubmit(event?: { preventDefault?: () => void }, chatRequestOptions?: ChatRequestOptions) {
-    event?.preventDefault?.();
+  submit(requestBody: Record<string, any>) {
     const inputContent = this.input;
     const inputAttachments = this.attachments;
     if (!inputContent) return;
 
     if (this.mode.type === "edit") {
-      return this.edit(inputContent, this.mode.index, chatRequestOptions);
+      return this.edit(inputContent, this.mode.index, { options: { body: requestBody } });
     } else {
       this.input = "";
       return this.append(
@@ -437,7 +419,7 @@ export class ChatService {
           role: "user",
           attachments: inputAttachments,
         },
-        chatRequestOptions,
+        { options: { body: requestBody } },
       );
     }
   }
@@ -457,7 +439,6 @@ export class ChatService {
       const extraMetadata = {
         credentials: this.credentials,
         headers: this.headers,
-        body: this.body,
       };
 
       await processChatStream({

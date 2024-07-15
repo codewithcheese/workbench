@@ -46,7 +46,7 @@ describe("ChatService", () => {
     chatService.input = message;
 
     // Submit the message
-    await chatService.handleSubmit();
+    await chatService.submit();
 
     // Check if the message was added to the messages array
     expect(chatService.messages[0]).toEqual(
@@ -81,7 +81,7 @@ describe("ChatService", () => {
 
     chatService.input = "Trigger an error";
 
-    await chatService.handleSubmit();
+    await chatService.submit();
 
     // Wait for the error to be set
     await vi.waitUntil(() => chatService.error !== undefined, { timeout: 1000 });
@@ -93,7 +93,7 @@ describe("ChatService", () => {
   it("should abort ongoing requests when stop is called", async () => {
     chatService.input = "Long running request";
 
-    const submitPromise = chatService.handleSubmit();
+    const submitPromise = chatService.submit();
     expect(chatService.messages.length).toBe(1);
 
     // Wait for the loading state to be true
@@ -122,7 +122,7 @@ describe("ChatService", () => {
     chatService.input = "Hello, how are you?";
 
     // Trigger the edit
-    chatService.handleSubmit();
+    chatService.submit();
 
     expect(chatService.messages).toHaveLength(1);
 
@@ -175,7 +175,7 @@ describe("ChatService", () => {
 
     // Test reloading after a new user message
     chatService.input = "New user message";
-    await chatService.handleSubmit();
+    await chatService.submit();
     await chatService.reload();
     await vi.waitUntil(() => chatService.isLoading === false, { timeout: 1000 });
 
@@ -197,7 +197,7 @@ describe("ChatService", () => {
     ];
 
     // Submit the message
-    await chatService.handleSubmit();
+    await chatService.submit();
 
     // Check if the message was added to the messages array
     expect(chatService.messages[0]).toEqual(
@@ -235,7 +235,7 @@ describe("ChatService", () => {
       { type: "pasted", content: "Pasted text content", attributes: {} },
       { type: "document", content: "Document content", attributes: { name: "example" } },
     ];
-    await chatService.handleSubmit();
+    await chatService.submit();
 
     const chatRequest = chatService.createChatRequest();
     expect(chatRequest.messages[0].content).toContain("<Pasted>");
@@ -250,7 +250,7 @@ describe("ChatService", () => {
   it("should handle empty attachments gracefully in chat request", async () => {
     chatService.input = "Message with empty attachment";
     chatService.attachments = [{ type: "pasted", content: "", attributes: {} }];
-    await chatService.handleSubmit();
+    await chatService.submit();
 
     const chatRequest = chatService.createChatRequest();
     expect(chatRequest.messages[0].content).not.toContain("<Pasted>");
@@ -266,7 +266,7 @@ describe("ChatService", () => {
     const specialContent = "Content with <tags> and \n newlines";
     chatService.input = "Message with special characters";
     chatService.attachments = [{ type: "pasted", content: specialContent, attributes: {} }];
-    await chatService.handleSubmit();
+    await chatService.submit();
 
     const chatRequest = chatService.createChatRequest();
     expect(chatRequest.messages[0].content).toContain("&lt;tags&gt;");
@@ -291,7 +291,7 @@ describe("ChatService", () => {
       mode: { type: "edit", index: 0 },
     });
     chatService.input = "Edited message";
-    await chatService.handleSubmit();
+    await chatService.submit();
 
     const chatRequest = chatService.createChatRequest();
     expect(chatRequest.messages[0].content).toContain("Edited message");

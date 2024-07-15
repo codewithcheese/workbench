@@ -20,19 +20,9 @@
 
   let editIndex = $state(findEditIndex());
 
-  let body = $state<{ providerId?: string; modelName?: string; baseURL?: string; apiKey?: string }>(
-    {
-      providerId: undefined,
-      modelName: undefined,
-      baseURL: undefined,
-      apiKey: undefined,
-    },
-  );
-
   let chatService = new ChatService({
     initialMessages: revision.messages.map(toChatMessage),
     mode: editIndex != null ? { type: "edit", index: editIndex } : { type: "append" },
-    body,
     onLoading: () => {
       autoScroller.onLoading();
     },
@@ -77,13 +67,12 @@
       toast.error("Selected model not found");
       return;
     }
-    Object.assign(body, {
+    chatService.submit({
       providerId: model.service.providerId,
       modelName: model.name,
       baseURL: model.service.baseURL,
       apiKey: model.service.apiKey,
     });
-    chatService.handleSubmit();
   }
 
   async function handleRemoveAttachment(index: number) {
