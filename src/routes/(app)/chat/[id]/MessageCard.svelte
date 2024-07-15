@@ -36,7 +36,13 @@
     {/each}
   </div>
 {/if}
-<Card class={cn("", message.role === "user" && "border-none bg-muted/100")}>
+<Card
+  class={cn(
+    "",
+    message.role === "user" && "border-transparent bg-muted/100",
+    editable && "hover:border hover:border-gray-300",
+  )}
+>
   <CardContent class="p-4">
     {#if editable}
       <MessageEditor id={message.id} bind:content={message.content} onKeyPress={handleKeyPress} />

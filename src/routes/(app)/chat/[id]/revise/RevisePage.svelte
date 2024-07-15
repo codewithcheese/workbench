@@ -85,6 +85,7 @@
   <div class="flex flex-col gap-3 overflow-y-auto py-4" use:autoScroller.action>
     {#if chatService.messages.length > 0 && chatService.messages[chatService.messages.length - 1].role === "assistant"}
       <MessageCard
+        editable={true}
         message={chatService.messages[chatService.messages.length - 1]}
         onRemoveAttachment={handleRemoveAttachment}
       />
