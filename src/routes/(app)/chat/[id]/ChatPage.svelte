@@ -18,16 +18,6 @@
   let { chat, revision }: Props = $props();
   let autoScroller = new AutoScroller();
 
-  // todo initialize body state in ChatService
-  let body = $state<{ providerId?: string; modelName?: string; baseURL?: string; apiKey?: string }>(
-    {
-      providerId: undefined,
-      modelName: undefined,
-      baseURL: undefined,
-      apiKey: undefined,
-    },
-  );
-
   let chatService = new ChatService({
     initialMessages: revision.messages.map(toChatMessage),
     onLoading: () => {
