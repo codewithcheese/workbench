@@ -63,6 +63,6 @@
   </div>
 </header>
 
-<div class="flex flex-1 flex-col overflow-y-auto">
+<div class="flex flex-1 flex-col overflow-auto">
   <slot />
 </div>

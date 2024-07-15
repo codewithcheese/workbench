@@ -10,6 +10,13 @@
   import RobotLoader from "@/components/RobotLoader.svelte";
   import { AutoScroller } from "$lib/auto-scroller";
   import { nanoid } from "nanoid";
+  import { Button } from "@/components/ui/button";
+  import { ReplyIcon } from "lucide-svelte";
+  import { cn } from "$lib/cn";
+  import { Card, CardContent, CardFooter } from "@/components/ui/card";
+  import MessageMarkdown from "./MessageMarkdown.svelte";
+  import MessageEditor from "../MessageEditor.svelte";
+  import { tick } from "svelte";
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
@@ -17,6 +24,7 @@
   };
   let { chat, revision }: Props = $props();
   let autoScroller = new AutoScroller(true);
+  let messagesContainer: HTMLDivElement;
 
   let chatService = new ChatService({
     initialMessages:
@@ -49,6 +57,11 @@
     },
   });
 
+  let haveResponse = $derived(
+    chatService.messages.length > 0 &&
+      chatService.messages[chatService.messages.length - 1].role === "assistant",
+  );
+
   $inspect("RevisePage", chatService.messages);
 
   async function handleSubmit() {
@@ -73,12 +86,26 @@
     toast.error("Not implemented");
   }
 
+  async function handleAddToConversation() {
+    chatService.messages.push({
+      id: nanoid(10),
+      role: "user",
+      content: "",
+      attachments: [],
+    });
+    await tick();
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    document
+      .getElementById(`message-editor-${chatService.messages[chatService.messages.length - 1].id}`)
+      ?.focus();
+  }
+
   $inspect("chatService", chatService.messages);
 </script>
 
 <ChatTitlebar {chat} {revision} tab="revise" onRunClick={handleSubmit} />
 <div class="grid grid-cols-2 gap-3 overflow-y-auto px-4">
-  <div class="flex flex-col gap-2 overflow-y-auto py-4">
+  <div class="flex flex-col gap-2 overflow-y-auto" bind:this={messagesContainer}>
     {#each chatService.messages as message, index (message.id)}
       {#if chatService.messages[chatService.messages.length - 1].role === "assistant" ? index < chatService.messages.length - 1 : true}
         <MessageCard
@@ -89,17 +116,31 @@
         />
       {/if}
     {/each}
+    <div id="messages-end" class="py-4">&nbsp;</div>
   </div>
-  <div class="flex flex-col gap-3 overflow-y-auto py-4" use:autoScroller.action>
-    {#if chatService.messages.length > 0 && chatService.messages[chatService.messages.length - 1].role === "assistant"}
-      <MessageCard
-        editable={true}
-        message={chatService.messages[chatService.messages.length - 1]}
-        onRemoveAttachment={handleRemoveAttachment}
-      />
-    {/if}
-    {#if chatService.isLoading}
-      <RobotLoader />
-    {/if}
+  <div class="flex flex-col gap-3 overflow-hidden">
+    <Card class="mb-4 flex h-full flex-col overflow-hidden hover:border hover:border-gray-300">
+      <CardContent class="overflow-y-auto p-4">
+        {#if haveResponse}
+          {@const response = chatService.messages[chatService.messages.length - 1]}
+          <div use:autoScroller.action>
+            <MessageEditor id={response.id} bind:content={response.content} />
+          </div>
+        {/if}
+        {#if chatService.isLoading}
+          <RobotLoader />
+        {/if}
+      </CardContent>
+      <CardFooter class="p-3">
+        {#if haveResponse}
+          <div class="sticky bottom-0">
+            <Button variant="outline" onclick={handleAddToConversation}>
+              <ReplyIcon class="mr-2 h-4 w-4" />
+              Add to conversation
+            </Button>
+          </div>
+        {/if}
+      </CardFooter>
+    </Card>
   </div>
 </div>

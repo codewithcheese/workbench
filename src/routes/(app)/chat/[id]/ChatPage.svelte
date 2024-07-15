@@ -74,7 +74,7 @@
 </script>
 
 <ChatTitlebar {chat} {revision} tab="chat" />
-<div class="flex flex-1 flex-col overflow-y-auto" use:autoScroller.action>
+<div class="flex flex-col overflow-y-auto" use:autoScroller.action>
   <div class="flex flex-1 flex-col gap-2 p-4">
     {#each chatService.messages as message, index (message.id)}
       <MessageCard bind:message={chatService.messages[index]} />

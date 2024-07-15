@@ -70,7 +70,12 @@
 </script>
 
 <div class="editor-container">
-  <div class="focus:outline-none" bind:this={editorRef} contenteditable="true"></div>
+  <div
+    id="message-editor-{id}"
+    class="focus:outline-none"
+    bind:this={editorRef}
+    contenteditable="true"
+  ></div>
   {#if showPlaceholder}
     <div class="editor-placeholder">{placeholder}</div>
   {/if}
