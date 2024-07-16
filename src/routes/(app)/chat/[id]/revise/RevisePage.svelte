@@ -39,17 +39,12 @@
     },
     onFinish: async (message) => {
       console.log("onFinish", message);
+      const newRevision = await createRevision(chat.id, $state.snapshot(chatService.messages));
+      if (!newRevision) {
+        return toast.error("Failed to create revision");
+      }
       if (revision) {
-        const newRevision = await createRevision(chat.id, $state.snapshot(chatService.messages));
-        if (!newRevision) {
-          return toast.error("Failed to create revision");
-        }
         await goto(`/chat/${chat.id}/revise/?version=${newRevision.version}`, { noScroll: true });
-      } else {
-        const newRevision = await createRevision(chat.id, $state.snapshot(chatService.messages));
-        if (!newRevision) {
-          return toast.error("Failed to create revision");
-        }
       }
     },
     onMessageUpdate: () => {
