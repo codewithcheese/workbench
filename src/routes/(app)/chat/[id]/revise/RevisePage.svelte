@@ -17,6 +17,7 @@
   import { tick } from "svelte";
   import MessageMarkdown from "./MessageMarkdown.svelte";
   import { getClipboardContent } from "$lib/clipboard";
+  import { cn } from "$lib/cn";
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
@@ -25,6 +26,7 @@
   let { chat, revision }: Props = $props();
   let autoScroller = new AutoScroller(true);
   let messagesContainer: HTMLDivElement;
+  let highlightedForRemoval = $state<Record<number, boolean>>({});
 
   let chatService = new ChatService({
     initialMessages:
@@ -108,6 +110,34 @@
       .getElementById(`message-editor-${chatService.messages[chatService.messages.length - 1].id}`)
       ?.focus();
   }
+
+  function handleRemoveMouseEnter(index: number) {
+    const partner = chatService.messages[index].role === "assistant" ? index - 1 : index + 1;
+    highlightedForRemoval = {
+      [index]: true,
+      [partner]: true,
+    };
+  }
+
+  function handleRemoveMouseLeave() {
+    highlightedForRemoval = {};
+  }
+
+  function handleRemove(index: number) {
+    const spliceIndex = chatService.messages[index].role === "assistant" ? index - 1 : index;
+    chatService.messages.splice(spliceIndex, 2);
+    if (
+      chatService.messages.length === 0 ||
+      chatService.messages[chatService.messages.length - 1].role === "assistant"
+    ) {
+      chatService.messages.push({
+        id: nanoid(10),
+        role: "user",
+        content: "",
+        attachments: [],
+      });
+    }
+  }
 </script>
 
 <ChatTitlebar {chat} {revision} tab="revise" onRunClick={handleSubmit} />
@@ -118,8 +148,12 @@
         <MessageCard
           bind:message={chatService.messages[index]}
           editable={true}
+          highlightedForRemoval={highlightedForRemoval[index] || false}
           onPaste={() => handlePaste(index)}
           onSubmit={handleSubmit}
+          onRemove={() => handleRemove(index)}
+          onRemoveMouseEnter={() => handleRemoveMouseEnter(index)}
+          onRemoveMouseLeave={() => handleRemoveMouseLeave()}
           onRemoveAttachment={(attachmentIndex) => handleRemoveAttachment(index, attachmentIndex)}
         />
       {/if}
@@ -127,7 +161,12 @@
     <div id="messages-end" class="py-4">&nbsp;</div>
   </div>
   <div class="flex flex-col gap-3 overflow-hidden">
-    <Card class="mb-4 flex h-full flex-col overflow-hidden hover:border hover:border-gray-300">
+    <Card
+      class={cn(
+        "mb-4 flex h-full flex-col overflow-hidden hover:border hover:border-gray-300",
+        haveResponse && highlightedForRemoval[chatService.messages.length - 1] && "border-red-500",
+      )}
+    >
       <CardContent class="overflow-y-auto p-4" action={autoScroller.action}>
         {#if haveResponse}
           <div>

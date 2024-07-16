@@ -9,15 +9,30 @@
   import { FilePlus2Icon, PlusIcon, Trash, Trash2Icon, TrashIcon, UploadIcon } from "lucide-svelte";
   import { toast } from "svelte-french-toast";
   import AttachmentControls from "./AttachmentControls.svelte";
+  import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
   type Props = {
     message: ChatMessage;
     editable?: boolean;
+    highlightedForRemoval?: boolean;
     onSubmit?: () => void;
     onPaste?: () => void;
+    onRemove?: () => void;
+    onRemoveMouseEnter?: () => void;
+    onRemoveMouseLeave?: () => void;
     onRemoveAttachment?: (index: number) => void;
   };
-  let { message = $bindable(), editable, onSubmit, onPaste, onRemoveAttachment }: Props = $props();
+  let {
+    message = $bindable(),
+    editable,
+    highlightedForRemoval = false,
+    onSubmit,
+    onPaste,
+    onRemove = () => {},
+    onRemoveAttachment,
+    onRemoveMouseEnter = () => {},
+    onRemoveMouseLeave = () => {},
+  }: Props = $props();
   let format = "markdown";
   let showAttachmentControls = $state(false);
 
@@ -28,10 +43,6 @@
       return true;
     }
     return false;
-  }
-
-  function handleRemove() {
-    toast.error("Not implemented");
   }
 </script>
 
@@ -58,7 +69,8 @@
   class={cn(
     "",
     message.role === "user" && "border-transparent bg-muted/100",
-    editable && "hover:border hover:border-gray-300",
+    !highlightedForRemoval && editable && "hover:border",
+    highlightedForRemoval && "border-red-500",
   )}
 >
   {#if editable}
@@ -74,14 +86,24 @@
       >
         <FilePlus2Icon class="h-4 w-4" />
       </Button>
-      <Button
-        class="h-fit w-fit p-1 text-gray-500 hover:text-black"
-        variant="ghost"
-        size="icon"
-        onclick={handleRemove}
-      >
-        <Trash2Icon class="h-4 w-4" />
-      </Button>
+      <Tooltip openDelay={70}>
+        <TooltipTrigger asChild let:builder>
+          <Button
+            builders={[builder]}
+            class="h-fit w-fit p-1 text-gray-500 hover:text-black"
+            variant="ghost"
+            size="icon"
+            onmouseenter={onRemoveMouseEnter}
+            onmouseleave={onRemoveMouseLeave}
+            onclick={onRemove}
+          >
+            <Trash2Icon class="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Delete both to maintain user & assistant alternation</p>
+        </TooltipContent>
+      </Tooltip>
     </div>
   {/if}
   <CardContent class={cn("p-4", editable && "pt-0")}>
