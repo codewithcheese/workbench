@@ -3,7 +3,7 @@
   import { cn } from "@/lib/utils.js";
   import type { Action } from "svelte/action";
 
-  type $$Props = HTMLAttributes<HTMLDivElement> & { action: Action<HTMLDivElement> };
+  type $$Props = HTMLAttributes<HTMLDivElement> & { action?: Action<HTMLDivElement> };
 
   let className: $$Props["class"] = undefined;
   let action: Action<HTMLDivElement> = () => {};

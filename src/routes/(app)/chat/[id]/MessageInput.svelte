@@ -99,7 +99,7 @@
         </div>
       {/if}
       <div class="flex items-end gap-2">
-        <Button variant="outline" size="icon" on:click={toggleUploadOptions}>
+        <Button class="hidden" variant="outline" size="icon" on:click={toggleUploadOptions}>
           <Plus class="h-4 w-4" />
         </Button>
         <Textarea

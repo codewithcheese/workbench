@@ -3,13 +3,13 @@
   import type { TextareaEvents } from "./index.js";
   import { cn } from "@/lib/utils.js";
 
-  type $$Props = HTMLTextareaAttributes;
+  type $$Props = HTMLTextareaAttributes & { element: HTMLTextAreaElement | undefined };
   type $$Events = TextareaEvents;
 
   let className: $$Props["class"] = undefined;
-  export let value: $$Props["value"] = undefined;
-  export let element: HTMLTextAreaElement | undefined = undefined;
-  export { className as class };
+  let value: $$Props["value"] = undefined;
+  let element: HTMLTextAreaElement | undefined = undefined;
+  export { className as class, value, element };
 
   // Workaround for https://github.com/sveltejs/svelte/issues/9305
   // Fixed in Svelte 5, but not backported to 4.x.
