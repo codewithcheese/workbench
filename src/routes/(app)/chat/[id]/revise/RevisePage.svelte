@@ -1,6 +1,6 @@
 <script lang="ts">
   import MessageCard from "../MessageCard.svelte";
-  import { getModelService, createRevision, type RevisionView, toChatMessage } from "../$data";
+  import { createRevision, getModelService, type RevisionView, toChatMessage } from "../$data";
   import { store } from "$lib/store.svelte";
   import { ChatService } from "$lib/chat-service.svelte.js";
   import { toast } from "svelte-french-toast";
@@ -12,11 +12,10 @@
   import { nanoid } from "nanoid";
   import { Button } from "@/components/ui/button";
   import { ReplyIcon } from "lucide-svelte";
-  import { cn } from "$lib/cn";
   import { Card, CardContent, CardFooter } from "@/components/ui/card";
-  import MessageMarkdown from "./MessageMarkdown.svelte";
   import MessageEditor from "../MessageEditor.svelte";
   import { tick } from "svelte";
+  import MessageMarkdown from "./MessageMarkdown.svelte";
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
@@ -104,7 +103,7 @@
 </script>
 
 <ChatTitlebar {chat} {revision} tab="revise" onRunClick={handleSubmit} />
-<div class="grid grid-cols-2 gap-3 overflow-y-auto px-4">
+<div class="grid flex-1 grid-cols-2 gap-3 overflow-y-auto px-4">
   <div class="flex flex-col gap-2 overflow-y-auto" bind:this={messagesContainer}>
     {#each chatService.messages as message, index (message.id)}
       {#if chatService.messages[chatService.messages.length - 1].role === "assistant" ? index < chatService.messages.length - 1 : true}
@@ -122,13 +121,19 @@
     <Card class="mb-4 flex h-full flex-col overflow-hidden hover:border hover:border-gray-300">
       <CardContent class="overflow-y-auto p-4">
         {#if haveResponse}
-          {@const response = chatService.messages[chatService.messages.length - 1]}
           <div use:autoScroller.action>
-            <MessageEditor id={response.id} bind:content={response.content} />
+            {#if chatService.isLoading}
+              <MessageMarkdown
+                content={chatService.messages[chatService.messages.length - 1].content}
+              />
+              <RobotLoader />
+            {:else}
+              <MessageEditor
+                id={chatService.messages[chatService.messages.length - 1].id}
+                bind:content={chatService.messages[chatService.messages.length - 1].content}
+              />
+            {/if}
           </div>
-        {/if}
-        {#if chatService.isLoading}
-          <RobotLoader />
         {/if}
       </CardContent>
       <CardFooter class="p-3">
