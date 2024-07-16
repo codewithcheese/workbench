@@ -96,8 +96,8 @@
     });
   }
 
-  async function handleRemoveAttachment(index: number) {
-    toast.error("Not implemented");
+  async function handleRemoveAttachment(messageIndex: number, attachmentIndex: number) {
+    chatService.messages[messageIndex].attachments.splice(attachmentIndex, 1);
   }
 
   async function handleAddToConversation() {
@@ -125,7 +125,7 @@
           editable={true}
           onPaste={() => handlePaste(index)}
           onSubmit={handleSubmit}
-          onRemoveAttachment={handleRemoveAttachment}
+          onRemoveAttachment={(attachmentIndex) => handleRemoveAttachment(index, attachmentIndex)}
         />
       {/if}
     {/each}
