@@ -18,7 +18,7 @@
     {#if onRemove}
       <Button
         variant="ghost"
-        class="display-inline-block absolute right-1 top-1 z-10 h-4 cursor-pointer bg-white p-1"
+        class="display-inline-block absolute right-1 top-1 z-10 h-4 cursor-pointer bg-white p-1 text-gray-500"
         on:click={onRemove}
       >
         <XIcon size={14} />

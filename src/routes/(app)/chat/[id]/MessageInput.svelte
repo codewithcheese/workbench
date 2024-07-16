@@ -7,6 +7,7 @@
   import Attachment from "./Attachment.svelte";
   import type { MessageAttachment } from "$lib/chat-service.svelte";
   import { nanoid } from "nanoid";
+  import AttachmentControls from "./AttachmentControls.svelte";
 
   type Props = {
     onSubmit: (content: string, attachments: MessageAttachment[]) => Promise<boolean>;
@@ -83,20 +84,7 @@
         </div>
       {/if}
       {#if isUploadOpen}
-        <div class="flex items-center justify-start gap-2">
-          <Button variant="outline" size="sm" on:click={() => handleUpload("Browse")}>
-            <HardDriveUpload class="mr-2 h-4 w-4" />
-            Browse
-          </Button>
-          <Button variant="outline" size="sm" on:click={() => handleUpload("Drive")}>
-            <CloudUpload class="mr-2 h-4 w-4" />
-            Drive
-          </Button>
-          <Button variant="outline" size="sm" on:click={() => handleUpload("Paste")}>
-            <Clipboard class="mr-2 h-4 w-4" />
-            Paste
-          </Button>
-        </div>
+        <AttachmentControls />
       {/if}
       <div class="flex items-end gap-2">
         <Button class="hidden" variant="outline" size="icon" on:click={toggleUploadOptions}>

@@ -16,6 +16,7 @@
   import MessageEditor from "../MessageEditor.svelte";
   import { tick } from "svelte";
   import MessageMarkdown from "./MessageMarkdown.svelte";
+  import { getClipboardContent } from "$lib/clipboard";
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
@@ -61,8 +62,6 @@
       chatService.messages[chatService.messages.length - 1].role === "assistant",
   );
 
-  // $inspect("RevisePage", chatService.messages);
-
   async function handleSubmit() {
     if (!store.selected.modelId) {
       toast.error("No model selected");
@@ -78,6 +77,22 @@
       modelName: model.name,
       baseURL: model.service.baseURL,
       apiKey: model.service.apiKey,
+    });
+  }
+
+  async function handlePaste(index: number) {
+    const clip = await getClipboardContent();
+    if (clip.error !== null) {
+      toast.error(clip.error);
+      return;
+    }
+    const attachments = chatService.messages[index].attachments;
+    attachments.push({
+      id: nanoid(10),
+      type: "pasted",
+      name: `Pasted ${new Date().toLocaleString()}`,
+      content: clip.content,
+      attributes: {},
     });
   }
 
@@ -108,6 +123,7 @@
         <MessageCard
           bind:message={chatService.messages[index]}
           editable={true}
+          onPaste={() => handlePaste(index)}
           onSubmit={handleSubmit}
           onRemoveAttachment={handleRemoveAttachment}
         />
