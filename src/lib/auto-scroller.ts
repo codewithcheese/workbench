@@ -1,4 +1,5 @@
 import type { Action } from "svelte/action";
+import { tick } from "svelte";
 
 export class AutoScroller {
   private node: HTMLElement | null = null;
@@ -29,9 +30,12 @@ export class AutoScroller {
   public action: Action<HTMLElement> = (node) => {
     this.node = node;
     this.node.addEventListener("scroll", this.handleScroll);
-    if (this.scrollImmediate) {
-      this.scrollToBottom();
-    }
+    // wait for the editor to render the message before scrolling to the bottom
+    tick().then(() => {
+      if (this.scrollImmediate) {
+        this.scrollToBottom();
+      }
+    });
 
     return {
       destroy: () => {

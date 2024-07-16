@@ -61,7 +61,7 @@
       chatService.messages[chatService.messages.length - 1].role === "assistant",
   );
 
-  $inspect("RevisePage", chatService.messages);
+  // $inspect("RevisePage", chatService.messages);
 
   async function handleSubmit() {
     if (!store.selected.modelId) {
@@ -98,8 +98,6 @@
       .getElementById(`message-editor-${chatService.messages[chatService.messages.length - 1].id}`)
       ?.focus();
   }
-
-  $inspect("chatService", chatService.messages);
 </script>
 
 <ChatTitlebar {chat} {revision} tab="revise" onRunClick={handleSubmit} />
@@ -119,9 +117,9 @@
   </div>
   <div class="flex flex-col gap-3 overflow-hidden">
     <Card class="mb-4 flex h-full flex-col overflow-hidden hover:border hover:border-gray-300">
-      <CardContent class="overflow-y-auto p-4">
+      <CardContent class="overflow-y-auto p-4" action={autoScroller.action}>
         {#if haveResponse}
-          <div use:autoScroller.action>
+          <div>
             {#if chatService.isLoading}
               <MessageMarkdown
                 content={chatService.messages[chatService.messages.length - 1].content}
