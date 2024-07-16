@@ -26,7 +26,7 @@
 </script>
 
 {#if message.attachments && message.attachments.length > 0}
-  <div class="min-h-30 flex max-w-full flex-row gap-2 overflow-x-auto">
+  <div class="flex flex-row flex-wrap gap-2">
     {#each message.attachments as attachment, index (index)}
       <Attachment
         type={attachment.type}
