@@ -12,6 +12,7 @@ import type {
 import { callChatApi, processChatStream } from "@ai-sdk/ui-utils";
 import { nanoid } from "nanoid";
 import { toTitleCase } from "$lib/string";
+import { untrack } from "svelte";
 
 // todo remove tool and function calling until the library is stable and we need it
 
@@ -38,16 +39,18 @@ interface ToolCall$1<NAME extends string, ARGS> {
 
 export type ChatOptions = {
   /**
+   * A unique identifier for the chat. Changes will be cached to local storage using this id.
+   */
+  id: string;
+  /**
+   * The version of the chat. Changes will be cached to local storage using this version.
+   */
+  version: number;
+  /**
    * The API endpoint that accepts a `{ messages: Message[] }` object and returns
    * a stream of tokens of the AI chat response. Defaults to `/api/chat`.
    */
   api?: string;
-  /**
-   * A unique identifier for the chat. If not provided, a random one will be
-   * generated. When provided, the `useChat` hook with the same `id` will
-   * have shared states across components.
-   */
-  id?: string;
   /**
    * Initial messages of the chat. Useful to load an existing chat history.
    */
@@ -218,10 +221,6 @@ const getStreamedResponse = async (
   });
 };
 
-let uniqueId = 0;
-
-const store: Record<string, ChatMessage[] | undefined> = {};
-
 export class ChatService {
   messages: ChatMessage[] = $state([]);
   error: undefined | Error = $state(undefined);
@@ -230,8 +229,10 @@ export class ChatService {
   isLoading: boolean | undefined = $state(undefined);
   data: JSONValue[] | undefined = $state(undefined);
   metadata?: Object;
+  hasChanges: boolean | undefined = $state(undefined);
 
   private id: string;
+  private version: number;
   private api: string;
   private mode: { type: "edit"; index: number } | { type: "append" };
   private generateId: IdGenerator;
@@ -250,8 +251,9 @@ export class ChatService {
   private fetch: FetchFunction | undefined;
 
   constructor({
-    api = "/api/chat",
     id,
+    version,
+    api = "/api/chat",
     initialMessages = [],
     initialInput = "",
     mode = { type: "append" },
@@ -270,8 +272,9 @@ export class ChatService {
     fetch,
   }: ChatOptions) {
     // assign options
+    this.id = id;
+    this.version = version;
     this.api = api;
-    this.id = id || `chat-${uniqueId++}`;
     this.mode = mode;
     this.sendExtraMessageFields = sendExtraMessageFields;
     this.experimental_onFunctionCall = experimental_onFunctionCall;
@@ -297,6 +300,19 @@ export class ChatService {
       throw new Error(`Message to edit at index ${mode.index} not found`);
     }
     this.input = mode.type === "edit" ? initialMessages[mode.index].content : initialInput;
+    this.readCacheIfExists();
+    $effect(() => {
+      // run if any message is changed or a message is added or removed
+      this.messages.map((m) => ({ ...m }));
+      untrack(() => {
+        // initialize to false on first run, set to true on subsequent runs
+        this.hasChanges = this.hasChanges !== undefined;
+        // cache changes to local storage
+        if (this.hasChanges) {
+          this.writeCache();
+        }
+      });
+    });
   }
 
   get key() {
@@ -358,7 +374,6 @@ export class ChatService {
    * manually to regenerate the AI response.
    */
   setMessages(key: string, messages: ChatMessage[]): void {
-    store[key] = messages;
     this.messages = messages;
     if (this.onMessageUpdate) {
       this.onMessageUpdate(messages);
@@ -406,7 +421,7 @@ export class ChatService {
 
   submit(requestBody: Record<string, any>) {
     if (this.mode.type === "edit") {
-      return this.revise(this.mode.index, { options: { body: requestBody } });
+      return this.revise({ options: { body: requestBody } });
     } else {
       const inputContent = this.input;
       const inputAttachments = this.attachments;
@@ -421,6 +436,26 @@ export class ChatService {
         { options: { body: requestBody } },
       );
     }
+  }
+
+  get cacheKey() {
+    return `chat-${this.id}-v${this.version}`;
+  }
+
+  readCacheIfExists() {
+    const cachedMessages = localStorage.getItem(this.cacheKey);
+    if (cachedMessages) {
+      this.messages = JSON.parse(cachedMessages);
+      this.hasChanges = true;
+    }
+  }
+
+  writeCache() {
+    localStorage.setItem(this.cacheKey, JSON.stringify(this.messages));
+  }
+
+  clearCache() {
+    localStorage.removeItem(this.cacheKey);
   }
 
   private async triggerRequest(chatRequest: ChatRequest): Promise<string | null | undefined> {

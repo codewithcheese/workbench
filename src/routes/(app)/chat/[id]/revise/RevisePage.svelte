@@ -29,6 +29,8 @@
   let highlightedForRemoval = $state<Record<number, boolean>>({});
 
   let chatService = new ChatService({
+    id: chat.id,
+    version: revision ? revision.version : 1,
     initialMessages:
       revision && revision.messages.length
         ? revision.messages.map(toChatMessage)
@@ -45,6 +47,8 @@
       if (!newRevision) {
         return toast.error("Failed to create revision");
       }
+      chatService.hasChanges = false;
+      chatService.clearCache();
       if (revision) {
         await goto(`/chat/${chat.id}/revise/?version=${newRevision.version}`, { noScroll: true });
       }
@@ -112,7 +116,7 @@
   }
 
   function handleRemoveMouseEnter(index: number) {
-    const partner = chatService.messages[index].role === "assistant" ? index - 1 : index + 1;
+    const partner = chatService.messages[index].role === "assistant" ? index + 1 : index - 1;
     highlightedForRemoval = {
       [index]: true,
       [partner]: true,
@@ -124,7 +128,7 @@
   }
 
   function handleRemove(index: number) {
-    const spliceIndex = chatService.messages[index].role === "assistant" ? index - 1 : index;
+    const spliceIndex = chatService.messages[index].role === "assistant" ? index : index + 1;
     chatService.messages.splice(spliceIndex, 2);
     if (
       chatService.messages.length === 0 ||
@@ -140,7 +144,13 @@
   }
 </script>
 
-<ChatTitlebar {chat} {revision} tab="revise" onRunClick={handleSubmit} />
+<ChatTitlebar
+  {chat}
+  {revision}
+  tab="revise"
+  onRunClick={handleSubmit}
+  unsavedChanges={chatService.hasChanges}
+/>
 <div class="grid flex-1 grid-cols-2 gap-3 overflow-y-auto px-4">
   <div class="flex flex-col gap-2 overflow-y-auto" bind:this={messagesContainer}>
     {#each chatService.messages as message, index (message.id)}

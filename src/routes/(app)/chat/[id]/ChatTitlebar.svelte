@@ -1,7 +1,13 @@
 <script lang="ts">
   import { Button } from "@/components/ui/button/index.js";
   import { Input } from "@/components/ui/input/index.js";
-  import { ArrowBigLeftIcon, ArrowBigRightIcon, ArrowLeftIcon, PlayIcon } from "lucide-svelte";
+  import {
+    ArrowBigLeftIcon,
+    ArrowBigRightIcon,
+    ArrowLeftIcon,
+    CheckIcon,
+    PlayIcon,
+  } from "lucide-svelte";
   import { updateChat } from "./$data.js";
   import type { Chat, Revision } from "@/database";
   import { untrack } from "svelte";
@@ -15,8 +21,9 @@
     revision?: Revision;
     tab: string;
     onRunClick?: () => void;
+    unsavedChanges?: boolean;
   };
-  let { chat, revision, tab, onRunClick }: Props = $props();
+  let { chat, revision, tab, onRunClick, unsavedChanges = false }: Props = $props();
   let id = $derived(chat.id);
   let name = $state(chat.name);
 
@@ -48,6 +55,8 @@
       name = chat.name;
     });
   });
+
+  $inspect("unsavedChanges", unsavedChanges);
 </script>
 
 <div class="flex flex-row gap-4 px-4 py-2">
@@ -58,6 +67,9 @@
       updateChat(chat.id, { name });
     }}
   />
+  {#if unsavedChanges}
+    <Button variant="secondary" class="rounded-full" onclick={async () => {}}>Unsaved</Button>
+  {/if}
   <div class="flex flex-row items-center">
     {#if revision}
       <Button
