@@ -121,6 +121,7 @@
       [index]: true,
       [partner]: true,
     };
+    console.log("highlightedForRemoval", highlightedForRemoval, index);
   }
 
   function handleRemoveMouseLeave() {
@@ -128,7 +129,8 @@
   }
 
   function handleRemove(index: number) {
-    const spliceIndex = chatService.messages[index].role === "assistant" ? index : index + 1;
+    const spliceIndex = chatService.messages[index].role === "assistant" ? index : index - 1;
+    console.log("handleRemove", index, spliceIndex);
     chatService.messages.splice(spliceIndex, 2);
     if (
       chatService.messages.length === 0 ||
@@ -154,7 +156,7 @@
 <div class="grid flex-1 grid-cols-2 gap-3 overflow-y-auto px-4">
   <div class="flex flex-col gap-2 overflow-y-auto" bind:this={messagesContainer}>
     {#each chatService.messages as message, index (message.id)}
-      {#if chatService.messages[chatService.messages.length - 1].role === "assistant" ? index < chatService.messages.length - 1 : true}
+      {#if message.role !== "assistant" || index < chatService.messages.length - 1}
         <MessageCard
           bind:message={chatService.messages[index]}
           editable={true}
