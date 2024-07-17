@@ -158,6 +158,7 @@
     {#each chatService.messages as message, index (message.id)}
       {#if message.role !== "assistant" || index < chatService.messages.length - 1}
         <MessageCard
+          {index}
           bind:message={chatService.messages[index]}
           editable={true}
           highlightedForRemoval={highlightedForRemoval[index] || false}

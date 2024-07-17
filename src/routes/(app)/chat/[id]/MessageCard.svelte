@@ -12,6 +12,7 @@
   import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
   type Props = {
+    index: number;
     message: ChatMessage;
     editable?: boolean;
     highlightedForRemoval?: boolean;
@@ -23,12 +24,13 @@
     onRemoveAttachment?: (index: number) => void;
   };
   let {
+    index,
     message = $bindable(),
     editable,
     highlightedForRemoval = false,
     onSubmit,
     onPaste,
-    onRemove = () => {},
+    onRemove,
     onRemoveAttachment,
     onRemoveMouseEnter = () => {},
     onRemoveMouseLeave = () => {},
@@ -86,24 +88,26 @@
       >
         <FilePlus2Icon class="h-4 w-4" />
       </Button>
-      <Tooltip openDelay={70}>
-        <TooltipTrigger asChild let:builder>
-          <Button
-            builders={[builder]}
-            class="h-fit w-fit p-1 text-gray-500 hover:text-black"
-            variant="ghost"
-            size="icon"
-            onmouseenter={onRemoveMouseEnter}
-            onmouseleave={onRemoveMouseLeave}
-            onclick={onRemove}
-          >
-            <Trash2Icon class="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>Delete both to maintain user & assistant alternation</p>
-        </TooltipContent>
-      </Tooltip>
+      {#if index > 0}
+        <Tooltip openDelay={70}>
+          <TooltipTrigger asChild let:builder>
+            <Button
+              builders={[builder]}
+              class="h-fit w-fit p-1 text-gray-500 hover:text-black"
+              variant="ghost"
+              size="icon"
+              onmouseenter={onRemoveMouseEnter}
+              onmouseleave={onRemoveMouseLeave}
+              onclick={onRemove}
+            >
+              <Trash2Icon class="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Delete both to maintain user & assistant alternation</p>
+          </TooltipContent>
+        </Tooltip>
+      {/if}
     </div>
   {/if}
   <CardContent class={cn("p-4", editable && "pt-0")}>
