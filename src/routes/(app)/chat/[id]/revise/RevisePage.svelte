@@ -47,10 +47,10 @@
       if (!newRevision) {
         return toast.error("Failed to create revision");
       }
-      chatService.hasChanges = false;
-      chatService.clearCache();
       if (revision) {
         await goto(`/chat/${chat.id}/revise/?version=${newRevision.version}`, { noScroll: true });
+      } else {
+        chatService.resetChanges();
       }
     },
     onMessageUpdate: () => {

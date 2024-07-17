@@ -229,7 +229,7 @@ export class ChatService {
   isLoading: boolean | undefined = $state(undefined);
   data: JSONValue[] | undefined = $state(undefined);
   metadata?: Object;
-  hasChanges: boolean | undefined = $state(undefined);
+  hasChanges: boolean = $state(false);
 
   private id: string;
   private version: number;
@@ -249,6 +249,9 @@ export class ChatService {
   private credentials: RequestCredentials | undefined;
   private headers: Record<string, string> | Headers | undefined;
   private fetch: FetchFunction | undefined;
+
+  // initial snapshot of messages before any changes
+  private initialSate: string | undefined;
 
   constructor({
     id,
@@ -300,16 +303,29 @@ export class ChatService {
       throw new Error(`Message to edit at index ${mode.index} not found`);
     }
     this.input = mode.type === "edit" ? initialMessages[mode.index].content : initialInput;
-    this.readCacheIfExists();
     $effect(() => {
-      // run if any message is changed or a message is added or removed
-      this.messages.map((m) => ({ ...m }));
+      const currentState = JSON.stringify(this.messages);
+      // on startup, check cache for changes
+      if (!this.initialSate) {
+        this.initialSate = currentState;
+        const cachedState = localStorage.getItem(this.cacheKey);
+        if (cachedState) {
+          // if the last user message is empty, remove it
+          const messages = JSON.parse(cachedState);
+          const lastMessage = messages[messages.length - 1];
+          if (lastMessage.role === "user" && lastMessage.content.trim() === "") {
+            messages.pop();
+          }
+          this.messages = messages;
+          this.hasChanges = true;
+        }
+        return;
+      }
       untrack(() => {
-        // initialize to false on first run, set to true on subsequent runs
-        this.hasChanges = this.hasChanges !== undefined;
-        // cache changes to local storage
+        this.hasChanges = this.initialSate !== currentState;
         if (this.hasChanges) {
-          this.writeCache();
+          // cache changes to local storage
+          localStorage.setItem(this.cacheKey, JSON.stringify(this.messages));
         }
       });
     });
@@ -438,24 +454,14 @@ export class ChatService {
     }
   }
 
+  resetChanges() {
+    localStorage.removeItem(this.cacheKey);
+    this.initialSate = JSON.stringify(this.messages);
+    this.hasChanges = false;
+  }
+
   get cacheKey() {
     return `chat-${this.id}-v${this.version}`;
-  }
-
-  readCacheIfExists() {
-    const cachedMessages = localStorage.getItem(this.cacheKey);
-    if (cachedMessages) {
-      this.messages = JSON.parse(cachedMessages);
-      this.hasChanges = true;
-    }
-  }
-
-  writeCache() {
-    localStorage.setItem(this.cacheKey, JSON.stringify(this.messages));
-  }
-
-  clearCache() {
-    localStorage.removeItem(this.cacheKey);
   }
 
   private async triggerRequest(chatRequest: ChatRequest): Promise<string | null | undefined> {

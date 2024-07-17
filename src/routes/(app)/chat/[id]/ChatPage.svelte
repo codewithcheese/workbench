@@ -23,6 +23,7 @@
   };
   let { chat, revision }: Props = $props();
   let autoScroller = new AutoScroller();
+  let saveAsNewRevision = $state(false);
 
   let chatService = new ChatService({
     id: chat.id,
@@ -35,9 +36,9 @@
       toast.error(e.message);
     },
     onFinish: (message) => {
+      console.log("onFinish", chatService.hasChanges);
       appendMessage({ ...message, revisionId: revision!.id }, message.attachments);
-      chatService.hasChanges = false;
-      chatService.clearCache();
+      chatService.resetChanges();
     },
     onMessageUpdate: (messages) => {
       autoScroller.onMessageUpdate();
@@ -55,7 +56,9 @@
       return false;
     }
     if (!revision) {
-      revision = await createRevision(chat.id, []);
+      revision = await createRevision(chat.id, $state.snapshot(chatService.messages));
+    } else if (chatService.hasChanges) {
+      saveAsNewRevision = true;
     }
     if (!revision) {
       toast.error("Failed to create revision");
