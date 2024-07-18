@@ -11,13 +11,14 @@
   import { AutoScroller } from "$lib/auto-scroller";
   import { nanoid } from "nanoid";
   import { Button } from "@/components/ui/button";
-  import { ReplyIcon } from "lucide-svelte";
+  import { PlusIcon, ReplyIcon, SquarePlusIcon } from "lucide-svelte";
   import { Card, CardContent, CardFooter } from "@/components/ui/card";
   import MessageEditor from "../MessageEditor.svelte";
   import { tick } from "svelte";
   import MessageMarkdown from "./MessageMarkdown.svelte";
   import { getClipboardContent } from "$lib/clipboard";
   import { cn } from "$lib/cn";
+  import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
@@ -115,34 +116,19 @@
       ?.focus();
   }
 
-  function handleRemoveMouseEnter(index: number) {
-    const partner = chatService.messages[index].role === "assistant" ? index + 1 : index - 1;
-    highlightedForRemoval = {
-      [index]: true,
-      [partner]: true,
-    };
-    console.log("highlightedForRemoval", highlightedForRemoval, index);
-  }
-
-  function handleRemoveMouseLeave() {
-    highlightedForRemoval = {};
-  }
-
   function handleRemove(index: number) {
-    const spliceIndex = chatService.messages[index].role === "assistant" ? index : index - 1;
-    console.log("handleRemove", index, spliceIndex);
-    chatService.messages.splice(spliceIndex, 2);
-    if (
-      chatService.messages.length === 0 ||
-      chatService.messages[chatService.messages.length - 1].role === "assistant"
-    ) {
-      chatService.messages.push({
-        id: nanoid(10),
-        role: "user",
-        content: "",
-        attachments: [],
-      });
-    }
+    chatService.messages.splice(index, 1);
+  }
+
+  function handleInsertMessage(index: number) {
+    console.log("handleInsertMessage", index);
+    const role = chatService.messages[index].role === "assistant" ? "user" : "assistant";
+    chatService.messages.splice(index + 1, 0, {
+      id: nanoid(10),
+      role,
+      content: "",
+      attachments: [],
+    });
   }
 </script>
 
@@ -154,21 +140,59 @@
   unsavedChanges={chatService.hasChanges}
 />
 <div class="grid flex-1 grid-cols-2 gap-3 overflow-y-auto px-4">
-  <div class="flex flex-col gap-2 overflow-y-auto" bind:this={messagesContainer}>
+  <div class="flex flex-col overflow-y-auto" bind:this={messagesContainer}>
     {#each chatService.messages as message, index (message.id)}
+      {@const isRepeatRole =
+        index < chatService.messages.length - 1 &&
+        chatService.messages[index + 1].role === chatService.messages[index].role}
       {#if message.role !== "assistant" || index < chatService.messages.length - 1}
-        <MessageCard
-          {index}
-          bind:message={chatService.messages[index]}
-          editable={true}
-          highlightedForRemoval={highlightedForRemoval[index] || false}
-          onPaste={() => handlePaste(index)}
-          onSubmit={handleSubmit}
-          onRemove={() => handleRemove(index)}
-          onRemoveMouseEnter={() => handleRemoveMouseEnter(index)}
-          onRemoveMouseLeave={() => handleRemoveMouseLeave()}
-          onRemoveAttachment={(attachmentIndex) => handleRemoveAttachment(index, attachmentIndex)}
-        />
+        <div>
+          <MessageCard
+            {index}
+            bind:message={chatService.messages[index]}
+            editable={true}
+            highlightedForRemoval={highlightedForRemoval[index] || false}
+            onPaste={() => handlePaste(index)}
+            onSubmit={handleSubmit}
+            onRemove={() => handleRemove(index)}
+            onRemoveAttachment={(attachmentIndex) => handleRemoveAttachment(index, attachmentIndex)}
+          />
+          {#if isRepeatRole}
+            <Tooltip openDelay={70}>
+              <TooltipTrigger class="group flex h-2 w-full items-center bg-amber-100">
+                <div class="h-px flex-grow"></div>
+                <div class="relative flex-shrink-0">
+                  <Button
+                    onclick={() => handleInsertMessage(index)}
+                    class="invisible absolute -left-2 -top-2 h-4 w-4 border border-gray-300 bg-white p-0 text-gray-800 shadow-sm transition-all hover:bg-gray-100 group-hover:visible"
+                  >
+                    <PlusIcon class="h-4 w-4" />
+                  </Button>
+                </div>
+                <div class="h-px flex-grow"></div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  Some AI providers (e.g. Anthropic) require messages that alternate between user &
+                  assistant
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          {:else}
+            <div class="group flex h-2 w-full items-center">
+              <div class="h-px flex-grow"></div>
+              <div class="relative flex-shrink-0">
+                <Button
+                  onclick={() => handleInsertMessage(index)}
+                  class="invisible absolute -left-2 -top-2 h-4 w-4 border border-gray-300 bg-white p-0 text-gray-800 shadow-sm transition-all hover:bg-gray-100 group-hover:visible"
+                >
+                  <PlusIcon class="h-4 w-4" />
+                </Button>
+              </div>
+              <div class="h-px flex-grow"></div>
+            </div>
+          {/if}
+        </div>
       {/if}
     {/each}
     <div id="messages-end" class="py-4">&nbsp;</div>
