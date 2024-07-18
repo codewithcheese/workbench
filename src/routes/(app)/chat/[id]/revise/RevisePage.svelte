@@ -18,7 +18,7 @@
   import MessageMarkdown from "./MessageMarkdown.svelte";
   import { getClipboardContent } from "$lib/clipboard";
   import { cn } from "$lib/cn";
-  import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+  import MessageDivider from "./MessageDivider.svelte";
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
@@ -121,8 +121,12 @@
   }
 
   function handleInsertMessage(index: number) {
-    console.log("handleInsertMessage", index);
-    const role = chatService.messages[index].role === "assistant" ? "user" : "assistant";
+    const role =
+      index === -1
+        ? "user"
+        : chatService.messages[index].role === "assistant"
+          ? "user"
+          : "assistant";
     chatService.messages.splice(index + 1, 0, {
       id: nanoid(10),
       role,
@@ -141,58 +145,35 @@
 />
 <div class="grid flex-1 grid-cols-2 gap-3 overflow-y-auto px-4">
   <div class="flex flex-col overflow-y-auto" bind:this={messagesContainer}>
+    <MessageDivider
+      index={-1}
+      warning={chatService.messages[0].role !== "user"
+        ? "Some AI providers (e.g. Anthropic) require the first message to be a user message"
+        : ""}
+      {handleInsertMessage}
+    />
     {#each chatService.messages as message, index (message.id)}
-      {@const isRepeatRole =
+      {@const showWarning =
         index < chatService.messages.length - 1 &&
         chatService.messages[index + 1].role === chatService.messages[index].role}
       {#if message.role !== "assistant" || index < chatService.messages.length - 1}
-        <div>
-          <MessageCard
-            {index}
-            bind:message={chatService.messages[index]}
-            editable={true}
-            highlightedForRemoval={highlightedForRemoval[index] || false}
-            onPaste={() => handlePaste(index)}
-            onSubmit={handleSubmit}
-            onRemove={() => handleRemove(index)}
-            onRemoveAttachment={(attachmentIndex) => handleRemoveAttachment(index, attachmentIndex)}
-          />
-          {#if isRepeatRole}
-            <Tooltip openDelay={70}>
-              <TooltipTrigger class="group flex h-2 w-full items-center bg-amber-100">
-                <div class="h-px flex-grow"></div>
-                <div class="relative flex-shrink-0">
-                  <Button
-                    onclick={() => handleInsertMessage(index)}
-                    class="invisible absolute -left-2 -top-2 h-4 w-4 border border-gray-300 bg-white p-0 text-gray-800 shadow-sm transition-all hover:bg-gray-100 group-hover:visible"
-                  >
-                    <PlusIcon class="h-4 w-4" />
-                  </Button>
-                </div>
-                <div class="h-px flex-grow"></div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>
-                  Some AI providers (e.g. Anthropic) require messages that alternate between user &
-                  assistant
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          {:else}
-            <div class="group flex h-2 w-full items-center">
-              <div class="h-px flex-grow"></div>
-              <div class="relative flex-shrink-0">
-                <Button
-                  onclick={() => handleInsertMessage(index)}
-                  class="invisible absolute -left-2 -top-2 h-4 w-4 border border-gray-300 bg-white p-0 text-gray-800 shadow-sm transition-all hover:bg-gray-100 group-hover:visible"
-                >
-                  <PlusIcon class="h-4 w-4" />
-                </Button>
-              </div>
-              <div class="h-px flex-grow"></div>
-            </div>
-          {/if}
-        </div>
+        <MessageCard
+          {index}
+          bind:message={chatService.messages[index]}
+          editable={true}
+          highlightedForRemoval={highlightedForRemoval[index] || false}
+          onPaste={() => handlePaste(index)}
+          onSubmit={handleSubmit}
+          onRemove={() => handleRemove(index)}
+          onRemoveAttachment={(attachmentIndex) => handleRemoveAttachment(index, attachmentIndex)}
+        />
+        <MessageDivider
+          {index}
+          warning={showWarning
+            ? "Some AI providers (e.g. Anthropic) require messages that alternate between user & assistant"
+            : undefined}
+          {handleInsertMessage}
+        />
       {/if}
     {/each}
     <div id="messages-end" class="py-4">&nbsp;</div>
