@@ -148,39 +148,38 @@ export async function interpolateDocuments(prompt: string) {
   return interpolatedPrompt;
 }
 
-export async function appendMessage(
-  message: Omit<InsertMessage, "index" | "createdAt">,
-  attachments: MessageAttachment[] = [],
-) {
+export async function appendMessages(revisionId: string, messages: ChatMessage[]) {
   try {
     return await useDb().transaction(async (tx) => {
-      await tx
-        .insert(messageTable)
-        .values({
-          id: message.id,
-          revisionId: message.revisionId,
-          role: message.role,
-          content: message.content,
-          index: sql`(SELECT COUNT(id) FROM ${messageTable} WHERE ${eq(messageTable.revisionId, message.revisionId)})`,
-        })
-        .execute();
-      for (const attachment of attachments) {
-        const documentId = attachment.id;
+      for (const message of messages) {
         await tx
-          .insert(documentTable)
+          .insert(messageTable)
           .values({
-            id: documentId,
-            type: attachment.type,
-            name: `Pasted ${new Date().toLocaleString()}`,
-            description: "",
-            content: attachment.content,
+            id: message.id,
+            revisionId,
+            role: message.role,
+            content: message.content,
+            index: sql`(SELECT COUNT(id) FROM ${messageTable} WHERE ${eq(messageTable.revisionId, revisionId)})`,
           })
           .execute();
-        await tx.insert(attachmentTable).values({
-          id: nanoid(10),
-          documentId,
-          messageId: message.id,
-        });
+        for (const attachment of message.attachments) {
+          const documentId = attachment.id;
+          await tx
+            .insert(documentTable)
+            .values({
+              id: documentId,
+              type: attachment.type,
+              name: `Pasted ${new Date().toLocaleString()}`,
+              description: "",
+              content: attachment.content,
+            })
+            .execute();
+          await tx.insert(attachmentTable).values({
+            id: nanoid(10),
+            documentId,
+            messageId: message.id,
+          });
+        }
       }
     });
   } catch (e) {

@@ -4,7 +4,7 @@
   import MessageInput from "./MessageInput.svelte";
   import { store } from "$lib/store.svelte";
   import {
-    appendMessage,
+    appendMessages,
     createRevision,
     getModelService,
     type RevisionView,
@@ -16,29 +16,42 @@
   import { nanoid } from "nanoid";
   import RobotLoader from "@/components/RobotLoader.svelte";
   import { AutoScroller } from "$lib/auto-scroller";
+  import { goto } from "$app/navigation";
+  import { route } from "$lib/route";
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
-    revision?: RevisionView;
+    revision: RevisionView;
   };
   let { chat, revision }: Props = $props();
   let autoScroller = new AutoScroller();
-  let saveAsNewRevision = $state(false);
+  let saveLength = $state(revision.messages.length);
 
   let chatService = new ChatService({
     id: chat.id,
-    version: revision ? revision.version : 1,
-    initialMessages: revision ? revision.messages.map(toChatMessage) : [],
+    version: revision.version,
+    initialMessages: revision.messages.map(toChatMessage),
     onLoading: () => {
       autoScroller.onLoading();
     },
     onError: (e) => {
       toast.error(e.message);
     },
-    onFinish: (message) => {
-      console.log("onFinish", chatService.hasChanges);
-      appendMessage({ ...message, revisionId: revision!.id }, message.attachments);
-      chatService.resetChanges();
+    onFinish: async (message) => {
+      if (chatService.hasEdits) {
+        console.log("onFinish", "Creating new revision");
+        // save as new revision
+        const newRevision = await createRevision(chat.id, $state.snapshot(chatService.messages));
+        if (!newRevision) {
+          return toast.error("Failed to create revision");
+        }
+        await goto(route(`/chat/[id]`, { id: chat.id, $query: { version: newRevision.version } }));
+      } else {
+        console.log("onFinish", "Appending to existing revision");
+        const unsaved = chatService.messages.slice(saveLength);
+        await appendMessages(revision.id, unsaved);
+        saveLength = chatService.messages.length;
+      }
     },
     onMessageUpdate: (messages) => {
       autoScroller.onMessageUpdate();
@@ -57,30 +70,32 @@
     }
     if (!revision) {
       revision = await createRevision(chat.id, $state.snapshot(chatService.messages));
-    } else if (chatService.hasChanges) {
-      saveAsNewRevision = true;
     }
     if (!revision) {
       toast.error("Failed to create revision");
       return false;
     }
-    await appendMessage(
-      { id: nanoid(10), role: "user", content: value, revisionId: revision.id },
+    chatService.messages.push({
+      id: nanoid(10),
+      role: "user",
+      content: value,
       attachments,
-    );
-    chatService.input = value;
-    chatService.attachments = attachments;
-    chatService.submit({
-      providerId: model.service.providerId,
-      modelName: model.name,
-      baseURL: model.service.baseURL,
-      apiKey: model.service.apiKey,
+    });
+    await chatService.submit({
+      options: {
+        body: {
+          providerId: model.service.providerId,
+          modelName: model.name,
+          baseURL: model.service.baseURL,
+          apiKey: model.service.apiKey,
+        },
+      },
     });
     return true;
   }
 </script>
 
-<ChatTitlebar {chat} {revision} tab="chat" unsavedChanges={chatService.hasChanges} />
+<ChatTitlebar {chat} {revision} tab="chat" unsavedChanges={chatService.hasEdits} />
 <div class="flex flex-1 flex-col overflow-y-auto" use:autoScroller.action>
   <div class="flex flex-1 flex-col gap-2 p-4 pt-0">
     {#each chatService.messages as message, index (message.id)}

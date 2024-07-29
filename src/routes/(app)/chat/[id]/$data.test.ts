@@ -7,7 +7,7 @@ import {
   getLatestRevision,
   getModelService,
   createRevision,
-  appendMessage,
+  appendMessages,
   createRevision,
   isTab,
   tabRouteId,
@@ -216,7 +216,7 @@ describe("appendMessage", () => {
       content: "New message content",
       revisionId: "revision2",
     };
-    await appendMessage(message, []);
+    await appendMessages(message, []);
 
     const messages = await db.query.messageTable.findMany({
       where: eq(schema.messageTable.revisionId, "revision2"),

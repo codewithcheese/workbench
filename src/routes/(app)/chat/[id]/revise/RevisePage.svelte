@@ -1,6 +1,12 @@
 <script lang="ts">
   import MessageCard from "../MessageCard.svelte";
-  import { createRevision, getModelService, type RevisionView, toChatMessage } from "../$data";
+  import {
+    appendMessages,
+    createRevision,
+    getModelService,
+    type RevisionView,
+    toChatMessage,
+  } from "../$data";
   import { store } from "$lib/store.svelte";
   import { ChatService } from "$lib/chat-service.svelte.js";
   import { toast } from "svelte-french-toast";
@@ -14,17 +20,19 @@
   import { PlusIcon, ReplyIcon, SquarePlusIcon } from "lucide-svelte";
   import { Card, CardContent, CardFooter } from "@/components/ui/card";
   import MessageEditor from "../MessageEditor.svelte";
-  import { tick } from "svelte";
+  import { onMount, tick } from "svelte";
   import MessageMarkdown from "./MessageMarkdown.svelte";
   import { getClipboardContent } from "$lib/clipboard";
   import { cn } from "$lib/cn";
   import MessageDivider from "./MessageDivider.svelte";
+  import { route } from "$lib/route";
 
   type Props = {
     chat: Chat & { revisions: Revision[] };
-    revision?: RevisionView;
+    revision: RevisionView;
   };
   let { chat, revision }: Props = $props();
+  let saveLength = $state(revision.messages.length);
   let autoScroller = new AutoScroller(true);
   let messagesContainer: HTMLDivElement;
   let highlightedForRemoval = $state<Record<number, boolean>>({});
@@ -32,10 +40,7 @@
   let chatService = new ChatService({
     id: chat.id,
     version: revision ? revision.version : 1,
-    initialMessages:
-      revision && revision.messages.length
-        ? revision.messages.map(toChatMessage)
-        : [{ id: nanoid(10), role: "user", content: "", attachments: [] }],
+    initialMessages: revision.messages.map(toChatMessage),
     onLoading: () => {
       autoScroller.onLoading();
     },
@@ -43,15 +48,21 @@
       toast.error(e.message);
     },
     onFinish: async (message) => {
-      console.log("onFinish", message);
-      const newRevision = await createRevision(chat.id, $state.snapshot(chatService.messages));
-      if (!newRevision) {
-        return toast.error("Failed to create revision");
-      }
-      if (revision) {
-        await goto(`/chat/${chat.id}/revise/?version=${newRevision.version}`, { noScroll: true });
+      if (chatService.hasEdits) {
+        console.log("onFinish", "Creating new revision");
+        // save as new revision
+        const newRevision = await createRevision(chat.id, $state.snapshot(chatService.messages));
+        if (!newRevision) {
+          return toast.error("Failed to create revision");
+        }
+        await goto(
+          route(`/chat/[id]/revise`, { id: chat.id, $query: { version: newRevision.version } }),
+        );
       } else {
-        chatService.resetChanges();
+        console.log("onFinish", "Appending to existing revision");
+        const unsaved = chatService.messages.slice(saveLength);
+        await appendMessages(revision.id, unsaved);
+        saveLength = chatService.messages.length;
       }
     },
     onMessageUpdate: () => {
@@ -74,13 +85,28 @@
       toast.error("Selected model not found");
       return;
     }
-    return chatService.revise({
-      providerId: model.service.providerId,
-      modelName: model.name,
-      baseURL: model.service.baseURL,
-      apiKey: model.service.apiKey,
+    return chatService.submit({
+      options: {
+        body: {
+          providerId: model.service.providerId,
+          modelName: model.name,
+          baseURL: model.service.baseURL,
+          apiKey: model.service.apiKey,
+        },
+      },
     });
   }
+
+  onMount(() => {
+    if (chatService.messages.length === 0) {
+      chatService.messages.push({
+        id: nanoid(10),
+        role: "user",
+        content: "",
+        attachments: [],
+      });
+    }
+  });
 
   async function handlePaste(index: number) {
     const clip = await getClipboardContent();
@@ -141,13 +167,13 @@
   {revision}
   tab="revise"
   onRunClick={handleSubmit}
-  unsavedChanges={chatService.hasChanges}
+  unsavedChanges={chatService.hasEdits}
 />
 <div class="grid flex-1 grid-cols-2 gap-3 overflow-y-auto px-4">
   <div class="flex flex-col overflow-y-auto" bind:this={messagesContainer}>
     <MessageDivider
       index={-1}
-      warning={chatService.messages[0].role !== "user"
+      warning={chatService.messages.length > 0 && chatService.messages[0].role !== "user"
         ? "Some AI providers (e.g. Anthropic) require the first message to be a user message"
         : ""}
       {handleInsertMessage}

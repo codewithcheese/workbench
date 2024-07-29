@@ -6,10 +6,17 @@ import { invalidate } from "$app/navigation";
 
 export async function newChat() {
   const id = nanoid(10);
-  await useDb().insert(chatTable).values({
-    id: id,
-    name: "Untitled",
-    prompt: "",
+  await useDb().transaction(async (tx) => {
+    await tx.insert(chatTable).values({
+      id: id,
+      name: "Untitled",
+      prompt: "",
+    });
+    await tx.insert(revisionTable).values({
+      id: nanoid(10),
+      version: 1,
+      chatId: id,
+    });
   });
   await invalidate("view:chats");
   return id;
