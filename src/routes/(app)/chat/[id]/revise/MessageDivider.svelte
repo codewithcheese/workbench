@@ -8,9 +8,10 @@
   type Props = {
     index: number;
     warning?: string;
+    showOnHover?: boolean;
     handleInsertMessage: (index: number) => void;
   };
-  let { index, warning, handleInsertMessage }: Props = $props();
+  let { index, warning, handleInsertMessage, showOnHover = true }: Props = $props();
 
   const {
     elements: { trigger, content, arrow },
@@ -45,7 +46,10 @@
   <div class="relative flex-shrink-0">
     <Button
       onclick={() => handleInsertMessage(index)}
-      class="invisible absolute -left-3 -top-3 h-6 w-6 border border-gray-300 bg-white p-0 text-gray-800 shadow-sm transition-all delay-100 ease-in hover:bg-gray-100 group-hover:visible"
+      class={cn(
+        "absolute -left-3 -top-3 h-6 w-6 border border-gray-300 bg-white p-0 text-gray-800 shadow-sm transition-all delay-100 ease-in hover:bg-gray-100 group-hover:visible",
+        showOnHover && "invisible",
+      )}
     >
       <PlusIcon class="h-4 w-4" />
     </Button>

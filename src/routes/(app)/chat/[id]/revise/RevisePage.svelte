@@ -153,12 +153,19 @@
   }
 
   function handleInsertMessage(index: number) {
-    const role =
-      index === -1
-        ? "user"
-        : chatService.messages[index].role === "assistant"
-          ? "user"
-          : "assistant";
+    let role: "user" | "assistant" | "system" = "user";
+    const current = index === -1 ? "none" : chatService.messages[index].role;
+    switch (current) {
+      case "user":
+        role = "assistant";
+        break;
+      case "system":
+        role = "user";
+        break;
+      default:
+        role = "user";
+    }
+
     chatService.messages.splice(index + 1, 0, {
       id: nanoid(10),
       role,
@@ -179,7 +186,7 @@
   <div class="flex flex-col overflow-y-auto" bind:this={messagesContainer}>
     <MessageDivider
       index={-1}
-      warning={chatService.messages.length > 0 && chatService.messages[0].role !== "user"
+      warning={chatService.messages.length > 0 && chatService.messages[0].role === "assistant"
         ? "Some AI providers (e.g. Anthropic) require the first message to be a user message"
         : ""}
       {handleInsertMessage}
@@ -201,6 +208,7 @@
         />
         <MessageDivider
           {index}
+          showOnHover={true}
           warning={showWarning
             ? "Some AI providers (e.g. Anthropic) require messages that alternate between user & assistant"
             : undefined}

@@ -8,6 +8,12 @@
   import { Button } from "@/components/ui/button";
   import { FilePlus2Icon, Trash2Icon } from "lucide-svelte";
   import AttachmentControls from "./AttachmentControls.svelte";
+  import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+  } from "@/components/ui/dropdown-menu";
 
   type Props = {
     index: number;
@@ -74,10 +80,20 @@
   )}
 >
   {#if editable}
-    <div class="flex flex-row justify-end p-0">
-      <div class="flex-1 overflow-hidden p-1 font-mono text-xs uppercase text-gray-500">
-        {message.role}
-      </div>
+    <div class="flex flex-row p-0">
+      <DropdownMenu>
+        <DropdownMenuTrigger class="p-1 font-mono text-xs uppercase text-gray-500">
+          {message.role}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem onclick={() => (message.role = "user")}>User</DropdownMenuItem>
+          <DropdownMenuItem onclick={() => (message.role = "assistant")}>
+            Assistant
+          </DropdownMenuItem>
+          <DropdownMenuItem onclick={() => (message.role = "system")}>System</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <div class="flex-1"></div>
       <Button
         class="h-fit w-fit p-1 text-gray-500 hover:text-black"
         variant="ghost"
