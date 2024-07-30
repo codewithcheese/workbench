@@ -17,7 +17,7 @@
   import { AutoScroller } from "$lib/auto-scroller";
   import { nanoid } from "nanoid";
   import { Button } from "@/components/ui/button";
-  import { PlusIcon, ReplyIcon, SquarePlusIcon } from "lucide-svelte";
+  import { PlusIcon, ReplyIcon, SquarePlusIcon, Trash2Icon } from "lucide-svelte";
   import { Card, CardContent, CardFooter } from "@/components/ui/card";
   import MessageEditor from "../MessageEditor.svelte";
   import { onMount, tick } from "svelte";
@@ -225,9 +225,19 @@
         haveResponse && highlightedForRemoval[chatService.messages.length - 1] && "border-red-500",
       )}
     >
-      <CardContent class="overflow-y-auto p-4" action={autoScroller.action}>
+      <CardContent class="overflow-y-auto p-0" action={autoScroller.action}>
         {#if haveResponse}
-          <div>
+          <div class="flex flex-row justify-end">
+            <Button
+              class="h-fit w-fit p-1 text-gray-500 hover:text-black"
+              variant="ghost"
+              size="icon"
+              onclick={() => handleRemove(chatService.messages.length - 1)}
+            >
+              <Trash2Icon class="h-4 w-4" />
+            </Button>
+          </div>
+          <div class="px-4 pb-4">
             {#if chatService.isLoading}
               <MessageMarkdown
                 content={chatService.messages[chatService.messages.length - 1].content}

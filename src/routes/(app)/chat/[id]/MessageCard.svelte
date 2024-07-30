@@ -23,8 +23,6 @@
     onSubmit?: () => void;
     onPaste?: () => void;
     onRemove?: () => void;
-    onRemoveMouseEnter?: () => void;
-    onRemoveMouseLeave?: () => void;
     onRemoveAttachment?: (index: number) => void;
   };
   let {
@@ -36,8 +34,6 @@
     onPaste,
     onRemove,
     onRemoveAttachment,
-    onRemoveMouseEnter = () => {},
-    onRemoveMouseLeave = () => {},
   }: Props = $props();
   let format = "markdown";
   let showAttachmentControls = $state(false);
@@ -107,8 +103,6 @@
         class="h-fit w-fit p-1 text-gray-500 hover:text-black"
         variant="ghost"
         size="icon"
-        onmouseenter={onRemoveMouseEnter}
-        onmouseleave={onRemoveMouseLeave}
         onclick={onRemove}
       >
         <Trash2Icon class="h-4 w-4" />
