@@ -56,9 +56,12 @@ export function toChatMessage(message: RevisionView["messages"][number]): ChatMe
   };
 }
 
-export function getRevision(chatId: string, version: number) {
+export function getRevision(chatId: string, version: number | null) {
   return useDb().query.revisionTable.findFirst({
-    where: and(eq(revisionTable.chatId, chatId), eq(revisionTable.version, version)),
+    where:
+      version !== null
+        ? and(eq(revisionTable.chatId, chatId), eq(revisionTable.version, version))
+        : eq(revisionTable.chatId, chatId),
     with: {
       messages: {
         with: {
@@ -70,6 +73,7 @@ export function getRevision(chatId: string, version: number) {
         },
       },
     },
+    orderBy: [desc(revisionTable.version)],
   });
 }
 

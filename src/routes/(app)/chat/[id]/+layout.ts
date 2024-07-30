@@ -47,8 +47,8 @@ export async function load({ route, url, params, depends }) {
   const services = await loadServices();
   registerModel(serviceTable, services, depends);
 
-  const version = url.searchParams.get("version") || "1";
-  const revision = await getRevision(params.id, parseInt(version));
+  const version = Number(url.searchParams.get("version")) || null;
+  const revision = await getRevision(params.id, version);
   if (!revision) {
     return error(404, `Revision ${version} not found`);
   }
