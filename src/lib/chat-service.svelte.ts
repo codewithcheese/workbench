@@ -13,6 +13,10 @@ import { callChatApi, processChatStream } from "@ai-sdk/ui-utils";
 import { nanoid } from "nanoid";
 import { toTitleCase } from "$lib/string";
 import { untrack } from "svelte";
+import { appendMessages, createRevision } from "../routes/(app)/chat/[id]/$data";
+import { toast } from "svelte-french-toast";
+import { goto } from "$app/navigation";
+import { route } from "$lib/route";
 
 // todo remove tool and function calling until the library is stable and we need it
 
@@ -96,13 +100,13 @@ export type ChatOptions = {
    */
   onLoading?: () => void;
   /**
-   * Callback function to be called when the API response is received.
+   * Callback function to be called when response should append to the current revision
    */
-  onResponse?: (response: Response) => void | Promise<void>;
+  onAppend?: () => void;
   /**
-   * Callback function to be called when the chat is finished streaming.
+   * Callback function to be called when response should create a new revision
    */
-  onFinish?: (message: ChatMessage) => void;
+  onRevision?: () => void;
   /**
    * Callback function to be called when an error is encountered.
    */
@@ -235,8 +239,8 @@ export class ChatService {
   private experimental_onToolCall: ToolCallHandler | undefined;
   private streamMode: "stream-data" | "text" | undefined;
   private onLoading: (() => void) | undefined;
-  private onResponse: ((response: Response) => void | Promise<void>) | undefined;
-  private onFinish: ((message: ChatMessage) => void) | undefined;
+  private onAppend: (() => void) | undefined;
+  private onRevision: (() => void) | undefined;
   private onError: ((error: Error) => void) | undefined;
   private onMessageUpdate: ((messages: ChatMessage[]) => void) | undefined;
   private credentials: RequestCredentials | undefined;
@@ -257,8 +261,8 @@ export class ChatService {
     experimental_onToolCall,
     streamMode,
     onLoading,
-    onResponse,
-    onFinish,
+    onAppend,
+    onRevision,
     onError,
     onMessageUpdate,
     credentials,
@@ -275,8 +279,8 @@ export class ChatService {
     this.experimental_onToolCall = experimental_onToolCall;
     this.streamMode = streamMode;
     this.onLoading = onLoading;
-    this.onResponse = onResponse;
-    this.onFinish = onFinish;
+    this.onAppend = onAppend;
+    this.onRevision = onRevision;
     this.onError = onError;
     this.onMessageUpdate = onMessageUpdate;
     this.credentials = credentials;
@@ -419,12 +423,13 @@ export class ChatService {
   }
 
   handleOnFinish = (message: ChatMessage) => {
-    if (this.onFinish) {
-      try {
-        this.onFinish(message as ChatMessage);
-      } catch (e: unknown) {
-        console.error(e);
-        this.onError && this.onError(e instanceof Error ? e : new Error("Unknown error"));
+    if (this.hasEdits) {
+      if (this.onRevision) {
+        this.onRevision();
+      }
+    } else {
+      if (this.onAppend) {
+        this.onAppend();
       }
     }
   };
@@ -466,7 +471,7 @@ export class ChatService {
             this.generateId,
             this.streamMode,
             this.handleOnFinish,
-            this.onResponse,
+            () => {},
             this.sendExtraMessageFields,
             this.fetch,
           ),

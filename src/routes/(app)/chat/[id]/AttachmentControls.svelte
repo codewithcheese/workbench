@@ -8,7 +8,7 @@
   let { onPaste = () => {} }: Props = $props();
 </script>
 
-<div class="flex items-center justify-start gap-2">
+<div class="flex items-center justify-start gap-2 pb-1">
   <!--  <Button variant="outline" size="sm" on:click={() => handleUpload("Browse")}>-->
   <!--    <HardDriveUpload class="mr-2 h-4 w-4" />-->
   <!--    Browse-->

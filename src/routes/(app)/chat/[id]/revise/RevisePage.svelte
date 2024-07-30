@@ -47,23 +47,23 @@
     onError: (e) => {
       toast.error(e.message);
     },
-    onFinish: async (message) => {
-      if (chatService.hasEdits) {
-        console.log("onFinish", "Creating new revision");
-        // save as new revision
-        const newRevision = await createRevision(chat.id, $state.snapshot(chatService.messages));
-        if (!newRevision) {
-          return toast.error("Failed to create revision");
-        }
-        await goto(
-          route(`/chat/[id]/revise`, { id: chat.id, $query: { version: newRevision.version } }),
-        );
-      } else {
-        console.log("onFinish", "Appending to existing revision");
-        const unsaved = chatService.messages.slice(saveLength);
-        await appendMessages(revision.id, unsaved);
-        saveLength = chatService.messages.length;
+    onAppend: async () => {
+      console.log("onAppend", "Appending to existing revision");
+      const unsaved = chatService.messages.slice(saveLength);
+      await appendMessages(revision.id, unsaved);
+      saveLength = chatService.messages.length;
+      chatService.markAsSaved();
+    },
+    onRevision: async () => {
+      console.log("onRevision", "Creating new revision");
+      // save as new revision
+      const newRevision = await createRevision(chat.id, $state.snapshot(chatService.messages));
+      if (!newRevision) {
+        return toast.error("Failed to create revision");
       }
+      await goto(
+        route(`/chat/[id]/revise`, { id: chat.id, $query: { version: newRevision.version } }),
+      );
       chatService.markAsSaved();
     },
     onMessageUpdate: () => {
