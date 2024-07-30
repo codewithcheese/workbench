@@ -214,9 +214,9 @@ describe("appendMessage", () => {
       id: "new-message",
       role: "user",
       content: "New message content",
-      revisionId: "revision2",
+      attachments: [],
     };
-    await appendMessages(message, []);
+    await appendMessages("revision2", [message]);
 
     const messages = await db.query.messageTable.findMany({
       where: eq(schema.messageTable.revisionId, "revision2"),

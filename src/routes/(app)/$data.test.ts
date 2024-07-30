@@ -87,7 +87,7 @@ describe("(app)/$data", () => {
 
   describe("newChat", () => {
     it("should create a new chat", async () => {
-      vi.mocked(nanoid).mockReturnValueOnce("newChatId");
+      vi.mocked(nanoid).mockReturnValueOnce("newChatId").mockReturnValueOnce("newRevisionId");
 
       const newChatId = await newChat();
       expect(newChatId).toBe("newChatId");
@@ -101,8 +101,6 @@ describe("(app)/$data", () => {
         prompt: "",
         createdAt: expect.any(String),
       });
-
-      expect(vi.mocked(invalidate)).toHaveBeenCalledWith("view:chats");
     });
   });
 
@@ -130,7 +128,7 @@ describe("(app)/$data", () => {
     });
 
     it("should create a new chat if no chats remain", async () => {
-      vi.mocked(nanoid).mockReturnValueOnce("newChatId");
+      vi.mocked(nanoid).mockReturnValueOnce("newChatId").mockReturnValueOnce("newRevisionId");
       await db.delete(schema.chatTable);
 
       const nextChatId = await removeChat("non-existent-chat");

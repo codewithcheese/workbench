@@ -5,20 +5,20 @@ import { nanoid } from "nanoid";
 import { invalidate } from "$app/navigation";
 
 export async function newChat() {
-  const id = nanoid(10);
+  const chatId = nanoid(10);
   await useDb().transaction(async (tx) => {
     await tx.insert(chatTable).values({
-      id: id,
+      id: chatId,
       name: "Untitled",
       prompt: "",
     });
     await tx.insert(revisionTable).values({
       id: nanoid(10),
       version: 1,
-      chatId: id,
+      chatId: chatId,
     });
   });
-  return id;
+  return chatId;
 }
 
 export async function removeChat(chatId: string) {
