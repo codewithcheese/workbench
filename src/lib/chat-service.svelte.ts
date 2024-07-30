@@ -13,10 +13,6 @@ import { callChatApi, processChatStream } from "@ai-sdk/ui-utils";
 import { nanoid } from "nanoid";
 import { toTitleCase } from "$lib/string";
 import { untrack } from "svelte";
-import { appendMessages, createRevision } from "../routes/(app)/chat/[id]/$data";
-import { toast } from "svelte-french-toast";
-import { goto } from "$app/navigation";
-import { route } from "$lib/route";
 
 // todo remove tool and function calling until the library is stable and we need it
 
@@ -298,22 +294,24 @@ export class ChatService {
     this.initialState = JSON.stringify(this.messages);
     this.tryLoadFromCache();
 
-    $effect(() => {
-      const currentState = JSON.stringify(this.messages);
-      untrack(() => {
-        // has edits if initial messages have been modified
-        this.hasEdits =
-          JSON.stringify(this.messages.slice(0, this.initialLength)) !== this.initialState;
-        if (currentState !== this.initialState) {
-          // cache changes to local storage
-          if (!this.isLoading) {
-            console.log("caching changes");
-            localStorage.setItem(this.cacheKey, JSON.stringify(this.messages));
+    $effect.root(() => {
+      $effect(() => {
+        const currentState = JSON.stringify(this.messages);
+        untrack(() => {
+          // has edits if initial messages have been modified
+          this.hasEdits =
+            JSON.stringify(this.messages.slice(0, this.initialLength)) !== this.initialState;
+          if (currentState !== this.initialState) {
+            // cache changes to local storage
+            if (!this.isLoading) {
+              console.log("caching changes");
+              localStorage.setItem(this.cacheKey, JSON.stringify(this.messages));
+            }
+          } else {
+            // if no edits, remove the cache
+            localStorage.removeItem(this.cacheKey);
           }
-        } else {
-          // if no edits, remove the cache
-          localStorage.removeItem(this.cacheKey);
-        }
+        });
       });
     });
   }

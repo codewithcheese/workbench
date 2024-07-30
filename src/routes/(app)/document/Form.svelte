@@ -2,19 +2,7 @@
   import { Button } from "@/components/ui/button";
   import { Input } from "@/components/ui/input";
   import { Label } from "@/components/ui/label";
-  import { EditorView } from "@codemirror/view";
-  import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-  import { languages } from "@codemirror/language-data";
-  import CodeMirror from "svelte-codemirror-editor";
-  import { nanoid } from "nanoid";
-
-  const extensions = [
-    EditorView.lineWrapping,
-    markdown({
-      base: markdownLanguage,
-      codeLanguages: languages,
-    }),
-  ];
+  import { Textarea } from "@/components/ui/textarea";
 
   type Props = {
     onSubmit: (e: any) => void;
@@ -46,7 +34,7 @@
   </div>
   <div class="space-y-2">
     <Label for="name">Content</Label>
-    <CodeMirror class="rounded border border-gray-200" bind:value={content} {extensions} />
+    <Textarea bind:value={content} />
   </div>
   <div class="space-y-2">
     <Button type="submit">Submit</Button>
