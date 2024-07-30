@@ -222,7 +222,10 @@
             {:else}
               <MessageEditor
                 id={chatService.messages[chatService.messages.length - 1].id}
-                bind:content={chatService.messages[chatService.messages.length - 1].content}
+                content={chatService.messages[chatService.messages.length - 1].content}
+                onChange={(content) => {
+                  chatService.messages[chatService.messages.length - 1].content = content;
+                }}
               />
             {/if}
           </div>

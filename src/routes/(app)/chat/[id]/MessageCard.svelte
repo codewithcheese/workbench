@@ -1,15 +1,13 @@
 <script lang="ts">
   import { cn } from "$lib/cn.js";
   import MessageMarkdown from "./revise/MessageMarkdown.svelte";
-  import { Card, CardContent, CardHeader } from "@/components/ui/card/index.js";
+  import { Card, CardContent } from "@/components/ui/card/index.js";
   import Attachment from "./Attachment.svelte";
   import type { ChatMessage } from "$lib/chat-service.svelte";
   import MessageEditor from "./MessageEditor.svelte";
   import { Button } from "@/components/ui/button";
-  import { FilePlus2Icon, PlusIcon, Trash, Trash2Icon, TrashIcon, UploadIcon } from "lucide-svelte";
-  import { toast } from "svelte-french-toast";
+  import { FilePlus2Icon, Trash2Icon } from "lucide-svelte";
   import AttachmentControls from "./AttachmentControls.svelte";
-  import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
   type Props = {
     index: number;
@@ -103,7 +101,12 @@
   {/if}
   <CardContent class={cn("p-4", editable && "pt-0")}>
     {#if editable}
-      <MessageEditor id={message.id} bind:content={message.content} onKeyPress={handleKeyPress} />
+      <MessageEditor
+        id={message.id}
+        content={message.content}
+        onChange={(content) => (message.content = content)}
+        onKeyPress={handleKeyPress}
+      />
     {:else if format === "markdown"}
       <MessageMarkdown content={message.content} />
     {:else}

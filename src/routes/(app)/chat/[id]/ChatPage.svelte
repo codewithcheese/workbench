@@ -24,6 +24,7 @@
     revision: RevisionView;
   };
   let { chat, revision }: Props = $props();
+  console.log("ChatPage", chat, revision);
   let autoScroller = new AutoScroller();
   let saveLength = $state(revision.messages.length);
 

@@ -18,15 +18,11 @@
   type Props = {
     id: string;
     content: string;
+    onChange: (content: string) => void;
     onKeyPress?: (event: KeyboardEvent) => boolean;
     placeholder?: string;
   };
-  let {
-    id,
-    content = $bindable(""),
-    onKeyPress,
-    placeholder = "Enter your message",
-  }: Props = $props();
+  let { id, content, onChange, onKeyPress, placeholder = "Enter your message" }: Props = $props();
   let showPlaceholder = $state(content === "");
 
   const config: CreateEditorArgs = {
@@ -62,7 +58,8 @@
     editor.registerUpdateListener(({ editorState }) => {
       editorState.read(() => {
         const root = getRoot();
-        content = root.getTextContent();
+        const content = root.getTextContent();
+        onChange && onChange(content);
         showPlaceholder = content === "";
       });
     });

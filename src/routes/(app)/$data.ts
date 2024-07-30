@@ -18,7 +18,6 @@ export async function newChat() {
       chatId: id,
     });
   });
-  await invalidate("view:chats");
   return id;
 }
 

@@ -47,20 +47,12 @@ export async function load({ route, url, params, depends }) {
   const services = await loadServices();
   registerModel(serviceTable, services, depends);
 
-  const version = url.searchParams.get("version");
-  let revision: RevisionView | undefined;
-  if (version) {
-    const result = await getRevision(params.id, parseInt(version));
-    if (!result) {
-      return error(404, `Revision ${version} not found`);
-    }
-    revision = result;
-  } else {
-    revision = await getLatestRevision(params.id);
+  const version = url.searchParams.get("version") || "1";
+  const revision = await getRevision(params.id, parseInt(version));
+  if (!revision) {
+    return error(404, `Revision ${version} not found`);
   }
-  if (revision) {
-    registerModel(revisionTable, revision, depends);
-  }
+  registerModel(revisionTable, revision, depends);
   depends("view:messages");
   depends("view:chat");
   return { chat, services, tab, revision, version };

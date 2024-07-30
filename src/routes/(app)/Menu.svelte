@@ -5,7 +5,7 @@
   import * as Dialog from "@/components/ui/dialog/index";
   import { page } from "$app/stores";
   import { cn } from "$lib/cn";
-  import { goto } from "$app/navigation";
+  import { goto, invalidate } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
   import PersistenceAlert from "@/components/PersistenceAlert.svelte";
   import { type Chat } from "@/database";
@@ -36,6 +36,7 @@
     variant="outline"
     onclick={async () => {
       const id = await newChat();
+      await invalidate("view:chats");
       await goto(route(`/chat/[id]`, { id }));
     }}
   >
