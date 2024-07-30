@@ -64,6 +64,7 @@
         await appendMessages(revision.id, unsaved);
         saveLength = chatService.messages.length;
       }
+      chatService.markAsSaved();
     },
     onMessageUpdate: () => {
       autoScroller.onMessageUpdate();

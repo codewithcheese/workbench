@@ -332,30 +332,12 @@ export class ChatService {
     return `${this.api}|${this.id}`;
   }
 
-  /**
-   * Append a user message to the chat list. This triggers the API call to fetch
-   * the assistant's response.
-   * @param message The message to append
-   * @param chatRequestOptions Additional options to pass to the API call
-   */
-  append(
-    message: ChatMessage | CreateMessage,
-    requestOptions: ChatRequestOptions = {},
-  ): Promise<string | null | undefined> {
-    if (!message.id) {
-      message.id = this.generateId();
-    }
-    this.messages.push(message as ChatMessage);
-
-    return this.triggerRequest(this.createChatRequest(requestOptions));
-  }
-
-  revise(requestBody: Record<string, any>) {
-    if (this.messages[this.messages.length - 1].role === "assistant") {
-      this.messages.splice(-1);
-    }
-    console.log("revise", this.messages);
-    return this.triggerRequest(this.createChatRequest({ options: { body: requestBody } }));
+  markAsSaved() {
+    // clear cache
+    localStorage.removeItem(this.cacheKey);
+    // reset initial state
+    this.initialLength = this.messages.length;
+    this.initialState = JSON.stringify(this.messages);
   }
 
   /**
@@ -440,8 +422,6 @@ export class ChatService {
     if (this.onFinish) {
       try {
         this.onFinish(message as ChatMessage);
-        // clear cache
-        localStorage.removeItem(this.cacheKey);
       } catch (e: unknown) {
         console.error(e);
         this.onError && this.onError(e instanceof Error ? e : new Error("Unknown error"));
