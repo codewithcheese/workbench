@@ -85,6 +85,11 @@
       toast.error("Selected model not found");
       return;
     }
+    // if last message is assistant, replace it with new response
+    const lastMessage = chatService.messages[chatService.messages.length - 1];
+    if (lastMessage && lastMessage.role === "assistant") {
+      chatService.messages.pop();
+    }
     return chatService.submit({
       options: {
         body: {

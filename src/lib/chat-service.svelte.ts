@@ -291,30 +291,24 @@ export class ChatService {
     this.fetch = fetch;
     this.initialLength = initialMessages.length;
 
+    this.initialState = JSON.stringify(this.messages);
+    this.tryLoadFromCache();
+
     $effect(() => {
       const currentState = JSON.stringify(this.messages);
-      if (!this.initialState) {
-        this.initialState = currentState;
-        console.log("initialState", this.initialState);
-        this.tryLoadFromCache();
-      }
       untrack(() => {
         // has edits if initial messages have been modified
         this.hasEdits =
           JSON.stringify(this.messages.slice(0, this.initialLength)) !== this.initialState;
-        if (this.hasEdits) {
-          console.log(
-            "has edits",
-            JSON.stringify(this.messages.slice(0, this.initialLength)),
-            this.initialState,
-          );
-        }
         if (currentState !== this.initialState) {
           // cache changes to local storage
           if (!this.isLoading) {
-            console.log("caching changes", currentState, this.initialState);
+            console.log("caching changes");
             localStorage.setItem(this.cacheKey, JSON.stringify(this.messages));
           }
+        } else {
+          // if no edits, remove the cache
+          localStorage.removeItem(this.cacheKey);
         }
       });
     });
@@ -323,6 +317,7 @@ export class ChatService {
   tryLoadFromCache() {
     const cachedState = localStorage.getItem(this.cacheKey);
     if (cachedState) {
+      console.log("Applying cached state", this.cacheKey);
       // if the last user message is empty, remove it
       const messages = JSON.parse(cachedState);
       const lastMessage = messages[messages.length - 1];
@@ -439,22 +434,6 @@ export class ChatService {
 
   submit(requestOptions: ChatRequestOptions = {}) {
     return this.triggerRequest(this.createChatRequest(requestOptions));
-    // if (this.mode.type === "edit") {
-    //   return this.revise({ options: { body: requestBody } });
-    // } else {
-    //   const inputContent = this.input;
-    //   const inputAttachments = this.attachments;
-    //   if (!inputContent) return;
-    //   this.input = "";
-    //   return this.append(
-    //     {
-    //       content: inputContent,
-    //       role: "user",
-    //       attachments: inputAttachments,
-    //     },
-    //     { options: { body: requestBody } },
-    //   );
-    // }
   }
 
   handleOnFinish = (message: ChatMessage) => {
