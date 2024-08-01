@@ -17,7 +17,14 @@
   import { AutoScroller } from "$lib/auto-scroller";
   import { nanoid } from "nanoid";
   import { Button } from "@/components/ui/button";
-  import { PlusIcon, ReplyIcon, SquarePlusIcon, Trash2Icon } from "lucide-svelte";
+  import {
+    EditIcon,
+    EyeIcon,
+    PlusIcon,
+    ReplyIcon,
+    SquarePlusIcon,
+    Trash2Icon,
+  } from "lucide-svelte";
   import { Card, CardContent, CardFooter } from "@/components/ui/card";
   import MessageEditor from "../MessageEditor.svelte";
   import { onMount, tick } from "svelte";
@@ -36,12 +43,14 @@
   let autoScroller = new AutoScroller(true);
   let messagesContainer: HTMLDivElement;
   let highlightedForRemoval = $state<Record<number, boolean>>({});
+  let responseMode: "edit" | "view" = $state("edit");
 
   let chatService = new ChatService({
     id: chat.id,
     version: revision ? revision.version : 1,
     initialMessages: revision.messages.map(toChatMessage),
     onLoading: () => {
+      responseMode = "edit";
       autoScroller.onLoading();
     },
     onError: (e) => {
@@ -227,7 +236,19 @@
     >
       <CardContent class="overflow-y-auto p-0" action={autoScroller.action}>
         {#if haveResponse}
-          <div class="flex flex-row justify-end">
+          <div class="flex flex-row items-center justify-end">
+            <Button
+              class="h-fit w-fit p-1 text-gray-500 hover:text-black"
+              variant="ghost"
+              size="icon"
+              onclick={() => (responseMode = responseMode === "edit" ? "view" : "edit")}
+            >
+              {#if responseMode === "view"}
+                <EditIcon class="h-4 w-4" />
+              {:else}
+                <EyeIcon class="h-4 w-4" />
+              {/if}
+            </Button>
             <Button
               class="h-fit w-fit p-1 text-gray-500 hover:text-black"
               variant="ghost"
@@ -238,11 +259,10 @@
             </Button>
           </div>
           <div class="px-4 pb-4">
-            {#if chatService.isLoading}
+            {#if responseMode === "view" || chatService.isLoading}
               <MessageMarkdown
                 content={chatService.messages[chatService.messages.length - 1].content}
               />
-              <RobotLoader />
             {:else}
               <MessageEditor
                 id={chatService.messages[chatService.messages.length - 1].id}
@@ -251,6 +271,9 @@
                   chatService.messages[chatService.messages.length - 1].content = content;
                 }}
               />
+            {/if}
+            {#if chatService.isLoading}
+              <RobotLoader />
             {/if}
           </div>
         {/if}
