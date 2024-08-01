@@ -36,7 +36,7 @@
   let autoScroller = new AutoScroller(true);
   let messagesContainer: HTMLDivElement;
   let highlightedForRemoval = $state<Record<number, boolean>>({});
-  let responseMode: "edit" | "view" = $state("edit");
+  let responseMode: "edit" | "view" = $state("view");
 
   let chatService = new ChatService({
     id: chat.id,
