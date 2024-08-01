@@ -50,7 +50,7 @@
     version: revision ? revision.version : 1,
     initialMessages: revision.messages.map(toChatMessage),
     onLoading: () => {
-      responseMode = "edit";
+      responseMode = "view";
       autoScroller.onLoading();
     },
     onError: (e) => {

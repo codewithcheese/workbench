@@ -6,7 +6,7 @@
   import type { ChatMessage } from "$lib/chat-service.svelte";
   import MessageEditor from "./MessageEditor.svelte";
   import { Button } from "@/components/ui/button";
-  import { FilePlus2Icon, Trash2Icon } from "lucide-svelte";
+  import { EditIcon, EyeIcon, FilePlus2Icon, Trash2Icon } from "lucide-svelte";
   import AttachmentControls from "./AttachmentControls.svelte";
   import {
     DropdownMenu,
@@ -37,6 +37,7 @@
   }: Props = $props();
   let format = "markdown";
   let showAttachmentControls = $state(false);
+  let mode: "edit" | "view" = $state("edit");
 
   function handleKeyPress(event: KeyboardEvent) {
     if (event.ctrlKey && event.key === "Enter") {
@@ -98,7 +99,18 @@
       >
         <FilePlus2Icon class="h-4 w-4" />
       </Button>
-
+      <Button
+        class="h-fit w-fit p-1 text-gray-500 hover:text-black "
+        variant="ghost"
+        size="icon"
+        onclick={() => (mode = mode === "edit" ? "view" : "edit")}
+      >
+        {#if mode === "view"}
+          <EditIcon class="h-4 w-4" />
+        {:else}
+          <EyeIcon class="h-4 w-4" />
+        {/if}
+      </Button>
       <Button
         class="h-fit w-fit p-1 text-gray-500 hover:text-black"
         variant="ghost"
@@ -110,7 +122,7 @@
     </div>
   {/if}
   <CardContent class={cn("p-4", editable && "pt-0")}>
-    {#if editable}
+    {#if mode === "edit" && editable}
       <MessageEditor
         id={message.id}
         content={message.content}
