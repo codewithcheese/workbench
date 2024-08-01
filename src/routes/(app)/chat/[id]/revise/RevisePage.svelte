@@ -17,14 +17,7 @@
   import { AutoScroller } from "$lib/auto-scroller";
   import { nanoid } from "nanoid";
   import { Button } from "@/components/ui/button";
-  import {
-    EditIcon,
-    EyeIcon,
-    PlusIcon,
-    ReplyIcon,
-    SquarePlusIcon,
-    Trash2Icon,
-  } from "lucide-svelte";
+  import { EditIcon, EyeIcon, ReplyIcon, Trash2Icon } from "lucide-svelte";
   import { Card, CardContent, CardFooter } from "@/components/ui/card";
   import MessageEditor from "../MessageEditor.svelte";
   import { onMount, tick } from "svelte";
@@ -86,14 +79,18 @@
   );
 
   async function handleSubmit() {
+    if (chatService.isLoading) {
+      chatService.stop();
+      return false;
+    }
     if (!store.selected.modelId) {
       toast.error("No model selected");
-      return;
+      return false;
     }
     const model = await getModelService(store.selected.modelId);
     if (!model) {
       toast.error("Selected model not found");
-      return;
+      return false;
     }
     // if last message is assistant, replace it with new response
     const lastMessage = chatService.messages[chatService.messages.length - 1];
@@ -188,7 +185,8 @@
   {chat}
   {revision}
   tab="revise"
-  onRunClick={handleSubmit}
+  isLoading={chatService.isLoading}
+  onSubmit={handleSubmit}
   unsavedChanges={chatService.hasEdits}
 />
 <div class="grid flex-1 grid-cols-2 gap-3 overflow-y-auto px-4">
@@ -254,6 +252,7 @@
                 class="h-fit w-fit p-1 text-gray-500 hover:text-black"
                 variant="ghost"
                 size="icon"
+                disabled={chatService.isLoading}
                 onclick={() => handleRemove(chatService.messages.length - 1)}
               >
                 <Trash2Icon class="h-4 w-4" />

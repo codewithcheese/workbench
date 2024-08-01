@@ -5,6 +5,7 @@
     ArrowBigLeftIcon,
     ArrowBigRightIcon,
     ArrowLeftIcon,
+    BanIcon,
     CheckIcon,
     PlayIcon,
   } from "lucide-svelte";
@@ -18,12 +19,13 @@
     chat: Chat & {
       revisions: Revision[];
     };
-    revision?: Revision;
+    revision: Revision;
     tab: string;
-    onRunClick?: () => void;
-    unsavedChanges?: boolean;
+    isLoading: boolean;
+    onSubmit: () => void;
+    unsavedChanges: boolean;
   };
-  let { chat, revision, tab, onRunClick, unsavedChanges = false }: Props = $props();
+  let { chat, revision, tab, isLoading, onSubmit, unsavedChanges = false }: Props = $props();
   let id = $derived(chat.id);
   let name = $state(chat.name);
 
@@ -55,8 +57,6 @@
       name = chat.name;
     });
   });
-
-  $inspect("unsavedChanges", unsavedChanges);
 </script>
 
 <div class="flex flex-row gap-4 px-4 py-2">
@@ -95,9 +95,13 @@
     <Button
       variant="default"
       class="focus-visible:ring-0 focus-visible:ring-offset-0"
-      onclick={onRunClick}
+      onclick={onSubmit}
     >
-      <PlayIcon class="mr-2 h-4 w-4" /> Run
+      {#if isLoading}
+        <BanIcon class="mr-2 h-4 w-4" /> Stop
+      {:else}
+        <PlayIcon class="mr-2 h-4 w-4" /> Run
+      {/if}
       <div
         class="w-13 pointer-events-none ml-2 hidden h-6 rounded-full bg-gray-700 px-2 py-1 md:inline-flex"
       >

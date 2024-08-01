@@ -52,9 +52,7 @@
       if (!newRevision) {
         return toast.error("Failed to create revision");
       }
-      await goto(
-        route(`/chat/[id]/revise`, { id: chat.id, $query: { version: newRevision.version } }),
-      );
+      await goto(route(`/chat/[id]`, { id: chat.id, $query: { version: newRevision.version } }));
       chatService.markAsSaved();
     },
     onMessageUpdate: (messages) => {
@@ -63,6 +61,10 @@
   });
 
   async function handleSubmit(value: string, attachments: MessageAttachment[]): Promise<boolean> {
+    if (chatService.isLoading) {
+      chatService.stop();
+      return false;
+    }
     if (!store.selected.modelId) {
       toast.error("No model selected");
       return false;
@@ -85,7 +87,7 @@
       content: value,
       attachments,
     });
-    await chatService.submit({
+    chatService.submit({
       options: {
         body: {
           providerId: model.service.providerId,
@@ -96,6 +98,12 @@
       },
     });
     return true;
+  }
+
+  function handleStop() {
+    if (chatService.isLoading) {
+      chatService.stop();
+    }
   }
 </script>
 
@@ -109,5 +117,5 @@
       <RobotLoader />
     {/if}
   </div>
-  <MessageInput onSubmit={handleSubmit} />
+  <MessageInput isLoading={chatService.isLoading} onSubmit={handleSubmit} onStop={handleStop} />
 </div>

@@ -221,7 +221,7 @@ export class ChatService {
   version: number;
   messages: ChatMessage[] = $state([]);
   error: undefined | Error = $state(undefined);
-  isLoading: boolean | undefined = $state(undefined);
+  isLoading: boolean = $state(false);
   data: JSONValue[] | undefined = $state(undefined);
   metadata?: Object;
   hasEdits: boolean = $state(false);
@@ -323,7 +323,7 @@ export class ChatService {
       // if the last user message is empty, remove it
       const messages = JSON.parse(cachedState);
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === "user" && lastMessage.content.trim() === "") {
+      if (lastMessage && lastMessage.role === "user" && lastMessage.content.trim() === "") {
         messages.pop();
       }
       this.messages = messages;
@@ -417,10 +417,10 @@ export class ChatService {
   }
 
   submit(requestOptions: ChatRequestOptions = {}) {
-    return this.triggerRequest(this.createChatRequest(requestOptions));
+    this.triggerRequest(this.createChatRequest(requestOptions));
   }
 
-  handleOnFinish = (message: ChatMessage) => {
+  handleOnFinish = () => {
     if (this.hasEdits) {
       if (this.onRevision) {
         this.onRevision();
@@ -486,6 +486,7 @@ export class ChatService {
       // Ignore abort errors as they are expected.
       if ((err as any).name === "AbortError") {
         this.abortController = null;
+        this.handleOnFinish();
         return null;
       }
 

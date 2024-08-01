@@ -3,20 +3,30 @@
   import { Card, CardContent } from "@/components/ui/card";
   import { Button } from "@/components/ui/button";
   import { Textarea } from "@/components/ui/textarea";
-  import { Send, Plus, HardDriveUpload, CloudUpload, Clipboard } from "lucide-svelte";
+  import {
+    Send,
+    Plus,
+    HardDriveUpload,
+    CloudUpload,
+    Clipboard,
+    SendIcon,
+    BanIcon,
+  } from "lucide-svelte";
   import Attachment from "./Attachment.svelte";
   import type { MessageAttachment } from "$lib/chat-service.svelte";
   import { nanoid } from "nanoid";
   import AttachmentControls from "./AttachmentControls.svelte";
 
   type Props = {
+    isLoading: boolean;
     onSubmit: (content: string, attachments: MessageAttachment[]) => Promise<boolean>;
   };
-  let { onSubmit }: Props = $props();
+  let { isLoading, onSubmit }: Props = $props();
   let isUploadOpen = $state(false);
   let textareaElement: HTMLTextAreaElement;
   let content = $state("");
   let attachments = $state<MessageAttachment[]>([]);
+  let disabled = $derived(content === "" && attachments.length === 0);
 
   function resize() {
     textareaElement.style.height = "auto";
@@ -36,8 +46,8 @@
   }
 
   async function handleSubmit() {
-    console.log("handleSubmit", content);
-    if (await onSubmit(content, attachments)) {
+    const submit = await onSubmit(content, attachments);
+    if (submit) {
       content = "";
       attachments = [];
     }
@@ -99,8 +109,12 @@
           onkeydown={handleKeydown}
           onpaste={handlePaste}
         />
-        <Button variant="default" size="icon" onclick={handleSubmit}>
-          <Send class="h-4 w-4" />
+        <Button variant="default" size="icon" {disabled} onclick={handleSubmit}>
+          {#if isLoading}
+            <BanIcon class="h-4 w-4" />
+          {:else}
+            <SendIcon class="h-4 w-4" />
+          {/if}
         </Button>
       </div>
     </CardContent>
