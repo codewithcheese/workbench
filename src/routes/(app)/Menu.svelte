@@ -13,14 +13,13 @@
   import { route } from "$lib/route";
 
   let { chats }: { chats: Chat[] } = $props();
+  let chatToDelete: Chat | null = $state(null);
 
   let chatId: string | undefined = $derived.by(() => {
     if ($page.url.pathname.startsWith("/chat")) {
       return $page.params.id;
     }
   });
-
-  let chatToDelete: Chat | null = $state(null);
 </script>
 
 <div class="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
@@ -112,18 +111,21 @@
     </div>
   </nav>
 </div>
-{#if chatToDelete}
-  <DeleteDialog
-    name={chatToDelete.name}
-    type="chat"
-    onConfirm={async () => {
-      if (chatToDelete) {
-        const nextId = await removeChat(chatToDelete.id);
-        await goto(route(`/chat/[id]`, { id: nextId }));
-      }
-    }}
-    onCancel={() => {
+
+<DeleteDialog
+  open={chatToDelete !== null}
+  name={chatToDelete?.name ?? ""}
+  type="chat"
+  onConfirm={async () => {
+    if (chatToDelete) {
+      const nextId = await removeChat(chatToDelete.id);
       chatToDelete = null;
-    }}
-  />
-{/if}
+      await goto(route(`/chat/[id]`, { id: nextId }));
+    }
+  }}
+  onOpenChange={(open) => {
+    if (!open) {
+      chatToDelete = null;
+    }
+  }}
+/>

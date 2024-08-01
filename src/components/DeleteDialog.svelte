@@ -1,7 +1,14 @@
 <script lang="ts">
   import { TrashIcon } from "lucide-svelte";
   import { Button } from "@/components/ui/button/index.js";
-  import * as Dialog from "@/components/ui/dialog/index.js";
+  import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogTitle,
+    DialogTrigger,
+  } from "@/components/ui/dialog";
 
   function capitalizeWords(text: string): string {
     return text
@@ -11,16 +18,17 @@
   }
 
   type Props = {
+    open: boolean;
     name: string;
     type: "chat" | "document";
     onConfirm: () => void;
-    onCancel: () => void;
+    onOpenChange: (open: boolean) => void;
   };
-  let { name, type, onConfirm, onCancel }: Props = $props();
+  let { open, name, type, onConfirm, onOpenChange }: Props = $props();
 </script>
 
-<Dialog.Root open onOpenChange={onCancel}>
-  <Dialog.Trigger asChild let:builder>
+<Dialog {open} {onOpenChange}>
+  <DialogTrigger asChild let:builder>
     <Button
       builders={[builder]}
       variant="ghost"
@@ -28,17 +36,17 @@
     >
       <TrashIcon class="h-4 w-4" />
     </Button>
-  </Dialog.Trigger>
-  <Dialog.Content class="max-w-[400px]">
-    <Dialog.Title>Delete {capitalizeWords(type)}</Dialog.Title>
-    <Dialog.Description class="space-y-2">
+  </DialogTrigger>
+  <DialogContent class="max-w-[400px]">
+    <DialogTitle>Delete {capitalizeWords(type)}</DialogTitle>
+    <DialogDescription class="space-y-2">
       <p>Are you sure you want to delete this {type}?</p>
       <p>
         {capitalizeWords(type)} to be deleted: <span class="font-semibold">{name}</span>
       </p>
       <p>This action cannot be undone.</p>
-    </Dialog.Description>
-    <Dialog.Close>
+    </DialogDescription>
+    <DialogFooter>
       <Button
         class="w-full"
         variant="destructive"
@@ -48,6 +56,6 @@
       >
         Delete
       </Button>
-    </Dialog.Close>
-  </Dialog.Content>
-</Dialog.Root>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
