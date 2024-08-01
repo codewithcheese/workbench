@@ -236,27 +236,29 @@
     >
       <CardContent class="overflow-y-auto p-0" action={autoScroller.action}>
         {#if haveResponse}
-          <div class="flex flex-row items-center justify-end">
-            <Button
-              class="h-fit w-fit p-1 text-gray-500 hover:text-black"
-              variant="ghost"
-              size="icon"
-              onclick={() => (responseMode = responseMode === "edit" ? "view" : "edit")}
-            >
-              {#if responseMode === "view"}
-                <EditIcon class="h-4 w-4" />
-              {:else}
-                <EyeIcon class="h-4 w-4" />
-              {/if}
-            </Button>
-            <Button
-              class="h-fit w-fit p-1 text-gray-500 hover:text-black"
-              variant="ghost"
-              size="icon"
-              onclick={() => handleRemove(chatService.messages.length - 1)}
-            >
-              <Trash2Icon class="h-4 w-4" />
-            </Button>
+          <div class="sticky top-0 z-10 flex flex-row items-center justify-end">
+            <div class="rounded bg-background">
+              <Button
+                class="h-fit w-fit p-1 text-gray-500 hover:text-black "
+                variant="ghost"
+                size="icon"
+                onclick={() => (responseMode = responseMode === "edit" ? "view" : "edit")}
+              >
+                {#if responseMode === "view"}
+                  <EditIcon class="h-4 w-4" />
+                {:else}
+                  <EyeIcon class="h-4 w-4" />
+                {/if}
+              </Button>
+              <Button
+                class="h-fit w-fit p-1 text-gray-500 hover:text-black"
+                variant="ghost"
+                size="icon"
+                onclick={() => handleRemove(chatService.messages.length - 1)}
+              >
+                <Trash2Icon class="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           <div class="px-4 pb-4">
             {#if responseMode === "view" || chatService.isLoading}
