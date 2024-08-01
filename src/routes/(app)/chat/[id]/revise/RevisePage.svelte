@@ -97,7 +97,7 @@
     if (lastMessage && lastMessage.role === "assistant") {
       chatService.messages.pop();
     }
-    return chatService.submit({
+    chatService.submit({
       options: {
         body: {
           providerId: model.service.providerId,
@@ -107,6 +107,7 @@
         },
       },
     });
+    return true;
   }
 
   onMount(() => {

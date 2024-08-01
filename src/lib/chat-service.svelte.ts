@@ -417,7 +417,7 @@ export class ChatService {
   }
 
   submit(requestOptions: ChatRequestOptions = {}) {
-    this.triggerRequest(this.createChatRequest(requestOptions));
+    return this.triggerRequest(this.createChatRequest(requestOptions));
   }
 
   handleOnFinish = () => {
