@@ -74,31 +74,51 @@ export const attachmentTable = sqliteTable(
   }),
 );
 
-export const modelTable = sqliteTable(
-  "model",
+export const aiModelTable = sqliteTable(
+  "aiModel",
   {
     id: text("id").notNull().primaryKey(),
-    serviceId: text("serviceId")
+    aiAccountId: text("aiAccountId")
       .notNull()
-      .references(() => serviceTable.id, { onDelete: "cascade" }),
+      .references(() => aiAccountTable.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     visible: int("visible").notNull(),
     createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
   },
   (table) => ({
-    serviceNameUnique: unique("serviceName_unique").on(table.serviceId, table.name),
-    serviceIdx: index("serviceId_idx").on(table.serviceId),
+    aiAccountId_unique: unique("accountId_unique").on(table.aiAccountId, table.name),
+    aiAccountId_idx: index("accountId_idx").on(table.aiAccountId),
   }),
 );
 
-export const serviceTable = sqliteTable("service", {
+export const aiAccountTable = sqliteTable("aiAccount", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  providerId: text("providerId").notNull(),
-  baseURL: text("baseURL").notNull(),
+  aiServiceId: text("aiServiceId").notNull(),
+  baseURL: text("baseURL"),
   apiKey: text("apiKey").notNull(),
   createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
+
+export const aiServiceTable = sqliteTable("aiService", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  aiSdkId: text("aiSdkId").notNull(),
+  baseURL: text("baseURL").notNull(),
+  createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+export const aiSdkTable = sqliteTable(
+  "aiSdk",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+  },
+  (table) => ({
+    slugUnique: unique("slug_unique").on(table.slug),
+  }),
+);
 
 export const chatTable = sqliteTable("chat", {
   id: text("id").primaryKey(),
@@ -115,8 +135,8 @@ export type Document = InferSelectModel<typeof documentTable>;
 export type Revision = InferSelectModel<typeof revisionTable>;
 export type Message = InferSelectModel<typeof messageTable>;
 export type InsertMessage = InferInsertModel<typeof messageTable>;
-export type Model = InferSelectModel<typeof modelTable>;
-export type Service = InferSelectModel<typeof serviceTable>;
+export type Model = InferSelectModel<typeof aiModelTable>;
+export type Service = InferSelectModel<typeof aiAccountTable>;
 export type Chat = InferSelectModel<typeof chatTable>;
 // export type Eval = InferSelectModel<typeof evalTable>;
 
@@ -128,15 +148,15 @@ export const chatRelations = relations(chatTable, ({ many }) => ({
   revisions: many(revisionTable),
 }));
 
-export const modelRelations = relations(modelTable, ({ one }) => ({
-  service: one(serviceTable, {
-    fields: [modelTable.serviceId],
-    references: [serviceTable.id],
+export const modelRelations = relations(aiModelTable, ({ one }) => ({
+  service: one(aiAccountTable, {
+    fields: [aiModelTable.aiAccountId],
+    references: [aiAccountTable.id],
   }),
 }));
 
-export const serviceRelations = relations(serviceTable, ({ many }) => ({
-  models: many(modelTable),
+export const accountRelations = relations(aiAccountTable, ({ many }) => ({
+  models: many(aiModelTable),
 }));
 
 export const revisionRelations = relations(revisionTable, ({ one, many }) => ({

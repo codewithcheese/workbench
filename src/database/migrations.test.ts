@@ -155,6 +155,22 @@ describe("Migration Tests", () => {
         createdAt: "2023-01-03T00:00:01Z",
       },
     ],
+    documents: [
+      {
+        id: "doc1",
+        name: "Document 1",
+        description: "Test doc",
+        content: "Test content",
+        createdAt: "2023-01-01T00:00:00Z",
+      },
+      {
+        id: "doc2",
+        name: "Pasted",
+        description: "Pasted doc",
+        content: "Pasted content",
+        createdAt: "2023-01-02T00:00:00Z",
+      },
+    ],
   };
 
   let initialProjectCount: number;
@@ -162,6 +178,7 @@ describe("Migration Tests", () => {
   let initialModelCount: number;
   let initialResponseCount: number;
   let initialMessageCount: number;
+  let initialDocumentCount: number;
 
   function insertTestData() {
     for (const project of testData.projects) {
@@ -189,6 +206,11 @@ describe("Migration Tests", () => {
         sql`INSERT INTO responseMessage (id, "index", responseId, role, content, createdAt) VALUES (${message.id}, ${message.index}, ${message.responseId}, ${message.role}, ${message.content}, ${message.createdAt})`,
       );
     }
+    for (const document of testData.documents) {
+      db.run(
+        sql`INSERT INTO document (id, name, description, content, createdAt) VALUES (${document.id}, ${document.name}, ${document.description}, ${document.content}, ${document.createdAt})`,
+      );
+    }
     /*
      * Verify that the initial data was inserted correctly.
      * This establishes a baseline for comparison after migrations.
@@ -206,12 +228,16 @@ describe("Migration Tests", () => {
     initialMessageCount = db.get<{ count: number }>(
       sql`SELECT COUNT(*) as count FROM responseMessage`,
     ).count;
+    initialDocumentCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM document`,
+    ).count;
 
     expect(initialProjectCount).toBe(testData.projects.length);
     expect(initialServiceCount).toBe(testData.services.length);
     expect(initialModelCount).toBe(testData.models.length);
     expect(initialResponseCount).toBe(testData.responses.length);
     expect(initialMessageCount).toBe(testData.responseMessages.length);
+    expect(initialDocumentCount).toBe(testData.documents.length);
   }
 
   async function applyMigrationsUpTo(targetMigration: string) {
@@ -646,5 +672,348 @@ describe("Migration Tests", () => {
       sql`SELECT COUNT(*) as count FROM message`,
     ).count;
     expect(finalMessageCount).toBe(messageCount - 3); // 'project1' had 3 messages
+  });
+
+  it("0005_careful_the_professor", async () => {
+    await applyMigrationsUpTo("0005_careful_the_professor");
+
+    // Verify that the 'attachment' table was created
+    const attachmentTable = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='table' AND name='attachment'`,
+    );
+    expect(attachmentTable).toBeTruthy();
+
+    // Check the structure of the 'attachment' table
+    const attachmentColumns = db.all<{ name: string; type: string }>(
+      sql`PRAGMA table_info(attachment)`,
+    );
+    expect(attachmentColumns).toContainEqual(
+      expect.objectContaining({
+        name: "id",
+        type: "TEXT",
+      }),
+    );
+    expect(attachmentColumns).toContainEqual(
+      expect.objectContaining({
+        name: "messageId",
+        type: "TEXT",
+      }),
+    );
+    expect(attachmentColumns).toContainEqual(
+      expect.objectContaining({
+        name: "documentId",
+        type: "TEXT",
+      }),
+    );
+    expect(attachmentColumns).toContainEqual(
+      expect.objectContaining({
+        name: "createdAt",
+        type: "TEXT",
+      }),
+    );
+
+    // Verify that the 'type' column was added to the 'document' table
+    const documentColumns = db.all<{ name: string; type: string }>(
+      sql`PRAGMA table_info(document)`,
+    );
+    expect(documentColumns).toContainEqual(expect.objectContaining({ name: "type", type: "TEXT" }));
+
+    // Check if the indexes were created
+    const attachmentMessageIdIndex = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='index' AND name='attachment_messageId_idx'`,
+    );
+    expect(attachmentMessageIdIndex).toBeTruthy();
+
+    const messageDocumentUniqueIndex = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='index' AND name='messageDocument_unique'`,
+    );
+    expect(messageDocumentUniqueIndex).toBeTruthy();
+
+    // Test foreign key constraints
+    const message = db.get<{ id: string }>(sql`SELECT id FROM message LIMIT 1`);
+    const document = db.get<{ id: string }>(sql`SELECT id FROM document LIMIT 1`);
+
+    if (message && document) {
+      // Insert a valid attachment
+      db.run(
+        sql`INSERT INTO attachment (id, messageId, documentId) VALUES ('test1', ${message.id}, ${document.id})`,
+      );
+
+      // Attempt to insert an attachment with non-existent messageId (should fail)
+      expect(() =>
+        db.run(
+          sql`INSERT INTO attachment (id, messageId, documentId) VALUES ('test2', 'non_existent', ${document.id})`,
+        ),
+      ).toThrow();
+
+      // Attempt to insert an attachment with non-existent documentId (should fail)
+      expect(() =>
+        db.run(
+          sql`INSERT INTO attachment (id, messageId, documentId) VALUES ('test3', ${message.id}, 'non_existent')`,
+        ),
+      ).toThrow();
+
+      // Test cascade delete
+      db.run(sql`DELETE FROM message WHERE id = ${message.id}`);
+      const attachmentAfterDelete = db.get(
+        sql`SELECT * FROM attachment WHERE messageId = ${message.id}`,
+      );
+      expect(attachmentAfterDelete).toBeFalsy();
+    }
+  });
+
+  it("0006_opposite_sugar_man", async () => {
+    await applyMigrationsUpTo("0006_opposite_sugar_man");
+
+    // Verify that the 'attributes' column was added to the 'document' table
+    const documentColumns = db.all<{ name: string; type: string }>(
+      sql`PRAGMA table_info(document)`,
+    );
+    expect(documentColumns).toContainEqual(
+      expect.objectContaining({ name: "attributes", type: "TEXT" }),
+    );
+
+    // Check if the default value is set correctly
+    const document = db.get<{ attributes: string }>(sql`SELECT attributes FROM document LIMIT 1`);
+    expect(document?.attributes).toBe("{}");
+
+    // Test inserting a document with custom attributes
+    db.run(
+      sql`INSERT INTO document (id, name, type, description, content, attributes) VALUES ('test_doc', 'Test Document', 'document', 'Test description', 'Test content', '{"key": "value"}')`,
+    );
+    const insertedDocument = db.get<{ attributes: string }>(
+      sql`SELECT attributes FROM document WHERE id = 'test_doc'`,
+    );
+    expect(insertedDocument?.attributes).toBe('{"key": "value"}');
+
+    // Verify that existing documents have the default attributes value
+    const existingDocuments = db.all<{ id: string; attributes: string }>(
+      sql`SELECT id, attributes FROM document WHERE id != 'test_doc'`,
+    );
+    existingDocuments.forEach((doc) => {
+      expect(doc.attributes).toBe("{}");
+    });
+  });
+
+  it("0007_tidy_lilandra", async () => {
+    await applyMigrationsUpTo("0007_tidy_lilandra");
+
+    // Verify that the 'document_name_unique' index was dropped
+    const documentNameUniqueIndex = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='index' AND name='document_name_unique'`,
+    );
+    expect(documentNameUniqueIndex).toBeFalsy();
+
+    // Test that we can now insert documents with the same name
+    db.run(
+      sql`INSERT INTO document (id, name, type, description, content) VALUES ('doc3', 'Same Name', 'document', 'Test description', 'Test content')`,
+    );
+    db.run(
+      sql`INSERT INTO document (id, name, type, description, content) VALUES ('doc4', 'Same Name', 'document', 'Test description', 'Test content')`,
+    );
+
+    const documentsWithSameName = db.all<{ id: string }>(
+      sql`SELECT id FROM document WHERE name = 'Same Name'`,
+    );
+    expect(documentsWithSameName.length).toBe(2);
+
+    // Verify that other constraints and data remain intact
+    const documentCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM document`,
+    ).count;
+    expect(documentCount).toBe(initialDocumentCount + 2); // Initial count plus the two we just added
+  });
+
+  it("0008_parallel_grandmaster", async () => {
+    await applyMigrationsUpTo("0008_parallel_grandmaster");
+
+    // Verify that 'aiService' table was renamed to 'aiAccount'
+    const aiAccountTable = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='table' AND name='aiAccount'`,
+    );
+    expect(aiAccountTable).toBeTruthy();
+
+    const aiServiceTable = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='table' AND name='aiService'`,
+    );
+    expect(aiServiceTable).toBeFalsy();
+
+    // Check that 'aiServiceId' column in 'model' table was renamed to 'aiAccountId'
+    const modelColumns = db.all<{ name: string; type: string }>(sql`PRAGMA table_info(aiModel)`);
+    expect(modelColumns).toContainEqual(
+      expect.objectContaining({ name: "aiAccountId", type: "TEXT" }),
+    );
+    expect(modelColumns).not.toContainEqual(expect.objectContaining({ name: "aiServiceId" }));
+
+    // Verify that 'providerId' column in 'aiAccount' table was renamed to 'aiServiceId'
+    const aiAccountColumns = db.all<{ name: string; type: string }>(
+      sql`PRAGMA table_info(aiAccount)`,
+    );
+    expect(aiAccountColumns).toContainEqual(
+      expect.objectContaining({ name: "aiServiceId", type: "TEXT" }),
+    );
+    expect(aiAccountColumns).not.toContainEqual(expect.objectContaining({ name: "providerId" }));
+
+    // Check that the new indexes were created
+    const aiAccountIdIdx = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='index' AND name='aiAccountId_idx'`,
+    );
+    expect(aiAccountIdIdx).toBeTruthy();
+
+    const aiAccountIdUnique = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='index' AND name='aiAccountId_unique'`,
+    );
+    expect(aiAccountIdUnique).toBeTruthy();
+
+    // Verify that the old indexes were dropped
+    const aiServiceIdIdx = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='index' AND name='aiServiceId_idx'`,
+    );
+    expect(aiServiceIdIdx).toBeFalsy();
+
+    const aiServiceNameUnique = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='index' AND name='aiServiceName_unique'`,
+    );
+    expect(aiServiceNameUnique).toBeFalsy();
+
+    // Verify that the data was migrated correctly
+    const aiAccountCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM aiAccount`,
+    ).count;
+    expect(aiAccountCount).toBe(initialServiceCount);
+
+    const modelCount = db.get<{ count: number }>(sql`SELECT COUNT(*) as count FROM aiModel`).count;
+    expect(modelCount).toBe(initialModelCount);
+
+    // Verify the content of migrated data
+    const aiAccountData = db.all<{ id: string; name: string; aiServiceId: string }>(
+      sql`SELECT id, name, aiServiceId FROM aiAccount ORDER BY id`,
+    );
+    expect(aiAccountData).toEqual(
+      testData.services.map(({ id, name, providerId: aiServiceId }) => ({ id, name, aiServiceId })),
+    );
+
+    const modelData = db.all<{ id: string; aiAccountId: string; name: string; visible: number }>(
+      sql`SELECT id, aiAccountId, name, visible FROM aiModel ORDER BY id`,
+    );
+    expect(modelData).toEqual(
+      testData.models.map(({ id, serviceId: aiAccountId, name, visible }) => ({
+        id,
+        aiAccountId,
+        name,
+        visible,
+      })),
+    );
+
+    // Test the new foreign key constraint
+    const aiAccount = db.get<{ id: string }>(sql`SELECT id FROM aiAccount LIMIT 1`);
+    expect(aiAccount).toBeTruthy();
+
+    // Insert a valid model
+    db.run(
+      sql`INSERT INTO aiModel (id, aiAccountId, name, visible) VALUES ('test_model', ${aiAccount.id}, 'Test Model', 1)`,
+    );
+
+    // Attempt to insert a model with non-existent aiAccountId (should fail)
+    expect(() =>
+      db.run(
+        sql`INSERT INTO aiModel (id, aiAccountId, name, visible) VALUES ('invalid_model', 'non_existent', 'Invalid Model', 1)`,
+      ),
+    ).toThrow();
+
+    // Test cascade delete
+    db.run(sql`DELETE FROM aiAccount WHERE id = ${aiAccount.id}`);
+    const modelAfterDelete = db.get(sql`SELECT * FROM aiModel WHERE aiAccountId = ${aiAccount.id}`);
+    expect(modelAfterDelete).toBeFalsy();
+  });
+
+  it("0009_ancient_korath", async () => {
+    await applyMigrationsUpTo("0009_ancient_korath");
+
+    // Verify that the 'aiSdk' table was created
+    const aiSdkTable = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='table' AND name='aiSdk'`,
+    );
+    expect(aiSdkTable).toBeTruthy();
+
+    // Verify that the 'aiService' table was created
+    const aiServiceTable = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='table' AND name='aiService'`,
+    );
+    expect(aiServiceTable).toBeTruthy();
+
+    // Check the structure of the 'aiSdk' table
+    const aiSdkColumns = db.all<{ name: string; type: string }>(sql`PRAGMA table_info(aiSdk)`);
+    expect(aiSdkColumns).toContainEqual(expect.objectContaining({ name: "id", type: "TEXT" }));
+    expect(aiSdkColumns).toContainEqual(expect.objectContaining({ name: "slug", type: "TEXT" }));
+    expect(aiSdkColumns).toContainEqual(expect.objectContaining({ name: "name", type: "TEXT" }));
+
+    // Check the structure of the 'aiService' table
+    const aiServiceColumns = db.all<{ name: string; type: string }>(
+      sql`PRAGMA table_info(aiService)`,
+    );
+    expect(aiServiceColumns).toContainEqual(expect.objectContaining({ name: "id", type: "TEXT" }));
+    expect(aiServiceColumns).toContainEqual(
+      expect.objectContaining({ name: "name", type: "TEXT" }),
+    );
+    expect(aiServiceColumns).toContainEqual(
+      expect.objectContaining({ name: "aiSdkId", type: "TEXT" }),
+    );
+    expect(aiServiceColumns).toContainEqual(
+      expect.objectContaining({ name: "baseURL", type: "TEXT" }),
+    );
+    expect(aiServiceColumns).toContainEqual(
+      expect.objectContaining({ name: "createdAt", type: "TEXT" }),
+    );
+
+    // Verify that the initial data was inserted correctly
+    const aiSdkCount = db.get<{ count: number }>(sql`SELECT COUNT(*) as count FROM aiSdk`).count;
+    expect(aiSdkCount).toBe(10); // 10 SDKs were inserted
+
+    const aiServiceCount = db.get<{ count: number }>(
+      sql`SELECT COUNT(*) as count FROM aiService`,
+    ).count;
+    expect(aiServiceCount).toBe(10); // 10 services were inserted
+
+    // Check some specific entries to ensure data integrity
+    const openaiSdk = db.get<{ id: string; slug: string; name: string }>(
+      sql`SELECT * FROM aiSdk WHERE id = 'openai'`,
+    );
+    expect(openaiSdk).toEqual({ id: "openai", slug: "openai", name: "OpenAI" });
+
+    const azureService = db.get(sql`SELECT * FROM aiService WHERE id = 'azure'`);
+    expect(azureService).toMatchObject({
+      id: "azure",
+      name: "Azure OpenAI",
+      aiSdkId: "azure",
+      baseURL: null,
+    });
+
+    // // Test unique constraint on aiSdk slug
+    // expect(() =>
+    //   db.run(sql`INSERT INTO aiSdk (id, slug, name) VALUES ('test', 'openai', 'Test SDK')`),
+    // ).toThrow();
+
+    // Verify that the aiAccount table still exists and maintains its relationship with aiService
+    const aiAccountTable = db.get<{ name: string } | undefined>(
+      sql`SELECT name FROM sqlite_master WHERE type='table' AND name='aiAccount'`,
+    );
+    expect(aiAccountTable).toBeTruthy();
+
+    const aiAccountColumns = db.all<{ name: string; type: string }>(
+      sql`PRAGMA table_info(aiAccount)`,
+    );
+    expect(aiAccountColumns).toContainEqual(
+      expect.objectContaining({ name: "aiServiceId", type: "TEXT" }),
+    );
+  });
+
+  it("0010_far_wiccan", async () => {
+    await applyMigrationsUpTo("0010_far_wiccan");
+
+    // Test unique constraint on aiSdk slug
+    expect(() =>
+      db.run(sql`INSERT INTO aiSdk (id, slug, name) VALUES ('test', 'openai', 'Test SDK')`),
+    ).toThrow();
   });
 });

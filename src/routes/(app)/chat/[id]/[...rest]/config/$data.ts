@@ -1,9 +1,9 @@
 import {
   invalidateModel,
   type Model,
-  modelTable,
+  aiModelTable,
   type Service,
-  serviceTable,
+  aiAccountTable,
   useDb,
 } from "@/database";
 import type { Provider } from "$lib/providers";
@@ -14,7 +14,7 @@ import { nanoid } from "nanoid";
 export type ServicesView = Awaited<ReturnType<typeof loadServices>>;
 
 export async function loadServices() {
-  return useDb().query.serviceTable.findMany({
+  return useDb().query.aiAccountTable.findMany({
     with: {
       models: true,
     },
@@ -24,7 +24,7 @@ export async function loadServices() {
 export async function addService(provider: Provider) {
   const newId = nanoid(10);
   const result = await useDb()
-    .insert(serviceTable)
+    .insert(aiAccountTable)
     .values({
       id: newId,
       name: "",
@@ -42,31 +42,31 @@ export async function addService(provider: Provider) {
 
 export async function deleteService(service: Service) {
   await useDb().transaction(async (tx) => {
-    await tx.delete(modelTable).where(eq(modelTable.serviceId, service.id));
-    await tx.delete(serviceTable).where(eq(serviceTable.id, service.id));
+    await tx.delete(aiModelTable).where(eq(aiModelTable.serviceId, service.id));
+    await tx.delete(aiAccountTable).where(eq(aiAccountTable.id, service.id));
   });
-  await invalidateModel(serviceTable, service);
+  await invalidateModel(aiAccountTable, service);
 }
 
 export async function updateService(service: Service) {
   console.time("updateService");
   await useDb()
-    .update(serviceTable)
+    .update(aiAccountTable)
     .set({ ...service })
-    .where(eq(serviceTable.id, service.id));
+    .where(eq(aiAccountTable.id, service.id));
   console.timeEnd("updateService");
-  await invalidateModel(serviceTable, service);
+  await invalidateModel(aiAccountTable, service);
 }
 
 export async function replaceModels(service: Service, newModels: any[]) {
   console.time("replaceModels");
   await useDb().transaction(async (tx) => {
     // remove models that no longer exist
-    await tx.delete(modelTable).where(
+    await tx.delete(aiModelTable).where(
       and(
-        eq(modelTable.serviceId, service.id),
+        eq(aiModelTable.serviceId, service.id),
         notInArray(
-          modelTable.name,
+          aiModelTable.name,
           newModels.map((m) => m.name),
         ),
       ),
@@ -74,30 +74,30 @@ export async function replaceModels(service: Service, newModels: any[]) {
     console.log("newModels", newModels);
     for (const model of newModels) {
       await tx
-        .insert(modelTable)
+        .insert(aiModelTable)
         .values({ id: nanoid(10), name: model.name, visible: 1, serviceId: service.id })
         .onConflictDoNothing({
-          target: [modelTable.name, modelTable.serviceId],
+          target: [aiModelTable.name, aiModelTable.serviceId],
         });
     }
   });
   console.timeEnd("replaceModels");
-  await invalidateModel(serviceTable, service);
+  await invalidateModel(aiAccountTable, service);
 }
 
 export async function toggleVisible(service: Service, model: Model) {
   await useDb()
-    .update(modelTable)
+    .update(aiModelTable)
     .set({ visible: model.visible ? 0 : 1 })
-    .where(and(eq(modelTable.id, model.id), eq(modelTable.serviceId, service.id)));
-  await invalidateModel(serviceTable, service);
-  await invalidateModel(modelTable, model);
+    .where(and(eq(aiModelTable.id, model.id), eq(aiModelTable.serviceId, service.id)));
+  await invalidateModel(aiAccountTable, service);
+  await invalidateModel(aiModelTable, model);
 }
 
 export async function toggleAllVisible(service: Service, visible: 1 | 0) {
   console.time("toggleAllVisible");
-  await useDb().update(modelTable).set({ visible }).where(eq(modelTable.serviceId, service.id));
+  await useDb().update(aiModelTable).set({ visible }).where(eq(aiModelTable.serviceId, service.id));
   console.timeEnd("toggleAllVisible");
-  await invalidateModel(serviceTable, service);
+  await invalidateModel(aiAccountTable, service);
   await invalidate("view:chat");
 }

@@ -41,17 +41,17 @@ beforeEach(async () => {
   await runMigrations(true);
 
   // Insert test data
-  await db.insert(schema.serviceTable).values([
+  await db.insert(schema.aiAccountTable).values([
     {
       id: "service1",
       name: "Test Service",
-      providerId: "provider1",
+      aiServiceId: "aiService1",
       baseURL: "https://api.test.com",
       apiKey: "test-api-key",
     },
   ]);
 
-  await db.insert(schema.modelTable).values([
+  await db.insert(schema.aiModelTable).values([
     { id: "model1", serviceId: "service1", name: "Test Model 1", visible: 1 },
     { id: "model2", serviceId: "service1", name: "Test Model 2", visible: 0 },
   ]);
@@ -96,8 +96,8 @@ describe("deleteService", () => {
       createdAt: new Date().toISOString(),
     };
     await deleteService(service);
-    const remainingServices = await db.query.serviceTable.findMany();
-    const remainingModels = await db.query.modelTable.findMany();
+    const remainingServices = await db.query.aiAccountTable.findMany();
+    const remainingModels = await db.query.aiModelTable.findMany();
     expect(remainingServices).toHaveLength(0);
     expect(remainingModels).toHaveLength(0);
   });
@@ -114,8 +114,8 @@ describe("updateService", () => {
       createdAt: new Date().toISOString(),
     };
     await updateService(updatedService);
-    const service = await db.query.serviceTable.findFirst({
-      where: eq(schema.serviceTable.id, "service1"),
+    const service = await db.query.aiAccountTable.findFirst({
+      where: eq(schema.aiAccountTable.id, "service1"),
     });
     expect(service).toEqual({ ...updatedService, createdAt: expect.any(String) });
   });
@@ -138,8 +138,8 @@ describe("replaceModels", () => {
     const newModels = [{ name: "New Model 1" }, { name: "New Model 2" }, { name: "Test Model 1" }];
     await replaceModels(service, newModels);
 
-    const models = await db.query.modelTable.findMany({
-      where: eq(schema.modelTable.serviceId, "service1"),
+    const models = await db.query.aiModelTable.findMany({
+      where: eq(schema.aiModelTable.serviceId, "service1"),
     });
 
     expect(models).toHaveLength(3);
@@ -175,8 +175,8 @@ describe("replaceModels", () => {
     ];
     await replaceModels(service, newModels);
 
-    const models = await db.query.modelTable.findMany({
-      where: eq(schema.modelTable.serviceId, "service1"),
+    const models = await db.query.aiModelTable.findMany({
+      where: eq(schema.aiModelTable.serviceId, "service1"),
     });
 
     expect(models).toHaveLength(3); // Should still be 3, not 4
@@ -207,8 +207,8 @@ describe("toggleVisible", () => {
       createdAt: new Date().toISOString(),
     };
     await toggleVisible(service, model);
-    const updatedModel = await db.query.modelTable.findFirst({
-      where: eq(schema.modelTable.id, "model1"),
+    const updatedModel = await db.query.aiModelTable.findFirst({
+      where: eq(schema.aiModelTable.id, "model1"),
     });
     expect(updatedModel?.visible).toBe(0);
   });
@@ -225,8 +225,8 @@ describe("toggleAllVisible", () => {
       createdAt: new Date().toISOString(),
     };
     await toggleAllVisible(service, 0);
-    const models = await db.query.modelTable.findMany({
-      where: eq(schema.modelTable.serviceId, "service1"),
+    const models = await db.query.aiModelTable.findMany({
+      where: eq(schema.aiModelTable.serviceId, "service1"),
     });
     expect(models.every((m) => m.visible === 0)).toBe(true);
   });

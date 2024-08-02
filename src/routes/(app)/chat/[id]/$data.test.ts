@@ -56,7 +56,7 @@ beforeEach(async () => {
   await runMigrations(true);
 
   // Insert test data
-  await db.insert(schema.serviceTable).values([
+  await db.insert(schema.aiAccountTable).values([
     {
       id: "service1",
       name: "Test Service",
@@ -67,7 +67,7 @@ beforeEach(async () => {
   ]);
 
   await db
-    .insert(schema.modelTable)
+    .insert(schema.aiModelTable)
     .values([{ id: "model1", serviceId: "service1", name: "Test Model", visible: 1 }]);
 
   await db
