@@ -53,10 +53,7 @@
   <div class="relative ml-auto flex-1 md:grow-0">
     <div class="flex flex-row">
       <SelectModel {services} />
-      <Button
-        variant="ghost"
-        onclick={() => goto(route(`/chat/[id]/[...rest]/config`, { id: chat.id, rest: "" }))}
-      >
+      <Button variant="ghost" onclick={() => goto(route(`/settings`))}>
         <SettingsIcon size={16} />
       </Button>
     </div>

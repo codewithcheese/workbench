@@ -148,15 +148,31 @@ export const chatRelations = relations(chatTable, ({ many }) => ({
   revisions: many(revisionTable),
 }));
 
-export const modelRelations = relations(aiModelTable, ({ one }) => ({
-  service: one(aiAccountTable, {
+export const aiModelRelations = relations(aiModelTable, ({ one }) => ({
+  aiService: one(aiAccountTable, {
     fields: [aiModelTable.aiAccountId],
     references: [aiAccountTable.id],
   }),
 }));
 
-export const accountRelations = relations(aiAccountTable, ({ many }) => ({
-  models: many(aiModelTable),
+export const aiAccountRelations = relations(aiAccountTable, ({ many, one }) => ({
+  aiModels: many(aiModelTable),
+  aiService: one(aiServiceTable, {
+    fields: [aiAccountTable.aiServiceId],
+    references: [aiServiceTable.id],
+  }),
+}));
+
+export const aiServiceRelations = relations(aiServiceTable, ({ many, one }) => ({
+  aiAccounts: many(aiAccountTable),
+  aiSdk: one(aiSdkTable, {
+    fields: [aiServiceTable.aiSdkId],
+    references: [aiSdkTable.id],
+  }),
+}));
+
+export const aiSdkRelations = relations(aiSdkTable, ({ many }) => ({
+  aiService: many(aiServiceTable),
 }));
 
 export const revisionRelations = relations(revisionTable, ({ one, many }) => ({

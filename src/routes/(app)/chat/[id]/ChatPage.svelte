@@ -99,15 +99,15 @@
     });
     return true;
   }
-
-  function handleStop() {
-    if (chatService.isLoading) {
-      chatService.stop();
-    }
-  }
 </script>
 
-<ChatTitlebar {chat} {revision} tab="chat" unsavedChanges={chatService.hasEdits} />
+<ChatTitlebar
+  isLoading={chatService.isLoading}
+  {chat}
+  {revision}
+  tab="chat"
+  unsavedChanges={chatService.hasEdits}
+/>
 <div class="flex flex-1 flex-col overflow-y-auto" use:autoScroller.action>
   <div class="flex flex-1 flex-col gap-2 p-4 pt-0">
     {#each chatService.messages as message, index (message.id)}
@@ -117,5 +117,5 @@
       <RobotLoader />
     {/if}
   </div>
-  <MessageInput isLoading={chatService.isLoading} onSubmit={handleSubmit} onStop={handleStop} />
+  <MessageInput isLoading={chatService.isLoading} onSubmit={handleSubmit} />
 </div>

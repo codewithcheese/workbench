@@ -1,14 +1,7 @@
 <script lang="ts">
   import { Button } from "@/components/ui/button/index.js";
   import { Input } from "@/components/ui/input/index.js";
-  import {
-    ArrowBigLeftIcon,
-    ArrowBigRightIcon,
-    ArrowLeftIcon,
-    BanIcon,
-    CheckIcon,
-    PlayIcon,
-  } from "lucide-svelte";
+  import { ArrowBigLeftIcon, ArrowBigRightIcon, BanIcon, PlayIcon } from "lucide-svelte";
   import { updateChat } from "./$data.js";
   import type { Chat, Revision } from "@/database";
   import { untrack } from "svelte";
@@ -22,10 +15,17 @@
     revision: Revision;
     tab: string;
     isLoading: boolean;
-    onSubmit: () => void;
+    onSubmit?: () => void;
     unsavedChanges: boolean;
   };
-  let { chat, revision, tab, isLoading, onSubmit, unsavedChanges = false }: Props = $props();
+  let {
+    chat,
+    revision,
+    tab,
+    isLoading,
+    onSubmit = () => {},
+    unsavedChanges = false,
+  }: Props = $props();
   let id = $derived(chat.id);
   let name = $state(chat.name);
 
