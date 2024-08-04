@@ -22,8 +22,8 @@
   <CardHeader>
     <div class="flex flex-row items-center justify-between">
       <div>
-        <CardTitle>AI accounts</CardTitle>
-        <CardDescription>Manage your AI accounts and their API keys and models.</CardDescription>
+        <CardTitle>Your AI accounts</CardTitle>
+        <CardDescription>Manage your AI accounts; API keys and models.</CardDescription>
       </div>
       <Button href={route("/settings/ai-accounts/add")}>Add account</Button>
     </div>
@@ -31,28 +31,10 @@
 
   <CardContent>
     <div class="flex flex-col gap-2">
-      <Table>
-        <TableHeader class="text-left text-muted-foreground">
-          <TableCell class="p-2 font-semibold">Name</TableCell>
-          <TableCell class="p-2 font-semibold">Service</TableCell>
-        </TableHeader>
-        <TableBody>
-          {#if data.aiAccounts.length === 0}
-            <TableRow class="cursor-pointer">
-              <TableCell class="p-2">No accounts found.</TableCell>
-            </TableRow>
-          {/if}
-          {#each data.aiAccounts as aiAccount (aiAccount.id)}
-            <TableRow
-              class="cursor-pointer"
-              onclick={() => goto(route(`/settings/ai-accounts/[id]`, { id: aiAccount.id }))}
-            >
-              <TableCell class="p-2">{aiAccount.name || "-"}</TableCell>
-              <TableCell class="p-2">{aiAccount.aiService.name}</TableCell>
-            </TableRow>
-          {/each}
-        </TableBody>
-      </Table>
+      {#if data.aiAccounts.length === 0}
+        <p>No accounts found.</p>
+        <p>Add an AI account to start a chatting.</p>
+      {/if}
     </div>
   </CardContent>
 </Card>

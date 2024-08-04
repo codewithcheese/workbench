@@ -6,7 +6,7 @@ export const POST = (async ({ request }) => {
     baseURL: string;
   };
 
-  const apiKey = request.headers.get("X_API_KEY");
+  const apiKey = request.headers.get("Authorization");
 
   if (!apiKey) {
     return new Response("Missing API key", {
@@ -20,21 +20,15 @@ export const POST = (async ({ request }) => {
     });
   }
 
-  if (!baseURL) {
-    return new Response("Missing baseURL", {
-      status: 400,
-    });
-  }
-
   switch (providerId) {
     case "openai":
-      return await fetchOpenAIModels(apiKey, baseURL);
+      return await fetchOpenAIModels(apiKey, baseURL || undefined);
     case "anthropic":
-      return await fetchAnthropicModels(apiKey, baseURL);
+      return await fetchAnthropicModels(apiKey, baseURL || undefined);
     case "mistral":
-      return await fetchMistralModels(apiKey, baseURL);
+      return await fetchMistralModels(apiKey, baseURL || undefined);
     case "google":
-      return await fetchGoogleModels(apiKey, baseURL);
+      return await fetchGoogleModels(apiKey, baseURL || undefined);
     default:
       return new Response(`Unsupported provider ${providerId}`, {
         status: 400,

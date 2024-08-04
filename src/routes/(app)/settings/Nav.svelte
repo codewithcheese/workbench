@@ -9,7 +9,10 @@
   data-x-chunk-container="chunk-container after:right-0"
 >
   <a href={route("/settings")} class={match("/settings", $page.url.pathname) ? "active" : ""}>
-    AI Accounts
+    API Keys and Models
+  </a>
+  <a href={route("/settings")} class={match("/settings", $page.url.pathname) ? "active" : ""}>
+    Title Generation
   </a>
 </nav>
 
