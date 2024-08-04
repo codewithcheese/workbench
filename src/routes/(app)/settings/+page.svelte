@@ -1,19 +1,9 @@
 <script lang="ts">
   import { Button } from "@/components/ui/button/index.js";
-  import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-  } from "@/components/ui/card";
-  import { Input } from "@/components/ui/input/index.js";
-  import { PlusCircleIcon } from "lucide-svelte";
-  import { providersById } from "$lib/providers";
-  import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-  import { goto } from "$app/navigation";
+  import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+  import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
   import { route } from "$lib/route";
+  import { TrashIcon } from "lucide-svelte";
 
   let { data } = $props();
 </script>
@@ -32,9 +22,23 @@
   <CardContent>
     <div class="flex flex-col gap-2">
       {#if data.aiAccounts.length === 0}
-        <p>No accounts found.</p>
-        <p>Add an AI account to start a chatting.</p>
+        <p>None found.</p>
       {/if}
+      {#each data.aiAccounts as account (account.id)}
+        <a
+          href={route(`/settings/ai-accounts/[id]`, { id: account.id })}
+          class="flex cursor-pointer items-center gap-4 p-4 hover:bg-muted/50"
+        >
+          <Avatar class="hidden h-8 w-8 sm:flex">
+            <AvatarImage src="/icons/openai-32x32.png" alt="Avatar" />
+            <AvatarFallback>OM</AvatarFallback>
+          </Avatar>
+          <div class="grid gap-1">
+            <p class="text-sm font-medium leading-none">{account.name}</p>
+            <p class="text-sm text-muted-foreground">{account.aiService.name}</p>
+          </div>
+        </a>
+      {/each}
     </div>
   </CardContent>
 </Card>

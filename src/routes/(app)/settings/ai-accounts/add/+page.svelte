@@ -34,6 +34,7 @@
   import { LoaderCircle, TriangleAlertIcon } from "lucide-svelte";
   import { cn } from "$lib/cn";
   import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+  import { toast } from "svelte-french-toast";
 
   export async function fetchModels(form: z.infer<typeof formSchema>) {}
 
@@ -88,6 +89,7 @@
               models.map((m) => ({ ...m, id: nanoid(10), visible: 1, aiAccountId: accountId })),
             );
         });
+        toast.success("Account added");
         await goto(route(`/settings/ai-accounts/[id]`, { id: accountId }));
       } catch (e) {
         setError(form, "", e instanceof Error ? e.message : "Unknown error");

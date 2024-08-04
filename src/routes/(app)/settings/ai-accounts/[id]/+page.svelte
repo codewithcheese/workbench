@@ -16,28 +16,34 @@
     SelectTrigger,
     SelectValue,
   } from "@/components/ui/select";
-  import SuperDebug, { setError, superForm } from "sveltekit-superforms";
+  import { setError, superForm } from "sveltekit-superforms";
   import { zodClient } from "sveltekit-superforms/adapters";
-  import { formSchema, replaceModels } from "../$data";
+  import { formSchema } from "../$data";
   import {
+    FormButton,
     FormControl,
     FormField,
     FormFieldErrors,
     FormLabel,
-    FormButton,
   } from "@/components/ui/form";
-  import { z } from "zod";
-  import { aiAccountTable, aiModelTable, aiServiceTable, useDb } from "@/database";
+  import { aiAccountTable, aiModelTable, aiServiceTable, invalidateModel, useDb } from "@/database";
   import { and, eq, notInArray } from "drizzle-orm";
   import { nanoid } from "nanoid";
   import { goto, invalidate } from "$app/navigation";
-  import { route } from "$lib/route";
   import { LoaderCircle, TriangleAlertIcon } from "lucide-svelte";
   import { cn } from "$lib/cn";
   import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
   import { toast } from "svelte-french-toast";
+  import { route } from "$lib/route";
 
   let { data } = $props();
+
+  async function handleDelete() {
+    await useDb().delete(aiAccountTable).where(eq(aiAccountTable.id, data.aiAccount.id));
+    await invalidateModel(aiAccountTable, data.aiAccount);
+    toast.success("Account deleted");
+    await goto(route(`/settings`));
+  }
 
   const formHandle = superForm(data.form, {
     SPA: true,
@@ -121,7 +127,7 @@
     <CardHeader>
       <div class="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>{data.aiAccount.aiService.name} account</CardTitle>
+          <CardTitle>Your {data.aiAccount.aiService.name} account</CardTitle>
           <CardDescription>Update your account settings.</CardDescription>
         </div>
       </div>
@@ -186,4 +192,17 @@
     </CardFooter>
   </Card>
 </form>
-<SuperDebug data={$form} />
+<Card>
+  <CardHeader>
+    <div class="flex flex-row items-center justify-between">
+      <div>
+        <CardTitle>Delete account</CardTitle>
+        <CardDescription>Delete this account's API key and models configuration.</CardDescription>
+      </div>
+    </div>
+  </CardHeader>
+
+  <CardContent>
+    <Button variant="destructive" onclick={handleDelete}>Delete</Button>
+  </CardContent>
+</Card>

@@ -22,7 +22,8 @@ INSERT INTO aiSdk (id, slug, name) VALUES
 ('mistral', 'mistral', 'Mistral'),
 ('groq', 'groq', 'Groq'),
 ('perplexity', 'perplexity', 'Perplexity'),
-('fireworks', 'fireworks', 'Fireworks');
+('fireworks', 'fireworks', 'Fireworks'),
+('cohere', 'cohere', 'Cohere');
 --> statement-breakpoint
 INSERT INTO aiService (id, name, aiSdkId, baseURL) VALUES
 ('openai', 'OpenAI', 'openai', NULL),
@@ -34,5 +35,6 @@ INSERT INTO aiService (id, name, aiSdkId, baseURL) VALUES
 ('mistral', 'Mistral', 'mistral', NULL),
 ('groq', 'Groq', 'groq', NULL),
 ('perplexity', 'Perplexity', 'perplexity', NULL),
-('fireworks', 'Fireworks', 'fireworks', NULL);
+('fireworks', 'Fireworks', 'fireworks', NULL),
+('cohere', 'Cohere', 'cohere', NULL);
 
