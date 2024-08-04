@@ -26,7 +26,7 @@
     FormFieldErrors,
     FormLabel,
   } from "@/components/ui/form";
-  import { aiAccountTable, aiModelTable, aiServiceTable, invalidateModel, useDb } from "@/database";
+  import { keyTable, modelTable, serviceTable, invalidateModel, useDb } from "@/database";
   import { and, eq, notInArray } from "drizzle-orm";
   import { nanoid } from "nanoid";
   import { goto, invalidate } from "$app/navigation";
@@ -39,9 +39,9 @@
   let { data } = $props();
 
   async function handleDelete() {
-    await useDb().delete(aiAccountTable).where(eq(aiAccountTable.id, data.aiAccount.id));
-    await invalidateModel(aiAccountTable, data.aiAccount);
-    toast.success("Account deleted");
+    await useDb().delete(keyTable).where(eq(keyTable.id, data.key.id));
+    await invalidateModel(keyTable, data.key);
+    toast.success("Key deleted");
     await goto(route(`/settings`));
   }
 
@@ -55,11 +55,11 @@
       }
       try {
         // query provider
-        const provider = await useDb().query.aiServiceTable.findFirst({
-          where: eq(aiServiceTable.id, form.data.aiServiceId),
+        const provider = await useDb().query.serviceTable.findFirst({
+          where: eq(serviceTable.id, form.data.serviceId),
         });
         if (!provider) {
-          setError(form, "aiServiceId", `Provider for ${form.data.aiServiceId} not found`);
+          setError(form, "serviceId", `Provider for ${form.data.serviceId} not found`);
           return;
         }
         // fetch models
@@ -80,27 +80,27 @@
           return;
         }
         // update account and update models
-        const aiAccountId = data.aiAccount.id;
+        const keyId = data.key.id;
         await useDb().transaction(async (tx) => {
-          console.log("updating account", form.data, aiAccountId);
-          await tx.update(aiAccountTable).set(form.data).where(eq(aiAccountTable.id, aiAccountId));
+          console.log("updating account", form.data, keyId);
+          await tx.update(keyTable).set(form.data).where(eq(keyTable.id, keyId));
           // remove models that no longer exist
           const models = (await resp.json()) as any[];
-          await tx.delete(aiModelTable).where(
+          await tx.delete(modelTable).where(
             and(
-              eq(aiModelTable.aiAccountId, aiAccountId),
+              eq(modelTable.keyId, keyId),
               notInArray(
-                aiModelTable.name,
+                modelTable.name,
                 models.map((m) => m.name),
               ),
             ),
           );
           for (const model of models) {
             await tx
-              .insert(aiModelTable)
-              .values({ id: nanoid(10), name: model.name, visible: 1, aiAccountId })
+              .insert(modelTable)
+              .values({ id: nanoid(10), name: model.name, visible: 1, keyId })
               .onConflictDoNothing({
-                target: [aiModelTable.name, aiModelTable.aiAccountId],
+                target: [modelTable.name, modelTable.keyId],
               });
           }
         });
@@ -116,8 +116,8 @@
   let { form, enhance, submitting, allErrors } = formHandle;
   let selectedAiService = $derived.by(() => {
     return {
-      label: data.aiServices.find((s) => s.id === $form.aiServiceId)?.name || "",
-      value: $form.aiServiceId,
+      label: data.services.find((s) => s.id === $form.serviceId)?.name || "",
+      value: $form.serviceId,
     };
   });
 </script>
@@ -127,21 +127,21 @@
     <CardHeader>
       <div class="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Your {data.aiAccount.aiService.name} key</CardTitle>
+          <CardTitle>Your {data.key.service.name} key</CardTitle>
           <CardDescription>Update your key.</CardDescription>
         </div>
       </div>
     </CardHeader>
     <CardContent>
       <div class="flex max-w-xl flex-col gap-4">
-        <FormField form={formHandle} name="aiServiceId">
+        <FormField form={formHandle} name="serviceId">
           <FormControl let:attrs>
             <FormLabel>AI Service</FormLabel>
             <Select
               selected={selectedAiService}
               onSelectedChange={(selected) => {
                 if (selected) {
-                  $form.aiServiceId = selected.value;
+                  $form.serviceId = selected.value;
                 }
               }}
             >
@@ -149,7 +149,7 @@
                 <SelectValue placeholder="Select an AI service" />
               </SelectTrigger>
               <SelectContent>
-                {#each data.aiServices as service (service.id)}
+                {#each data.services as service (service.id)}
                   <SelectItem image="/icons/{service.id}-16x16.png" value={service.id}>
                     {service.name}
                   </SelectItem>
@@ -198,7 +198,7 @@
   <CardHeader>
     <div class="flex flex-row items-center justify-between">
       <div>
-        <CardTitle>{data.aiAccount.aiService.name} models</CardTitle>
+        <CardTitle>{data.key.service.name} models</CardTitle>
         <CardDescription>Show or hide models displayed in the chat interface.</CardDescription>
       </div>
     </div>

@@ -5,7 +5,7 @@ import {
   type Revision,
   type Message,
   revisionTable,
-  aiAccountTable,
+  keyTable,
   useDb,
 } from "@/database";
 import { error } from "@sveltejs/kit";
@@ -45,7 +45,7 @@ export async function load({ route, url, params, depends }) {
   registerModel(chatTable, chat, depends);
 
   const services = await loadServices();
-  registerModel(aiAccountTable, services, depends);
+  registerModel(keyTable, services, depends);
 
   const version = Number(url.searchParams.get("version")) || null;
   const revision = await getRevision(params.id, version);

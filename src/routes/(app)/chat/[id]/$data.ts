@@ -5,7 +5,7 @@ import {
   documentTable,
   type InsertMessage,
   messageTable,
-  aiModelTable,
+  modelTable,
   type Revision,
   revisionTable,
   useDb,
@@ -32,7 +32,7 @@ export function tabRouteId(tab: Tab): RouteId {
 }
 
 export function loadServices() {
-  return useDb().query.aiAccountTable.findMany({
+  return useDb().query.keyTable.findMany({
     with: {
       models: true,
     },
@@ -96,8 +96,8 @@ export function getLatestRevision(chatId: string) {
 }
 
 export function getModelService(modelId: string) {
-  return useDb().query.aiModelTable.findFirst({
-    where: eq(aiModelTable.id, modelId),
+  return useDb().query.modelTable.findFirst({
+    where: eq(modelTable.id, modelId),
     with: {
       service: true,
     },

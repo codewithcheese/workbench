@@ -1,23 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  interpolateDocuments,
-  updateChat,
-  loadServices,
-  getRevision,
-  getLatestRevision,
-  getModelService,
-  createRevision,
   appendMessages,
   createRevision,
+  getLatestRevision,
+  getModelService,
+  getRevision,
+  interpolateDocuments,
   isTab,
+  loadServices,
   tabRouteId,
+  updateChat,
 } from "./$data";
 import Database from "better-sqlite3";
 import { type BetterSQLite3Database, drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "@/database/schema";
 import { runMigrations } from "@/database/migrator";
-import { and, eq } from "drizzle-orm";
-import { invalidate } from "$app/navigation";
+import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { ChatMessage } from "$lib/chat-service.svelte";
 
@@ -56,7 +54,7 @@ beforeEach(async () => {
   await runMigrations(true);
 
   // Insert test data
-  await db.insert(schema.aiAccountTable).values([
+  await db.insert(schema.keyTable).values([
     {
       id: "service1",
       name: "Test Service",
@@ -67,7 +65,7 @@ beforeEach(async () => {
   ]);
 
   await db
-    .insert(schema.aiModelTable)
+    .insert(schema.modelTable)
     .values([{ id: "model1", serviceId: "service1", name: "Test Model", visible: 1 }]);
 
   await db

@@ -11,7 +11,7 @@
   import { store } from "@/lib/store.svelte";
   import { providersById } from "@/lib/providers";
   import type { ServicesView } from "./$data";
-  import { aiModelTable, useDb } from "@/database";
+  import { modelTable, useDb } from "@/database";
   import { asc, desc, eq } from "drizzle-orm";
 
   let { services }: { services: ServicesView } = $props();
@@ -53,16 +53,16 @@
       // if nothing selected then consider it available
       return true;
     }
-    const model = await useDb().query.aiModelTable.findFirst({
-      where: eq(aiModelTable.id, store.selected.modelId),
+    const model = await useDb().query.modelTable.findFirst({
+      where: eq(modelTable.id, store.selected.modelId),
     });
     return !!(model && model.visible);
   }
 
   async function selectNextAvailableModel() {
-    const model = await useDb().query.aiModelTable.findFirst({
-      where: eq(aiModelTable.visible, 1),
-      orderBy: asc(aiModelTable.createdAt),
+    const model = await useDb().query.modelTable.findFirst({
+      where: eq(modelTable.visible, 1),
+      orderBy: asc(modelTable.createdAt),
     });
     if (!model) {
       store.selected.modelId = null;

@@ -26,7 +26,7 @@
     FormLabel,
   } from "@/components/ui/form";
   import { z } from "zod";
-  import { aiAccountTable, aiModelTable, aiServiceTable, useDb } from "@/database";
+  import { keyTable, modelTable, serviceTable, useDb } from "@/database";
   import { eq } from "drizzle-orm";
   import { nanoid } from "nanoid";
   import { goto } from "$app/navigation";
@@ -48,11 +48,11 @@
       }
       try {
         // query provider
-        const provider = await useDb().query.aiServiceTable.findFirst({
-          where: eq(aiServiceTable.id, form.data.aiServiceId),
+        const provider = await useDb().query.serviceTable.findFirst({
+          where: eq(serviceTable.id, form.data.serviceId),
         });
         if (!provider) {
-          setError(form, "aiServiceId", `Provider for ${form.data.aiServiceId} not found`);
+          setError(form, "serviceId", `Provider for ${form.data.serviceId} not found`);
           return;
         }
         // fetch models
@@ -73,24 +73,22 @@
           return;
         }
         // create account and update models
-        const accountId = nanoid(10);
+        const keyId = nanoid(10);
         await useDb().transaction(async (tx) => {
-          await tx.insert(aiAccountTable).values({
-            id: accountId,
+          await tx.insert(keyTable).values({
+            id: keyId,
             name: form.data.name,
-            aiServiceId: form.data.aiServiceId,
+            serviceId: form.data.serviceId,
             baseURL: form.data.baseURL,
             apiKey: form.data.apiKey,
           });
           const models = (await resp.json()) as any[];
           await tx
-            .insert(aiModelTable)
-            .values(
-              models.map((m) => ({ ...m, id: nanoid(10), visible: 1, aiAccountId: accountId })),
-            );
+            .insert(modelTable)
+            .values(models.map((m) => ({ ...m, id: nanoid(10), visible: 1, keyId })));
         });
         toast.success("Account added");
-        await goto(route(`/settings/ai-accounts/[id]`, { id: accountId }));
+        await goto(route(`/settings/keys/[id]`, { id: keyId }));
       } catch (e) {
         setError(form, "", e instanceof Error ? e.message : "Unknown error");
       }
@@ -112,7 +110,7 @@
     </CardHeader>
     <CardContent>
       <div class="flex max-w-xl flex-col gap-4">
-        <FormField form={formHandle} name="aiServiceId">
+        <FormField form={formHandle} name="serviceId">
           <FormControl let:attrs>
             <FormLabel>Service</FormLabel>
             <Select
@@ -120,7 +118,7 @@
               onSelectedChange={(selected) => {
                 if (selected) {
                   // @ts-expect-error not inferring selected.value as string
-                  $form.aiServiceId = selected.value;
+                  $form.serviceId = selected.value;
                 }
               }}
             >
@@ -128,7 +126,7 @@
                 <SelectValue placeholder="Select a service..." />
               </SelectTrigger>
               <SelectContent>
-                {#each data.aiServices as service (service.id)}
+                {#each data.services as service (service.id)}
                   <SelectItem image="/icons/{service.id}-16x16.png" value={service.id}>
                     {service.name}
                   </SelectItem>

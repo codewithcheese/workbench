@@ -74,42 +74,42 @@ export const attachmentTable = sqliteTable(
   }),
 );
 
-export const aiModelTable = sqliteTable(
-  "aiModel",
+export const modelTable = sqliteTable(
+  "model",
   {
     id: text("id").notNull().primaryKey(),
-    aiAccountId: text("aiAccountId")
+    keyId: text("keyId")
       .notNull()
-      .references(() => aiAccountTable.id, { onDelete: "cascade" }),
+      .references(() => keyTable.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     visible: int("visible").notNull(),
     createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
   },
   (table) => ({
-    aiAccountId_unique: unique("accountId_unique").on(table.aiAccountId, table.name),
-    aiAccountId_idx: index("accountId_idx").on(table.aiAccountId),
+    keyId_unique: unique("accountId_unique").on(table.keyId, table.name),
+    keyId_idx: index("accountId_idx").on(table.keyId),
   }),
 );
 
-export const aiAccountTable = sqliteTable("aiAccount", {
+export const keyTable = sqliteTable("key", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  aiServiceId: text("aiServiceId").notNull(),
+  serviceId: text("serviceId").notNull(),
   baseURL: text("baseURL"),
   apiKey: text("apiKey").notNull(),
   createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const aiServiceTable = sqliteTable("aiService", {
+export const serviceTable = sqliteTable("service", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  aiSdkId: text("aiSdkId").notNull(),
+  sdkId: text("sdkId").notNull(),
   baseURL: text("baseURL").notNull(),
   createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const aiSdkTable = sqliteTable(
-  "aiSdk",
+export const sdkTable = sqliteTable(
+  "sdk",
   {
     id: text("id").primaryKey(),
     slug: text("slug").notNull(),
@@ -135,8 +135,8 @@ export type Document = InferSelectModel<typeof documentTable>;
 export type Revision = InferSelectModel<typeof revisionTable>;
 export type Message = InferSelectModel<typeof messageTable>;
 export type InsertMessage = InferInsertModel<typeof messageTable>;
-export type Model = InferSelectModel<typeof aiModelTable>;
-export type Service = InferSelectModel<typeof aiAccountTable>;
+export type Model = InferSelectModel<typeof modelTable>;
+export type Service = InferSelectModel<typeof keyTable>;
 export type Chat = InferSelectModel<typeof chatTable>;
 // export type Eval = InferSelectModel<typeof evalTable>;
 
@@ -148,31 +148,31 @@ export const chatRelations = relations(chatTable, ({ many }) => ({
   revisions: many(revisionTable),
 }));
 
-export const aiModelRelations = relations(aiModelTable, ({ one }) => ({
-  aiService: one(aiAccountTable, {
-    fields: [aiModelTable.aiAccountId],
-    references: [aiAccountTable.id],
+export const modelRelations = relations(modelTable, ({ one }) => ({
+  service: one(keyTable, {
+    fields: [modelTable.keyId],
+    references: [keyTable.id],
   }),
 }));
 
-export const aiAccountRelations = relations(aiAccountTable, ({ many, one }) => ({
-  aiModels: many(aiModelTable),
-  aiService: one(aiServiceTable, {
-    fields: [aiAccountTable.aiServiceId],
-    references: [aiServiceTable.id],
+export const keyRelations = relations(keyTable, ({ many, one }) => ({
+  models: many(modelTable),
+  service: one(serviceTable, {
+    fields: [keyTable.serviceId],
+    references: [serviceTable.id],
   }),
 }));
 
-export const aiServiceRelations = relations(aiServiceTable, ({ many, one }) => ({
-  aiAccounts: many(aiAccountTable),
-  aiSdk: one(aiSdkTable, {
-    fields: [aiServiceTable.aiSdkId],
-    references: [aiSdkTable.id],
+export const serviceRelations = relations(serviceTable, ({ many, one }) => ({
+  accounts: many(keyTable),
+  sdk: one(sdkTable, {
+    fields: [serviceTable.sdkId],
+    references: [sdkTable.id],
   }),
 }));
 
-export const aiSdkRelations = relations(aiSdkTable, ({ many }) => ({
-  aiService: many(aiServiceTable),
+export const sdkRelations = relations(sdkTable, ({ many }) => ({
+  service: many(serviceTable),
 }));
 
 export const revisionRelations = relations(revisionTable, ({ one, many }) => ({

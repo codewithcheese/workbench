@@ -33,11 +33,11 @@ describe("(app)/$data", () => {
     await db.delete(schema.messageTable);
     await db.delete(schema.revisionTable);
     await db.delete(schema.chatTable);
-    await db.delete(schema.aiModelTable);
-    await db.delete(schema.aiAccountTable);
+    await db.delete(schema.modelTable);
+    await db.delete(schema.keyTable);
 
     // Insert dummy data
-    await db.insert(schema.aiAccountTable).values([
+    await db.insert(schema.keyTable).values([
       {
         id: "service1",
         name: "Test Service",
@@ -48,7 +48,7 @@ describe("(app)/$data", () => {
     ]);
 
     await db
-      .insert(schema.aiModelTable)
+      .insert(schema.modelTable)
       .values([{ id: "model1", serviceId: "service1", name: "Test Model", visible: 1 }]);
 
     await db.insert(schema.chatTable).values([

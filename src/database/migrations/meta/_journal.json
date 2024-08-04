@@ -78,6 +78,13 @@
       "when": 1722607191126,
       "tag": "0010_far_wiccan",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1722788063130,
+      "tag": "0011_easy_slapstick",
+      "breakpoints": true
     }
   ]
 }

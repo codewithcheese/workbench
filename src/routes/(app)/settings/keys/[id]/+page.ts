@@ -1,16 +1,16 @@
-import { aiAccountTable, registerModel, useDb } from "@/database";
+import { keyTable, registerModel, useDb } from "@/database";
 import { eq } from "drizzle-orm";
 import { superValidate } from "sveltekit-superforms";
 import { zod } from "sveltekit-superforms/adapters";
 import { formSchema } from "../$data";
 import { error } from "@sveltejs/kit";
-import { loadAiServices } from "../../$data.test";
+import { loadServices } from "../../$data.test";
 
 export async function load({ params, depends }) {
-  const aiAccount = await useDb().query.aiAccountTable.findFirst({
-    where: eq(aiAccountTable.id, params.id),
+  const key = await useDb().query.keyTable.findFirst({
+    where: eq(keyTable.id, params.id),
     with: {
-      aiService: {
+      service: {
         columns: {
           id: true,
           name: true,
@@ -18,14 +18,14 @@ export async function load({ params, depends }) {
       },
     },
   });
-  if (!aiAccount) {
+  if (!key) {
     return error(404, "Account not found");
   }
-  const form = await superValidate(aiAccount, zod(formSchema));
+  const form = await superValidate(key, zod(formSchema));
   depends("view:account");
   return {
     form,
-    aiAccount,
-    aiServices: await loadAiServices(),
+    key,
+    services: await loadServices(),
   };
 }

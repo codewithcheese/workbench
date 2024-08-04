@@ -3,7 +3,6 @@
   import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
   import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
   import { route } from "$lib/route";
-  import { TrashIcon } from "lucide-svelte";
 
   let { data } = $props();
 </script>
@@ -21,12 +20,12 @@
 
   <CardContent>
     <div class="flex flex-col gap-2">
-      {#if data.aiAccounts.length === 0}
+      {#if data.keys.length === 0}
         <p>No keys found.</p>
       {/if}
-      {#each data.aiAccounts as account (account.id)}
+      {#each data.keys as key (key.id)}
         <a
-          href={route(`/settings/keys/[id]`, { id: account.id })}
+          href={route(`/settings/keys/[id]`, { id: key.id })}
           class="flex cursor-pointer items-center gap-4 p-4 hover:bg-muted/50"
         >
           <Avatar class="hidden h-8 w-8 sm:flex">
@@ -34,8 +33,8 @@
             <AvatarFallback></AvatarFallback>
           </Avatar>
           <div class="grid gap-1">
-            <p class="text-sm font-medium leading-none">{account.name}</p>
-            <p class="text-sm text-muted-foreground">{account.aiService.name}</p>
+            <p class="text-sm font-medium leading-none">{key.name}</p>
+            <p class="text-sm text-muted-foreground">{key.service.name}</p>
           </div>
         </a>
       {/each}
