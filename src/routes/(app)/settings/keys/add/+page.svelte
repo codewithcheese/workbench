@@ -105,10 +105,8 @@
     <CardHeader>
       <div class="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Add AI account</CardTitle>
-          <CardDescription>
-            Select an AI service, enter your account name and API key.
-          </CardDescription>
+          <CardTitle>Add API key</CardTitle>
+          <CardDescription>Select a service and enter your API key.</CardDescription>
         </div>
       </div>
     </CardHeader>
@@ -116,7 +114,7 @@
       <div class="flex max-w-xl flex-col gap-4">
         <FormField form={formHandle} name="aiServiceId">
           <FormControl let:attrs>
-            <FormLabel>AI Service</FormLabel>
+            <FormLabel>Service</FormLabel>
             <Select
               {...attrs}
               onSelectedChange={(selected) => {
@@ -127,11 +125,13 @@
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select an AI service" />
+                <SelectValue placeholder="Select a service..." />
               </SelectTrigger>
               <SelectContent>
                 {#each data.aiServices as service (service.id)}
-                  <SelectItem value={service.id}>{service.name}</SelectItem>
+                  <SelectItem image="/icons/{service.id}-16x16.png" value={service.id}>
+                    {service.name}
+                  </SelectItem>
                 {/each}
               </SelectContent>
             </Select>
@@ -140,7 +140,7 @@
         </FormField>
         <FormField form={formHandle} name="name">
           <FormControl let:attrs>
-            <FormLabel>Account name</FormLabel>
+            <FormLabel>Key name</FormLabel>
             <Input {...attrs} bind:value={$form.name} />
           </FormControl>
           <FormFieldErrors />

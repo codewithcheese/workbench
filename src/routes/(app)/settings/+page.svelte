@@ -12,26 +12,26 @@
   <CardHeader>
     <div class="flex flex-row items-center justify-between">
       <div>
-        <CardTitle>Your AI accounts</CardTitle>
-        <CardDescription>Manage your AI accounts; API keys and models.</CardDescription>
+        <CardTitle>Your keys</CardTitle>
+        <CardDescription>Manage your API keys.</CardDescription>
       </div>
-      <Button href={route("/settings/ai-accounts/add")}>Add account</Button>
+      <Button href={route("/settings/keys/add")}>Add API key</Button>
     </div>
   </CardHeader>
 
   <CardContent>
     <div class="flex flex-col gap-2">
       {#if data.aiAccounts.length === 0}
-        <p>None found.</p>
+        <p>No keys found.</p>
       {/if}
       {#each data.aiAccounts as account (account.id)}
         <a
-          href={route(`/settings/ai-accounts/[id]`, { id: account.id })}
+          href={route(`/settings/keys/[id]`, { id: account.id })}
           class="flex cursor-pointer items-center gap-4 p-4 hover:bg-muted/50"
         >
           <Avatar class="hidden h-8 w-8 sm:flex">
             <AvatarImage src="/icons/openai-32x32.png" alt="Avatar" />
-            <AvatarFallback>OM</AvatarFallback>
+            <AvatarFallback></AvatarFallback>
           </Avatar>
           <div class="grid gap-1">
             <p class="text-sm font-medium leading-none">{account.name}</p>

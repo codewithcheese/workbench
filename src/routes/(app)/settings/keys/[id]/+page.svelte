@@ -127,8 +127,8 @@
     <CardHeader>
       <div class="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Your {data.aiAccount.aiService.name} account</CardTitle>
-          <CardDescription>Update your account settings.</CardDescription>
+          <CardTitle>Your {data.aiAccount.aiService.name} key</CardTitle>
+          <CardDescription>Update your key.</CardDescription>
         </div>
       </div>
     </CardHeader>
@@ -150,7 +150,9 @@
               </SelectTrigger>
               <SelectContent>
                 {#each data.aiServices as service (service.id)}
-                  <SelectItem value={service.id}>{service.name}</SelectItem>
+                  <SelectItem image="/icons/{service.id}-16x16.png" value={service.id}>
+                    {service.name}
+                  </SelectItem>
                 {/each}
               </SelectContent>
             </Select>
@@ -159,7 +161,7 @@
         </FormField>
         <FormField form={formHandle} name="name">
           <FormControl let:attrs>
-            <FormLabel>Account name</FormLabel>
+            <FormLabel>Key name</FormLabel>
             <Input {...attrs} bind:value={$form.name} />
           </FormControl>
           <FormFieldErrors />
@@ -196,8 +198,22 @@
   <CardHeader>
     <div class="flex flex-row items-center justify-between">
       <div>
-        <CardTitle>Delete account</CardTitle>
-        <CardDescription>Delete this account's API key and models configuration.</CardDescription>
+        <CardTitle>{data.aiAccount.aiService.name} models</CardTitle>
+        <CardDescription>Show or hide models displayed in the chat interface.</CardDescription>
+      </div>
+    </div>
+  </CardHeader>
+
+  <CardContent>
+    <Button variant="destructive" onclick={handleDelete}>Delete</Button>
+  </CardContent>
+</Card>
+<Card>
+  <CardHeader>
+    <div class="flex flex-row items-center justify-between">
+      <div>
+        <CardTitle>Delete key</CardTitle>
+        <CardDescription>Delete this API key and models configuration.</CardDescription>
       </div>
     </div>
   </CardHeader>
