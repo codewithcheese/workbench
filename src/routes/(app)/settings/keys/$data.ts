@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { invalidateModel, type Model, modelTable, type Service, keyTable, useDb } from "@/database";
+import { invalidateModel, type Model, modelTable, type Key, keyTable, useDb } from "@/database";
 import type { Provider } from "$lib/providers";
 import { and, asc, eq, notInArray } from "drizzle-orm";
 import { invalidate } from "$app/navigation";
@@ -41,7 +41,7 @@ export async function addService(provider: Provider) {
   return result[0];
 }
 
-export async function deleteService(service: Service) {
+export async function deleteService(service: Key) {
   await useDb().transaction(async (tx) => {
     await tx.delete(modelTable).where(eq(modelTable.serviceId, service.id));
     await tx.delete(keyTable).where(eq(keyTable.id, service.id));
@@ -49,7 +49,7 @@ export async function deleteService(service: Service) {
   await invalidateModel(keyTable, service);
 }
 
-export async function updateService(service: Service) {
+export async function updateService(service: Key) {
   console.time("updateService");
   await useDb()
     .update(keyTable)
@@ -59,7 +59,7 @@ export async function updateService(service: Service) {
   await invalidateModel(keyTable, service);
 }
 
-export async function replaceModels(service: Service, newModels: any[]) {
+export async function replaceModels(service: Key, newModels: any[]) {
   console.time("replaceModels");
   await useDb().transaction(async (tx) => {
     // remove models that no longer exist
@@ -86,7 +86,7 @@ export async function replaceModels(service: Service, newModels: any[]) {
   await invalidateModel(keyTable, service);
 }
 
-export async function toggleVisible(service: Service, model: Model) {
+export async function toggleVisible(service: Key, model: Model) {
   await useDb()
     .update(modelTable)
     .set({ visible: model.visible ? 0 : 1 })
@@ -95,7 +95,7 @@ export async function toggleVisible(service: Service, model: Model) {
   await invalidateModel(modelTable, model);
 }
 
-export async function toggleAllVisible(service: Service, visible: 1 | 0) {
+export async function toggleAllVisible(service: Key, visible: 1 | 0) {
   console.time("toggleAllVisible");
   await useDb().update(modelTable).set({ visible }).where(eq(modelTable.serviceId, service.id));
   console.timeEnd("toggleAllVisible");

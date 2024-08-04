@@ -136,7 +136,9 @@ export type Revision = InferSelectModel<typeof revisionTable>;
 export type Message = InferSelectModel<typeof messageTable>;
 export type InsertMessage = InferInsertModel<typeof messageTable>;
 export type Model = InferSelectModel<typeof modelTable>;
-export type Service = InferSelectModel<typeof keyTable>;
+export type Key = InferSelectModel<typeof keyTable>;
+export type Service = InferSelectModel<typeof serviceTable>;
+export type Sdk = InferSelectModel<typeof sdkTable>;
 export type Chat = InferSelectModel<typeof chatTable>;
 // export type Eval = InferSelectModel<typeof evalTable>;
 

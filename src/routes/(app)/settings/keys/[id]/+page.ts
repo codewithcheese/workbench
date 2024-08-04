@@ -10,6 +10,7 @@ export async function load({ params, depends }) {
   const key = await useDb().query.keyTable.findFirst({
     where: eq(keyTable.id, params.id),
     with: {
+      models: true,
       service: {
         columns: {
           id: true,

@@ -30,11 +30,16 @@
   import { and, eq, notInArray } from "drizzle-orm";
   import { nanoid } from "nanoid";
   import { goto, invalidate } from "$app/navigation";
-  import { LoaderCircle, TriangleAlertIcon } from "lucide-svelte";
+  import { EyeIcon, LoaderCircle, RefreshCwIcon, TriangleAlertIcon } from "lucide-svelte";
   import { cn } from "$lib/cn";
   import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
   import { toast } from "svelte-french-toast";
   import { route } from "$lib/route";
+  import { toggleAllVisible, toggleVisible } from "../../../chat/[id]/[...rest]/config/$data";
+  import { Separator } from "@/components/ui/separator";
+  import { Label } from "@/components/ui/label";
+  import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+  import { Toggle } from "@/components/ui/toggle";
 
   let { data } = $props();
 
@@ -120,6 +125,8 @@
       value: $form.serviceId,
     };
   });
+
+  async function updateModels() {}
 </script>
 
 <form use:enhance method="post">
@@ -195,17 +202,62 @@
   </Card>
 </form>
 <Card>
-  <CardHeader>
+  <CardHeader class="pb-0">
     <div class="flex flex-row items-center justify-between">
       <div>
         <CardTitle>{data.key.service.name} models</CardTitle>
         <CardDescription>Show or hide models displayed in the chat interface.</CardDescription>
       </div>
+      <Button variant="outline" onclick={updateModels}>
+        <RefreshCwIcon class={cn("mr-2 h-4 w-4", false && "loading-icon")} />
+        Refresh Models
+      </Button>
+    </div>
+    <div class="flex justify-end gap-1">
+      <Button
+        class="p-2 text-sm underline"
+        variant="ghost"
+        onclick={async () => {
+          await toggleAllVisible(data.key, 1);
+        }}
+      >
+        Show All
+      </Button>
+      <Button
+        class="p-2 text-sm underline"
+        variant="ghost"
+        onclick={async () => {
+          await toggleAllVisible(data.key, 0);
+        }}
+      >
+        Hide All
+      </Button>
     </div>
   </CardHeader>
 
   <CardContent>
-    <Button variant="destructive" onclick={handleDelete}>Delete</Button>
+    {#if data.key.models.length > 0}
+      <div class="min-h-[300px] w-full">
+        <Table>
+          <TableBody>
+            {#each data.key.models as model (model.id)}
+              <TableRow
+                class={cn("cursor-pointer", model.visible === 1 ? "" : "opacity-50")}
+                onclick={() => toggleVisible(data.key, model)}
+              >
+                <TableCell class="p-1 pl-4 font-normal">{model.name}</TableCell>
+                <TableCell class="p-1">
+                  <Toggle aria-label="Toggle Model Visibility" />
+                </TableCell>
+                <TableCell class="p-1">
+                  <EyeIcon class="h-4 w-4" />
+                </TableCell>
+              </TableRow>
+            {/each}
+          </TableBody>
+        </Table>
+      </div>
+    {/if}
   </CardContent>
 </Card>
 <Card>
