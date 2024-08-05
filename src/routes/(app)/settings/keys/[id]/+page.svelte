@@ -18,7 +18,7 @@
   } from "@/components/ui/select";
   import { setError, superForm } from "sveltekit-superforms";
   import { zodClient } from "sveltekit-superforms/adapters";
-  import { formSchema } from "../$data";
+  import { formSchema, refreshModels, toggleAllVisible, toggleVisible } from "../$data";
   import {
     FormButton,
     FormControl,
@@ -26,7 +26,7 @@
     FormFieldErrors,
     FormLabel,
   } from "@/components/ui/form";
-  import { keyTable, modelTable, serviceTable, invalidateModel, useDb } from "@/database";
+  import { invalidateModel, keyTable, modelTable, serviceTable, useDb } from "@/database";
   import { and, eq, notInArray } from "drizzle-orm";
   import { nanoid } from "nanoid";
   import { goto, invalidate } from "$app/navigation";
@@ -35,11 +35,9 @@
   import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
   import { toast } from "svelte-french-toast";
   import { route } from "$lib/route";
-  import { toggleAllVisible, toggleVisible } from "../../../chat/[id]/[...rest]/config/$data";
-  import { Separator } from "@/components/ui/separator";
-  import { Label } from "@/components/ui/label";
   import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
   import { Toggle } from "@/components/ui/toggle";
+  import { page } from "$app/stores";
 
   let { data } = $props();
 
@@ -91,23 +89,7 @@
           await tx.update(keyTable).set(form.data).where(eq(keyTable.id, keyId));
           // remove models that no longer exist
           const models = (await resp.json()) as any[];
-          await tx.delete(modelTable).where(
-            and(
-              eq(modelTable.keyId, keyId),
-              notInArray(
-                modelTable.name,
-                models.map((m) => m.name),
-              ),
-            ),
-          );
-          for (const model of models) {
-            await tx
-              .insert(modelTable)
-              .values({ id: nanoid(10), name: model.name, visible: 1, keyId })
-              .onConflictDoNothing({
-                target: [modelTable.name, modelTable.keyId],
-              });
-          }
+          await refreshModels(tx, data.key, models);
         });
         await invalidate("view:account");
         toast.success("Account updated");
@@ -126,7 +108,13 @@
     };
   });
 
-  async function updateModels() {}
+  async function handleRefreshModels() {
+    await useDb().transaction(async (tx) => {
+      await refreshModels(tx, data.key, data.key.models);
+    });
+    toast.success("Models refreshed");
+    await invalidateModel(keyTable, data.key);
+  }
 </script>
 
 <form use:enhance method="post">
@@ -208,7 +196,7 @@
         <CardTitle>{data.key.service.name} models</CardTitle>
         <CardDescription>Show or hide models displayed in the chat interface.</CardDescription>
       </div>
-      <Button variant="outline" onclick={updateModels}>
+      <Button variant="outline" onclick={handleRefreshModels}>
         <RefreshCwIcon class={cn("mr-2 h-4 w-4", false && "loading-icon")} />
         Refresh Models
       </Button>

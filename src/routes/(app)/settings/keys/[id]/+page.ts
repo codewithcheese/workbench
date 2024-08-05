@@ -23,7 +23,7 @@ export async function load({ params, depends }) {
     return error(404, "Account not found");
   }
   const form = await superValidate(key, zod(formSchema));
-  depends("view:account");
+  registerModel(keyTable, key, depends);
   return {
     form,
     key,
