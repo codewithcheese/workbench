@@ -29,7 +29,7 @@
           class="flex cursor-pointer items-center gap-4 p-4 hover:bg-muted/50"
         >
           <Avatar class="hidden h-8 w-8 sm:flex">
-            <AvatarImage src="/icons/openai-32x32.png" alt="Avatar" />
+            <AvatarImage src={`/icons/${key.service.id}-32x32.png`} alt="Avatar" />
             <AvatarFallback></AvatarFallback>
           </Avatar>
           <div class="grid gap-1">

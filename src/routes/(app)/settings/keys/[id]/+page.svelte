@@ -18,7 +18,13 @@
   } from "@/components/ui/select";
   import { setError, superForm } from "sveltekit-superforms";
   import { zodClient } from "sveltekit-superforms/adapters";
-  import { formSchema, refreshModels, toggleAllVisible, toggleVisible } from "../$data";
+  import {
+    fetchModels,
+    formSchema,
+    refreshModels,
+    toggleAllVisible,
+    toggleVisible,
+  } from "../$data";
   import {
     FormButton,
     FormControl,
@@ -56,25 +62,21 @@
       }
       try {
         // query provider
-        const provider = await useDb().query.serviceTable.findFirst({
+        const service = await useDb().query.serviceTable.findFirst({
           where: eq(serviceTable.id, form.data.serviceId),
+          with: { sdk: true },
         });
-        if (!provider) {
-          setError(form, "serviceId", `Provider for ${form.data.serviceId} not found`);
+        if (!service) {
+          setError(form, "serviceId", `Service for ${form.data.serviceId} not found`);
           return;
         }
         // fetch models
-        const resp = await fetch("/api/models", {
-          method: "POST",
-          headers: {
-            Authorization: form.data.apiKey,
-            ContentType: "application/json",
-          },
-          body: JSON.stringify({
-            providerId: provider.id,
-            baseURL: form.data.baseURL,
-          }),
-        });
+        const resp = await fetchModels(
+          form.data.apiKey,
+          form.data.baseURL,
+          service.sdk.id,
+          service.id,
+        );
         if (!resp.ok) {
           // if failed to fetch models, ask user to update API key
           setError(form, "apiKey", resp.statusText);
@@ -83,14 +85,12 @@
         // update account and update models
         const keyId = data.key.id;
         await useDb().transaction(async (tx) => {
-          console.log("updating account", form.data, keyId);
           await tx.update(keyTable).set(form.data).where(eq(keyTable.id, keyId));
-          // remove models that no longer exist
           const models = (await resp.json()) as any[];
-          await refreshModels(tx, data.key, models);
+          await refreshModels(tx, keyId, models);
         });
-        await invalidate("view:account");
-        toast.success("Account updated");
+        await invalidateModel(keyTable, data.key);
+        toast.success("Key updated");
         return form;
       } catch (e) {
         setError(form, "", e instanceof Error ? e.message : "Unknown error");
@@ -108,7 +108,7 @@
 
   async function handleRefreshModels() {
     await useDb().transaction(async (tx) => {
-      await refreshModels(tx, data.key, data.key.models);
+      await refreshModels(tx, data.key.id, data.key.models);
     });
     toast.success("Models refreshed");
     await invalidateModel(keyTable, data.key);
@@ -163,6 +163,18 @@
           <FormControl let:attrs>
             <FormLabel>API Key</FormLabel>
             <Input type="password" {...attrs} bind:value={$form.apiKey} />
+          </FormControl>
+          <FormFieldErrors />
+        </FormField>
+        <FormField form={formHandle} name="baseURL">
+          <FormControl let:attrs>
+            <FormLabel>Base URL</FormLabel>
+            <Input
+              placeholder="Leave blank to use default"
+              type="text"
+              {...attrs}
+              bind:value={$form.baseURL}
+            />
           </FormControl>
           <FormFieldErrors />
         </FormField>
@@ -223,7 +235,7 @@
 
   <CardContent>
     {#if data.key.models.length > 0}
-      <div class="min-h-[300px] w-full">
+      <div class="w-full">
         <Table>
           <TableBody>
             {#each data.key.models as model (model.id)}

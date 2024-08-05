@@ -968,7 +968,7 @@ describe("Migration Tests", () => {
 
     // Verify that the initial data was inserted correctly
     const aiSdkCount = db.get<{ count: number }>(sql`SELECT COUNT(*) as count FROM aiSdk`).count;
-    expect(aiSdkCount).toBe(11); // 11 SDKs were inserted
+    expect(aiSdkCount).toBe(8); // 11 SDKs were inserted
 
     const aiServiceCount = db.get<{ count: number }>(
       sql`SELECT COUNT(*) as count FROM aiService`,

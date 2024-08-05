@@ -15,9 +15,9 @@
     SelectTrigger,
     SelectValue,
   } from "@/components/ui/select";
-  import SuperDebug, { setError, superForm } from "sveltekit-superforms";
+  import { setError, superForm } from "sveltekit-superforms";
   import { zodClient } from "sveltekit-superforms/adapters";
-  import { formSchema } from "../$data";
+  import { fetchModels, formSchema, refreshModels } from "../$data";
   import {
     FormButton,
     FormControl,
@@ -25,7 +25,6 @@
     FormFieldErrors,
     FormLabel,
   } from "@/components/ui/form";
-  import { z } from "zod";
   import { keyTable, modelTable, serviceTable, useDb } from "@/database";
   import { eq } from "drizzle-orm";
   import { nanoid } from "nanoid";
@@ -36,9 +35,10 @@
   import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
   import { toast } from "svelte-french-toast";
 
-  export async function fetchModels(form: z.infer<typeof formSchema>) {}
-
   let { data } = $props();
+
+  console.log("data", data);
+
   const formHandle = superForm(data.form, {
     SPA: true,
     validators: zodClient(formSchema),
@@ -47,26 +47,22 @@
         return;
       }
       try {
-        // query provider
-        const provider = await useDb().query.serviceTable.findFirst({
+        // query service
+        const service = await useDb().query.serviceTable.findFirst({
           where: eq(serviceTable.id, form.data.serviceId),
+          with: { sdk: true },
         });
-        if (!provider) {
-          setError(form, "serviceId", `Provider for ${form.data.serviceId} not found`);
+        if (!service) {
+          setError(form, "serviceId", `Service for ${form.data.serviceId} not found`);
           return;
         }
         // fetch models
-        const resp = await fetch("/api/models", {
-          method: "POST",
-          headers: {
-            Authorization: form.data.apiKey,
-            ContentType: "application/json",
-          },
-          body: JSON.stringify({
-            providerId: provider.id,
-            baseURL: form.data.baseURL,
-          }),
-        });
+        const resp = await fetchModels(
+          form.data.apiKey,
+          form.data.baseURL,
+          service.sdk.id,
+          service.id,
+        );
         if (!resp.ok) {
           // if failed to fetch models, ask user to update API key
           setError(form, "apiKey", resp.statusText);
@@ -83,11 +79,9 @@
             apiKey: form.data.apiKey,
           });
           const models = (await resp.json()) as any[];
-          await tx
-            .insert(modelTable)
-            .values(models.map((m) => ({ ...m, id: nanoid(10), visible: 1, keyId })));
+          await refreshModels(tx, keyId, models);
         });
-        toast.success("Account added");
+        toast.success("Key added");
         await goto(route(`/settings/keys/[id]`, { id: keyId }));
       } catch (e) {
         setError(form, "", e instanceof Error ? e.message : "Unknown error");
@@ -119,6 +113,8 @@
                 if (selected) {
                   // @ts-expect-error not inferring selected.value as string
                   $form.serviceId = selected.value;
+                  $form.baseURL =
+                    data.services.find((s) => s.id === selected.value)?.baseURL ?? null;
                 }
               }}
             >
@@ -127,9 +123,11 @@
               </SelectTrigger>
               <SelectContent>
                 {#each data.services as service (service.id)}
-                  <SelectItem image="/icons/{service.id}-16x16.png" value={service.id}>
-                    {service.name}
-                  </SelectItem>
+                  {#if service.sdk.supported}
+                    <SelectItem image="/icons/{service.id}-16x16.png" value={service.id}>
+                      {service.name}
+                    </SelectItem>
+                  {/if}
                 {/each}
               </SelectContent>
             </Select>
@@ -147,6 +145,18 @@
           <FormControl let:attrs>
             <FormLabel>API Key</FormLabel>
             <Input type="password" {...attrs} bind:value={$form.apiKey} />
+          </FormControl>
+          <FormFieldErrors />
+        </FormField>
+        <FormField form={formHandle} name="baseURL">
+          <FormControl let:attrs>
+            <FormLabel>Base URL</FormLabel>
+            <Input
+              placeholder="Leave blank to use default"
+              type="text"
+              {...attrs}
+              bind:value={$form.baseURL}
+            />
           </FormControl>
           <FormFieldErrors />
         </FormField>

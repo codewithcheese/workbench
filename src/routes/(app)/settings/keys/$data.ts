@@ -20,14 +20,34 @@ export async function loadServices() {
   return useDb().query.serviceTable.findMany({ with: { sdk: true } });
 }
 
+export async function fetchModels(
+  apiKey: string,
+  baseURL: string | null,
+  sdkId: string,
+  serviceId: string,
+) {
+  return await fetch("/api/models", {
+    method: "POST",
+    headers: {
+      Authorization: apiKey,
+      ContentType: "application/json",
+    },
+    body: JSON.stringify({
+      sdkId,
+      baseURL,
+      serviceId,
+    }),
+  });
+}
+
 export async function refreshModels(
   tx: SQLiteTransaction<any, any, any, any>,
-  key: Key,
+  keyId: string,
   models: any[],
 ) {
   await tx.delete(modelTable).where(
     and(
-      eq(modelTable.keyId, key.id),
+      eq(modelTable.keyId, keyId),
       notInArray(
         modelTable.name,
         models.map((m) => m.name),
@@ -37,7 +57,7 @@ export async function refreshModels(
   for (const model of models) {
     await tx
       .insert(modelTable)
-      .values({ id: nanoid(10), name: model.name, visible: 1, keyId: key.id })
+      .values({ id: nanoid(10), name: model.name, visible: 1, keyId })
       .onConflictDoNothing({
         target: [modelTable.name, modelTable.keyId],
       });

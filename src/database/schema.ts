@@ -114,6 +114,7 @@ export const sdkTable = sqliteTable(
     id: text("id").primaryKey(),
     slug: text("slug").notNull(),
     name: text("name").notNull(),
+    supported: int("supported").notNull().default(1),
   },
   (table) => ({
     slugUnique: unique("slug_unique").on(table.slug),

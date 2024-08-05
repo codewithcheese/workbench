@@ -4,6 +4,8 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createMistral } from "@ai-sdk/mistral";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createAzure } from "@ai-sdk/azure";
+import { createCohere } from "@ai-sdk/cohere";
 
 export const POST = (async ({ request }) => {
   let { messages, sdkId, apiKey, baseURL, modelName } = (await request.json()) as {
@@ -24,6 +26,9 @@ export const POST = (async ({ request }) => {
 
   let provider;
   switch (sdkId) {
+    case "azure":
+      provider = createAzure({ apiKey, baseURL });
+      break;
     case "openai":
       provider = createOpenAI({ apiKey, baseURL });
       break;
@@ -33,8 +38,11 @@ export const POST = (async ({ request }) => {
     case "mistral":
       provider = createMistral({ apiKey, baseURL });
       break;
-    case "google":
+    case "google-gen-ai":
       provider = createGoogleGenerativeAI({ apiKey, baseURL });
+      break;
+    case "cohere":
+      provider = createCohere({ apiKey });
       break;
     default:
       return new Response(`Unsupported sdk ${sdkId}`, {
@@ -44,7 +52,7 @@ export const POST = (async ({ request }) => {
 
   try {
     const result = await streamText({
-      model: provider.chat(modelName),
+      model: provider(modelName),
       messages,
     });
     return new StreamingTextResponse(result.toAIStream());

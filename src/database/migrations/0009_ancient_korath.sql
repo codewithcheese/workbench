@@ -20,9 +20,6 @@ INSERT INTO aiSdk (id, slug, name) VALUES
 ('google-gen-ai', 'google-gen-ai', 'Google Generative AI'),
 ('google-vertex', 'google-vertex', 'Google Vertex AI'),
 ('mistral', 'mistral', 'Mistral'),
-('groq', 'groq', 'Groq'),
-('perplexity', 'perplexity', 'Perplexity'),
-('fireworks', 'fireworks', 'Fireworks'),
 ('cohere', 'cohere', 'Cohere');
 --> statement-breakpoint
 INSERT INTO aiService (id, name, aiSdkId, baseURL) VALUES
@@ -33,8 +30,8 @@ INSERT INTO aiService (id, name, aiSdkId, baseURL) VALUES
 ('google-gen-ai', 'Google Generative AI', 'google-gen-ai', NULL),
 ('google-vertex', 'Google Vertex AI', 'google-vertex', NULL),
 ('mistral', 'Mistral', 'mistral', NULL),
-('groq', 'Groq', 'groq', NULL),
-('perplexity', 'Perplexity', 'perplexity', NULL),
-('fireworks', 'Fireworks', 'fireworks', NULL),
+('groq', 'Groq', 'openai', 'https://api.groq.com/openai/v1'),
+('perplexity', 'Perplexity', 'openai', 'https://api.perplexity.ai/'),
+('fireworks', 'Fireworks', 'openai', 'https://api.fireworks.ai/inference/v1'),
 ('cohere', 'Cohere', 'cohere', NULL);
 
