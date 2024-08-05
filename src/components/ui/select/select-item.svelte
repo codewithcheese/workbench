@@ -31,7 +31,7 @@
   on:pointermove
 >
   {#if image}
-    <img src={image} alt={label || value || "item"} class="absolute left-2 h-4 w-4" />
+    <img src={image} alt={label} class="absolute left-2 h-4 w-4" />
   {:else}
     <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>

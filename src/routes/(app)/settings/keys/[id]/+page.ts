@@ -2,9 +2,8 @@ import { keyTable, registerModel, useDb } from "@/database";
 import { eq } from "drizzle-orm";
 import { superValidate } from "sveltekit-superforms";
 import { zod } from "sveltekit-superforms/adapters";
-import { formSchema } from "../$data";
+import { formSchema, loadServices } from "../$data";
 import { error } from "@sveltejs/kit";
-import { loadServices } from "../../$data.test";
 
 export async function load({ params, depends }) {
   const key = await useDb().query.keyTable.findFirst({

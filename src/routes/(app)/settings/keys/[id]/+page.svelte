@@ -26,9 +26,8 @@
     FormFieldErrors,
     FormLabel,
   } from "@/components/ui/form";
-  import { invalidateModel, keyTable, modelTable, serviceTable, useDb } from "@/database";
-  import { and, eq, notInArray } from "drizzle-orm";
-  import { nanoid } from "nanoid";
+  import { invalidateModel, keyTable, serviceTable, useDb } from "@/database";
+  import { eq } from "drizzle-orm";
   import { goto, invalidate } from "$app/navigation";
   import { EyeIcon, LoaderCircle, RefreshCwIcon, TriangleAlertIcon } from "lucide-svelte";
   import { cn } from "$lib/cn";
@@ -37,7 +36,6 @@
   import { route } from "$lib/route";
   import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
   import { Toggle } from "@/components/ui/toggle";
-  import { page } from "$app/stores";
 
   let { data } = $props();
 
@@ -45,7 +43,7 @@
     await useDb().delete(keyTable).where(eq(keyTable.id, data.key.id));
     await invalidateModel(keyTable, data.key);
     toast.success("Key deleted");
-    await goto(route(`/settings`));
+    await goto(route(`/settings/keys`));
   }
 
   const formHandle = superForm(data.form, {

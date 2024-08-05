@@ -6,7 +6,7 @@
   import {
     appendMessages,
     createRevision,
-    getModelService,
+    getModelKey,
     type RevisionView,
     toChatMessage,
   } from "./$data";
@@ -69,7 +69,7 @@
       toast.error("No model selected");
       return false;
     }
-    const model = await getModelService(store.selected.modelId);
+    const model = await getModelKey(store.selected.modelId);
     if (!model) {
       toast.error("Selected model not found");
       return false;
@@ -90,10 +90,10 @@
     chatService.submit({
       options: {
         body: {
-          providerId: model.service.providerId,
+          sdkId: model.key.service.sdk.id,
           modelName: model.name,
-          baseURL: model.service.baseURL,
-          apiKey: model.service.apiKey,
+          baseURL: model.key.baseURL,
+          apiKey: model.key.apiKey,
         },
       },
     });

@@ -1,22 +1,7 @@
 import { eq } from "drizzle-orm";
-import {
-  chatTable,
-  registerModel,
-  type Revision,
-  type Message,
-  revisionTable,
-  keyTable,
-  useDb,
-} from "@/database";
+import { chatTable, keyTable, registerModel, revisionTable, useDb } from "@/database";
 import { error } from "@sveltejs/kit";
-import {
-  createRevision,
-  getLatestRevision,
-  getRevision,
-  loadServices,
-  type RevisionView,
-  type Tab,
-} from "./$data";
+import { getKeys, getRevision, type Tab } from "./$data";
 import { match } from "$lib/route";
 
 export async function load({ route, url, params, depends }) {
@@ -44,8 +29,8 @@ export async function load({ route, url, params, depends }) {
   }
   registerModel(chatTable, chat, depends);
 
-  const services = await loadServices();
-  registerModel(keyTable, services, depends);
+  const keys = await getKeys();
+  registerModel(keyTable, keys, depends);
 
   const version = Number(url.searchParams.get("version")) || null;
   const revision = await getRevision(params.id, version);
@@ -55,5 +40,5 @@ export async function load({ route, url, params, depends }) {
   registerModel(revisionTable, revision, depends);
   depends("view:messages");
   depends("view:chat");
-  return { chat, services, tab, revision, version };
+  return { chat, keys, tab, revision, version };
 }

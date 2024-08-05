@@ -6,22 +6,24 @@ import { createMistral } from "@ai-sdk/mistral";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 export const POST = (async ({ request }) => {
-  const { messages, providerId, apiKey, baseURL, modelName } = (await request.json()) as {
+  let { messages, sdkId, apiKey, baseURL, modelName } = (await request.json()) as {
     messages: any[];
-    providerId: string;
+    sdkId: string;
     baseURL: string;
     apiKey: string;
     modelName: string;
   };
 
-  if (!providerId || !baseURL || !modelName) {
+  baseURL = baseURL ?? undefined;
+
+  if (!sdkId || !modelName) {
     return new Response(`Malformed request`, {
       status: 400,
     });
   }
 
   let provider;
-  switch (providerId) {
+  switch (sdkId) {
     case "openai":
       provider = createOpenAI({ apiKey, baseURL });
       break;
@@ -35,7 +37,7 @@ export const POST = (async ({ request }) => {
       provider = createGoogleGenerativeAI({ apiKey, baseURL });
       break;
     default:
-      return new Response(`Unsupported provider ${providerId}`, {
+      return new Response(`Unsupported sdk ${sdkId}`, {
         status: 400,
       });
   }

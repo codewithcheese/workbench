@@ -151,7 +151,7 @@ export const chatRelations = relations(chatTable, ({ many }) => ({
 }));
 
 export const modelRelations = relations(modelTable, ({ one }) => ({
-  service: one(keyTable, {
+  key: one(keyTable, {
     fields: [modelTable.keyId],
     references: [keyTable.id],
   }),

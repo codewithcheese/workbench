@@ -17,7 +17,7 @@ import { sql } from "drizzle-orm/sql";
 import type { RouteId } from "$lib/route";
 import type { MessageAttachment, ChatMessage } from "$lib/chat-service.svelte";
 
-export type ServicesView = Awaited<ReturnType<typeof loadServices>>;
+export type KeysView = Awaited<ReturnType<typeof getKeys>>;
 
 export type RevisionView = NonNullable<Awaited<ReturnType<typeof getRevision>>>;
 
@@ -31,10 +31,11 @@ export function tabRouteId(tab: Tab): RouteId {
   return tab === "chat" ? `/chat/[id]` : `/chat/[id]/${tab}`;
 }
 
-export function loadServices() {
+export function getKeys() {
   return useDb().query.keyTable.findMany({
     with: {
       models: true,
+      service: true,
     },
   });
 }
@@ -95,11 +96,28 @@ export function getLatestRevision(chatId: string) {
   });
 }
 
-export function getModelService(modelId: string) {
+export function getModelKey(modelId: string) {
   return useDb().query.modelTable.findFirst({
     where: eq(modelTable.id, modelId),
     with: {
-      service: true,
+      key: {
+        with: {
+          service: {
+            columns: {
+              id: true,
+              name: true,
+            },
+            with: {
+              sdk: {
+                columns: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
 }

@@ -10,7 +10,7 @@
   import { toast } from "svelte-french-toast";
 
   let { data } = $props();
-  let services = $derived(data.services);
+  let keys = $derived(data.keys);
   let chat = $derived(data.chat);
   let revision = $derived(data.revision);
 
@@ -52,7 +52,7 @@
   </nav>
   <div class="relative ml-auto flex-1 md:grow-0">
     <div class="flex flex-row">
-      <SelectModel {services} />
+      <SelectModel {keys} />
       <Button variant="ghost" onclick={() => goto(route(`/settings`))}>
         <SettingsIcon size={16} />
       </Button>

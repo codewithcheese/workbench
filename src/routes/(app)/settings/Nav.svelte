@@ -8,10 +8,16 @@
   class="grid gap-4 text-sm text-muted-foreground"
   data-x-chunk-container="chunk-container after:right-0"
 >
-  <a href={route("/settings")} class={match("/settings", $page.url.pathname) ? "active" : ""}>
+  <a
+    href={route("/settings/keys")}
+    class={match("/settings/keys", $page.url.pathname) ? "active" : ""}
+  >
     API Keys
   </a>
-  <a href={route("/settings")} class={match("/settings", $page.url.pathname) ? "active" : ""}>
+  <a
+    href={route("/settings/titles")}
+    class={match("/settings/titles", $page.url.pathname) ? "active" : ""}
+  >
     Title Generation
   </a>
 </nav>

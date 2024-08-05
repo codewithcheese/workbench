@@ -3,11 +3,11 @@ import {
   appendMessages,
   createRevision,
   getLatestRevision,
-  getModelService,
+  getModelKey,
   getRevision,
   interpolateDocuments,
   isTab,
-  loadServices,
+  getKeys,
   tabRouteId,
   updateChat,
 } from "./$data";
@@ -54,11 +54,28 @@ beforeEach(async () => {
   await runMigrations(true);
 
   // Insert test data
-  await db.insert(schema.keyTable).values([
+  await db.insert(schema.sdkTable).values([
+    {
+      id: "sdk1",
+      name: "Test SDK",
+      slug: "test-sdk",
+    },
+  ]);
+
+  await db.insert(schema.serviceTable).values([
     {
       id: "service1",
       name: "Test Service",
-      providerId: "provider1",
+      sdkId: "sdk1",
+      baseURL: "https://api.test.com",
+    },
+  ]);
+
+  await db.insert(schema.keyTable).values([
+    {
+      id: "key1",
+      name: "Test Key",
+      serviceId: "service1",
       baseURL: "https://api.test.com",
       apiKey: "test-api-key",
     },
@@ -66,7 +83,7 @@ beforeEach(async () => {
 
   await db
     .insert(schema.modelTable)
-    .values([{ id: "model1", serviceId: "service1", name: "Test Model", visible: 1 }]);
+    .values([{ id: "model1", keyId: "key1", name: "Test Model", visible: 1 }]);
 
   await db
     .insert(schema.chatTable)
@@ -144,11 +161,11 @@ describe("interpolateDocuments", () => {
 
 describe("loadServices", () => {
   it("should load services with their models", async () => {
-    const services = await loadServices();
-    expect(services).toHaveLength(1);
-    expect(services[0]).toMatchObject({
-      id: "service1",
-      name: "Test Service",
+    const keys = await getKeys();
+    expect(keys).toHaveLength(1);
+    expect(keys[0]).toMatchObject({
+      id: "key1",
+      name: "Test Key",
       models: [{ id: "model1", name: "Test Model" }],
     });
   });
@@ -186,11 +203,11 @@ describe("getLatestRevision", () => {
 
 describe("getModelService", () => {
   it("should get a model with its service", async () => {
-    const modelService = await getModelService("model1");
-    expect(modelService).toMatchObject({
+    const modelKey = await getModelKey("model1");
+    expect(modelKey).toMatchObject({
       id: "model1",
       name: "Test Model",
-      service: { id: "service1", name: "Test Service" },
+      key: { id: "key1", name: "Test Key" },
     });
   });
 });
@@ -210,7 +227,7 @@ describe("appendMessage", () => {
   it("should append a message to a revision", async () => {
     const message = {
       id: "new-message",
-      role: "user",
+      role: "user" as const,
       content: "New message content",
       attachments: [],
     };

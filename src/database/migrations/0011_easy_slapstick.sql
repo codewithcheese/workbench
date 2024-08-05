@@ -5,25 +5,10 @@ ALTER TABLE `aiService` RENAME TO `service`;--> statement-breakpoint
 ALTER TABLE `key` RENAME COLUMN `aiServiceId` TO `serviceId`;--> statement-breakpoint
 ALTER TABLE `model` RENAME COLUMN `aiAccountId` TO `keyId`;--> statement-breakpoint
 ALTER TABLE `service` RENAME COLUMN `aiSdkId` TO `sdkId`;--> statement-breakpoint
-/*
- SQLite does not support "Dropping foreign key" out of the box, we do not generate automatic migration for that, so it has to be done manually
- Please refer to: https://www.techonthenet.com/sqlite/tables/alter_table.php
-                  https://www.sqlite.org/lang_altertable.html
-
- Due to that we don't generate migration automatically and it has to be done manually
-*/--> statement-breakpoint
 DROP INDEX IF EXISTS `accountId_idx`;--> statement-breakpoint
 DROP INDEX IF EXISTS `accountId_unique`;--> statement-breakpoint
 CREATE INDEX `accountId_idx` ON `model` (`keyId`);--> statement-breakpoint
 CREATE UNIQUE INDEX `accountId_unique` ON `model` (`keyId`,`name`);--> statement-breakpoint
-/*
- SQLite does not support "Creating foreign key on existing column" out of the box, we do not generate automatic migration for that, so it has to be done manually
- Please refer to: https://www.techonthenet.com/sqlite/tables/alter_table.php
-                  https://www.sqlite.org/lang_altertable.html
-
- Due to that we don't generate migration automatically and it has to be done manually
-*/
---> statement-breakpoint
 ALTER TABLE `model` RENAME TO `model_old`;
 --> statement-breakpoint
 CREATE TABLE `model` (

@@ -1,11 +1,6 @@
-import { keyTable, registerModel } from "@/database";
-import { loadKeys } from "./$data.test";
+import { redirect } from "@sveltejs/kit";
+import { route } from "$lib/route";
 
-export async function load({ depends, route }) {
-  const keys = await loadKeys();
-  registerModel(keyTable, keys, depends);
-  depends("view:services");
-  return {
-    keys,
-  };
+export async function load() {
+  return redirect(301, route("/settings/keys"));
 }

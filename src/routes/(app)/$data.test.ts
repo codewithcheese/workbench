@@ -37,19 +37,26 @@ describe("(app)/$data", () => {
     await db.delete(schema.keyTable);
 
     // Insert dummy data
-    await db.insert(schema.keyTable).values([
-      {
-        id: "service1",
-        name: "Test Service",
-        providerId: "provider1",
-        baseURL: "https://api.test.com",
-        apiKey: "test-api-key",
-      },
-    ]);
-
+    await db.insert(schema.sdkTable).values([{ id: "sdk1", name: "Test SDK", slug: "test-sdk" }]);
+    await db
+      .insert(schema.serviceTable)
+      .values([
+        { id: "service1", name: "Test Service", sdkId: "sdk1", baseURL: "https://api.test.com" },
+      ]);
+    await db
+      .insert(schema.keyTable)
+      .values([
+        {
+          id: "key1",
+          name: "Test Key",
+          serviceId: "service1",
+          baseURL: "https://api.test.com",
+          apiKey: "test-api-key",
+        },
+      ]);
     await db
       .insert(schema.modelTable)
-      .values([{ id: "model1", serviceId: "service1", name: "Test Model", visible: 1 }]);
+      .values([{ id: "model1", keyId: "key1", name: "Test Model", visible: 1 }]);
 
     await db.insert(schema.chatTable).values([
       { id: "chat1", name: "Chat 1", prompt: "Prompt 1" },

@@ -12,6 +12,14 @@ export const formSchema = z.object({
   baseURL: z.string().nullable(),
 });
 
+export async function loadKeys() {
+  return useDb().query.keyTable.findMany({ with: { service: { with: { sdk: true } } } });
+}
+
+export async function loadServices() {
+  return useDb().query.serviceTable.findMany({ with: { sdk: true } });
+}
+
 export async function refreshModels(
   tx: SQLiteTransaction<any, any, any, any>,
   key: Key,
