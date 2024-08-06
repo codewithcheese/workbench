@@ -1,27 +1,36 @@
-import { StreamingTextResponse, streamText } from "ai";
+import { convertToCoreMessages, StreamingTextResponse, streamText } from "ai";
 import type { RequestHandler } from "./$types";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createMistral } from "@ai-sdk/mistral";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createAzure } from "@ai-sdk/azure";
+import { createCohere } from "@ai-sdk/cohere";
 
 export const POST = (async ({ request }) => {
-  const { messages, providerId, apiKey, baseURL, modelName } = (await request.json()) as {
+  let { messages, sdkId, apiKey, baseURL, modelName } = (await request.json()) as {
     messages: any[];
-    providerId: string;
+    sdkId: string;
     baseURL: string;
     apiKey: string;
     modelName: string;
   };
 
-  if (!providerId || !baseURL || !modelName) {
+  baseURL = baseURL ?? undefined;
+
+  if (!sdkId || !modelName) {
     return new Response(`Malformed request`, {
       status: 400,
     });
   }
 
+  console.log("chat request", messages, sdkId, apiKey, baseURL, modelName);
+
   let provider;
-  switch (providerId) {
+  switch (sdkId) {
+    case "azure":
+      provider = createAzure({ apiKey, baseURL });
+      break;
     case "openai":
       provider = createOpenAI({ apiKey, baseURL });
       break;
@@ -31,19 +40,22 @@ export const POST = (async ({ request }) => {
     case "mistral":
       provider = createMistral({ apiKey, baseURL });
       break;
-    case "google":
+    case "google-gen-ai":
       provider = createGoogleGenerativeAI({ apiKey, baseURL });
       break;
+    case "cohere":
+      provider = createCohere({ apiKey });
+      break;
     default:
-      return new Response(`Unsupported provider ${providerId}`, {
+      return new Response(`Unsupported sdk ${sdkId}`, {
         status: 400,
       });
   }
 
   try {
     const result = await streamText({
-      model: provider.chat(modelName),
-      messages,
+      model: provider(modelName),
+      messages: convertToCoreMessages(messages),
     });
     return new StreamingTextResponse(result.toAIStream());
   } catch (e: unknown) {

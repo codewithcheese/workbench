@@ -9,18 +9,17 @@
     SelectValue,
   } from "@/components/ui/select";
   import { store } from "@/lib/store.svelte";
-  import { providersById } from "@/lib/providers";
-  import type { ServicesView } from "./$data";
+  import type { KeysView } from "./$data";
   import { modelTable, useDb } from "@/database";
-  import { asc, desc, eq } from "drizzle-orm";
+  import { asc, eq } from "drizzle-orm";
 
-  let { services }: { services: ServicesView } = $props();
+  let { keys }: { keys: KeysView } = $props();
 
-  let visibleModels = $derived(services.map((s) => s.models.filter((m) => m.visible)).flat());
+  let visibleModels = $derived(keys.map((key) => key.models.filter((m) => m.visible)).flat());
 
   let modelsById = $derived(
-    services
-      .map((s) => s.models)
+    keys
+      .map((key) => key.models)
       .flat()
       .reduce<Record<string, any>>((acc, model) => {
         acc[model.id] = model;
@@ -86,11 +85,10 @@
     <SelectValue placeholder={visibleModels.length ? "Select a model" : "No models configured"} />
   </SelectTrigger>
   <SelectContent>
-    {#each services as service (service.id)}
-      {@const provider = providersById[service.providerId]}
+    {#each keys as key (key.id)}
       <SelectGroup>
-        <SelectLabel>{provider.name} {service.name ? `(${service.name})` : ""}</SelectLabel>
-        {#each service.models as model (model.id)}
+        <SelectLabel>{key.service.name} {key.name ? `(${key.name})` : ""}</SelectLabel>
+        {#each key.models as model (model.id)}
           {#if model.visible}
             <SelectItem value={model.id}>
               {model.name}

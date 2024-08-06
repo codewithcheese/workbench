@@ -1,13 +1,23 @@
-import { afterEach, beforeEach, describe, expect, it, vi, beforeAll, afterAll } from "vitest";
-import { updateChat, updateResponsePrompt, interpolateDocuments, submitPrompt } from "./$data";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  appendMessages,
+  createRevision,
+  getLatestRevision,
+  getModelKey,
+  getRevision,
+  interpolateDocuments,
+  isTab,
+  getKeys,
+  tabRouteId,
+  updateChat,
+} from "./$data";
 import Database from "better-sqlite3";
 import { type BetterSQLite3Database, drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "@/database/schema";
 import { runMigrations } from "@/database/migrator";
 import { eq } from "drizzle-orm";
-import { invalidate } from "$app/navigation";
-import { toast } from "svelte-french-toast";
 import { nanoid } from "nanoid";
+import type { ChatMessage } from "$lib/chat-service.svelte";
 
 let sqlite: Database.Database;
 let db: BetterSQLite3Database<typeof schema>;
@@ -29,7 +39,7 @@ beforeEach(async () => {
   }));
 
   vi.mock("nanoid", () => ({
-    nanoid: vi.fn(),
+    nanoid: vi.fn(() => "mocked-nanoid"),
   }));
 
   // Mock the useDb function
@@ -37,14 +47,35 @@ beforeEach(async () => {
     useDb: vi.fn(() => db),
   }));
 
+  vi.mock("@/database/model", () => ({
+    invalidateModel: vi.fn(),
+  }));
+
   await runMigrations(true);
 
   // Insert test data
+  await db.insert(schema.sdkTable).values([
+    {
+      id: "sdk1",
+      name: "Test SDK",
+      slug: "test-sdk",
+    },
+  ]);
+
   await db.insert(schema.serviceTable).values([
     {
       id: "service1",
       name: "Test Service",
-      providerId: "provider1",
+      sdkId: "sdk1",
+      baseURL: "https://api.test.com",
+    },
+  ]);
+
+  await db.insert(schema.keyTable).values([
+    {
+      id: "key1",
+      name: "Test Key",
+      serviceId: "service1",
       baseURL: "https://api.test.com",
       apiKey: "test-api-key",
     },
@@ -52,33 +83,50 @@ beforeEach(async () => {
 
   await db
     .insert(schema.modelTable)
-    .values([{ id: "model1", serviceId: "service1", name: "Test Model", visible: 1 }]);
+    .values([{ id: "model1", keyId: "key1", name: "Test Model", visible: 1 }]);
 
   await db
     .insert(schema.chatTable)
     .values([{ id: "chat1", name: "Test Chat", prompt: "Test prompt with [[doc1]]" }]);
 
-  await db
-    .insert(schema.responseTable)
-    .values([{ id: "response1", chatId: "chat1", modelId: "model1" }]);
+  await db.insert(schema.revisionTable).values([
+    { id: "revision1", version: 1, chatId: "chat1" },
+    { id: "revision2", version: 2, chatId: "chat1" },
+  ]);
 
-  await db.insert(schema.responseMessageTable).values([
+  await db.insert(schema.messageTable).values([
     {
       id: "message1",
       index: 0,
-      responseId: "response1",
+      revisionId: "revision1",
       role: "user",
       content: "Original content",
+    },
+    {
+      id: "message2",
+      index: 1,
+      revisionId: "revision2",
+      role: "assistant",
+      content: "Response content",
     },
   ]);
 
   await db
     .insert(schema.documentTable)
     .values([{ id: "doc1", name: "doc1", description: "Test doc", content: "Test content" }]);
+
+  await db.insert(schema.attachmentTable).values([
+    {
+      id: "attachment1",
+      messageId: "message1",
+      documentId: "doc1",
+    },
+  ]);
 });
 
 afterEach(() => {
   sqlite.close();
+  vi.clearAllMocks();
 });
 
 describe("updateChat", () => {
@@ -87,34 +135,14 @@ describe("updateChat", () => {
       id: "chat1",
       name: "Updated Chat",
       prompt: "Updated prompt",
-      createdAt: new Date().toISOString(),
     };
-    await updateChat(updatedChat);
+    await updateChat(updatedChat.id, updatedChat);
 
     const chat = await db.query.chatTable.findFirst({
       where: eq(schema.chatTable.id, "chat1"),
     });
 
     expect(chat).toEqual(expect.objectContaining(updatedChat));
-    expect(invalidate).toHaveBeenCalled();
-  });
-});
-
-describe("updateResponsePrompt", () => {
-  it("should update the response prompt", async () => {
-    await updateResponsePrompt("response1");
-
-    const message = await db.query.responseMessageTable.findFirst({
-      where: eq(schema.responseMessageTable.responseId, "response1"),
-    });
-
-    expect(message?.content).toBe("Test prompt with Test content");
-    expect(toast.error).not.toHaveBeenCalled();
-  });
-
-  it("should show error toast if response is not found", async () => {
-    await updateResponsePrompt("nonexistent");
-    expect(toast.error).toHaveBeenCalledWith("Response not found");
   });
 });
 
@@ -131,56 +159,149 @@ describe("interpolateDocuments", () => {
   });
 });
 
-describe("submitPrompt", () => {
-  it("should submit a prompt and create a new response", async () => {
-    vi.mocked(nanoid).mockReturnValueOnce("response2").mockReturnValueOnce("message2");
+describe("loadServices", () => {
+  it("should load services with their models", async () => {
+    const keys = await getKeys();
+    expect(keys).toHaveLength(1);
+    expect(keys[0]).toMatchObject({
+      id: "key1",
+      name: "Test Key",
+      models: [{ id: "model1", name: "Test Model" }],
+    });
+  });
+});
 
-    const chat = {
-      id: "chat1",
-      name: "Test Chat",
-      prompt: "Test prompt with [[doc1]]",
-      createdAt: new Date().toISOString(),
+describe("getRevision", () => {
+  it("should get a specific revision", async () => {
+    const revision = await getRevision("chat1", 1);
+    expect(revision).toMatchObject({
+      id: "revision1",
+      version: 1,
+      chatId: "chat1",
+      messages: [
+        {
+          id: "message1",
+          content: "Original content",
+          attachments: [{ id: "attachment1", documentId: "doc1", document: { id: "doc1" } }],
+        },
+      ],
+    });
+  });
+});
+
+describe("getLatestRevision", () => {
+  it("should get the latest revision", async () => {
+    const revision = await getLatestRevision("chat1");
+    expect(revision).toMatchObject({
+      id: "revision2",
+      version: 2,
+      chatId: "chat1",
+      messages: [{ id: "message2", content: "Response content" }],
+    });
+  });
+});
+
+describe("getModelService", () => {
+  it("should get a model with its service", async () => {
+    const modelKey = await getModelKey("model1");
+    expect(modelKey).toMatchObject({
+      id: "model1",
+      name: "Test Model",
+      key: { id: "key1", name: "Test Key" },
+    });
+  });
+});
+
+describe("createRevision", () => {
+  it("should create a new revision", async () => {
+    const newRevision = await createRevision("chat1");
+    expect(newRevision).toMatchObject({
+      chatId: "chat1",
+      version: 3,
+      id: "mocked-nanoid",
+    });
+  });
+});
+
+describe("appendMessage", () => {
+  it("should append a message to a revision", async () => {
+    const message = {
+      id: "new-message",
+      role: "user" as const,
+      content: "New message content",
+      attachments: [],
     };
-    await submitPrompt(chat, "model1");
+    await appendMessages("revision2", [message]);
 
-    const response = await db.query.responseTable.findFirst({
-      where: eq(schema.responseTable.id, "response2"),
+    const messages = await db.query.messageTable.findMany({
+      where: eq(schema.messageTable.revisionId, "revision2"),
     });
-    expect(response).toBeDefined();
-
-    const message = await db.query.responseMessageTable.findFirst({
-      where: eq(schema.responseMessageTable.responseId, "response2"),
+    expect(messages).toHaveLength(2);
+    expect(messages[1]).toMatchObject({
+      id: "new-message",
+      role: "user",
+      content: "New message content",
+      index: 1,
     });
-    expect(message).toEqual(
-      expect.objectContaining({
-        responseId: "response2",
-        role: "user",
-        content: "Test prompt with Test content",
-      }),
-    );
-
-    expect(invalidate).toHaveBeenCalledWith("view:responses");
   });
 
-  it("should show error toast if no model is selected", async () => {
-    const chat = {
-      id: "chat1",
-      name: "Test Chat",
-      prompt: "Test prompt",
-      createdAt: new Date().toISOString(),
-    };
-    await submitPrompt(chat, null);
-    expect(toast.error).toHaveBeenCalledWith("No model selected");
+  // todo
+  it("should append attachments to the message");
+});
+
+describe("newRevision", () => {
+  it("should create a new revision with messages", async () => {
+    vi.mocked(nanoid)
+      .mockReturnValueOnce("mocked-nanoid")
+      .mockReturnValueOnce("message-1")
+      .mockReturnValueOnce("message-2");
+    const messages: ChatMessage[] = [
+      { id: "new-message1", role: "user", content: "New user message", attachments: [] },
+      { id: "new-message2", role: "assistant", content: "New assistant message", attachments: [] },
+    ];
+    const revision = await createRevision("chat1", messages);
+
+    expect(revision).toMatchObject({
+      chatId: "chat1",
+      version: 3,
+      id: "mocked-nanoid",
+    });
+
+    const newMessages = await db.query.messageTable.findMany({
+      where: eq(schema.messageTable.revisionId, "mocked-nanoid"),
+    });
+    expect(newMessages).toHaveLength(2);
+    expect(newMessages[0]).toMatchObject({
+      role: "user",
+      content: "New user message",
+      index: 0,
+    });
+    expect(newMessages[1]).toMatchObject({
+      role: "assistant",
+      content: "New assistant message",
+      index: 1,
+    });
+  });
+});
+
+describe("isTab", () => {
+  it("should return true for valid tab values", () => {
+    expect(isTab("chat")).toBe(true);
+    expect(isTab("eval")).toBe(true);
+    expect(isTab("revise")).toBe(true);
   });
 
-  it("should show error toast if selected model is not found", async () => {
-    const chat = {
-      id: "chat1",
-      name: "Test Chat",
-      prompt: "Test prompt",
-      createdAt: new Date().toISOString(),
-    };
-    await submitPrompt(chat, "nonexistent");
-    expect(toast.error).toHaveBeenCalledWith("Selected model not found");
+  it("should return false for invalid tab values", () => {
+    expect(isTab("invalid")).toBe(false);
+    expect(isTab(123)).toBe(false);
+    expect(isTab(null)).toBe(false);
+  });
+});
+
+describe("tabRouteId", () => {
+  it("should return correct route ID for each tab", () => {
+    expect(tabRouteId("chat")).toBe("/chat/[id]");
+    expect(tabRouteId("eval")).toBe("/chat/[id]/eval");
+    expect(tabRouteId("revise")).toBe("/chat/[id]/revise");
   });
 });

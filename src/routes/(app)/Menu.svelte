@@ -5,21 +5,21 @@
   import * as Dialog from "@/components/ui/dialog/index";
   import { page } from "$app/stores";
   import { cn } from "$lib/cn";
-  import { goto } from "$app/navigation";
+  import { goto, invalidate } from "$app/navigation";
   import DeleteDialog from "@/components/DeleteDialog.svelte";
   import PersistenceAlert from "@/components/PersistenceAlert.svelte";
   import { type Chat } from "@/database";
   import { duplicateChat, newChat, removeChat } from "./$data";
+  import { route } from "$lib/route";
 
   let { chats }: { chats: Chat[] } = $props();
+  let chatToDelete: Chat | null = $state(null);
 
   let chatId: string | undefined = $derived.by(() => {
     if ($page.url.pathname.startsWith("/chat")) {
       return $page.params.id;
     }
   });
-
-  let chatToDelete: Chat | null = $state(null);
 </script>
 
 <div class="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
@@ -35,13 +35,14 @@
     variant="outline"
     onclick={async () => {
       const id = await newChat();
-      goto(`/chat/${id}`);
+      await invalidate("view:chats");
+      await goto(route(`/chat/[id]`, { id }));
     }}
   >
     <PlusIcon class="text-gray-600" />
   </Button>
 </div>
-<div class="flex-1">
+<div class="flex-1 overflow-y-auto">
   <nav class="grid items-start text-sm font-medium">
     <div class="p-2 pt-0">
       <PersistenceAlert />
@@ -69,7 +70,7 @@
     </div>
     <div class="mt-6 overflow-x-hidden">
       <h3 class="mb-2 overflow-hidden text-ellipsis break-all px-4 text-xs font-medium">Recent</h3>
-      {#each chats.toReversed() as chat (chat.id)}
+      {#each chats as chat (chat.id)}
         <div
           class:bg-accent={chat.id === chatId}
           class="group flex flex-row items-center overflow-x-hidden px-4"
@@ -100,7 +101,7 @@
               <DropdownMenu.Item
                 onclick={async () => {
                   const newId = await duplicateChat(chat.id);
-                  await goto(`/chat/${newId}`);
+                  await goto(route(`/chat/[id]`, { id: newId }));
                 }}>Duplicate</DropdownMenu.Item
               >
             </DropdownMenu.Content>
@@ -110,18 +111,21 @@
     </div>
   </nav>
 </div>
-{#if chatToDelete}
-  <DeleteDialog
-    name={chatToDelete.name}
-    type="chat"
-    onConfirm={async () => {
-      if (chatToDelete) {
-        const nextId = await removeChat(chatToDelete.id);
-        await goto(`/chat/${nextId}`);
-      }
-    }}
-    onCancel={() => {
+
+<DeleteDialog
+  open={chatToDelete !== null}
+  name={chatToDelete?.name ?? ""}
+  type="chat"
+  onConfirm={async () => {
+    if (chatToDelete) {
+      const nextId = await removeChat(chatToDelete.id);
       chatToDelete = null;
-    }}
-  />
-{/if}
+      await goto(route(`/chat/[id]`, { id: nextId }));
+    }
+  }}
+  onOpenChange={(open) => {
+    if (!open) {
+      chatToDelete = null;
+    }
+  }}
+/>

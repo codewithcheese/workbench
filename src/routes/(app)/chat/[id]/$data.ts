@@ -1,76 +1,151 @@
 import {
-  documentTable,
-  modelTable,
+  attachmentTable,
   type Chat,
   chatTable,
-  responseMessageTable,
-  responseTable,
+  documentTable,
+  type InsertMessage,
+  messageTable,
+  modelTable,
+  type Revision,
+  revisionTable,
   useDb,
 } from "@/database";
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { invalidate } from "$app/navigation";
-import { toast } from "svelte-french-toast";
 import { invalidateModel } from "@/database/model";
+import { sql } from "drizzle-orm/sql";
+import type { RouteId } from "$lib/route";
+import type { MessageAttachment, ChatMessage } from "$lib/chat-service.svelte";
 
-export type ServicesView = Awaited<ReturnType<typeof loadServices>>;
+export type KeysView = Awaited<ReturnType<typeof getKeys>>;
 
-export function loadServices() {
-  return useDb().query.serviceTable.findMany({
+export type RevisionView = NonNullable<Awaited<ReturnType<typeof getRevision>>>;
+
+export type Tab = "chat" | "eval" | "revise";
+
+export function isTab(tab: any): tab is Tab {
+  return tab === "chat" || tab === "eval" || tab === "revise";
+}
+
+export function tabRouteId(tab: Tab): RouteId {
+  return tab === "chat" ? `/chat/[id]` : `/chat/[id]/${tab}`;
+}
+
+export function getKeys() {
+  return useDb().query.keyTable.findMany({
     with: {
       models: true,
+      service: true,
     },
   });
 }
 
-export async function updateChat(chat: Chat) {
-  console.log("updateChat", chat);
-  const result = await useDb()
-    .update(chatTable)
-    .set({ ...chat })
-    .where(eq(chatTable.id, chat.id))
-    .returning();
-  console.log(result);
-  await invalidateModel(chatTable, chat);
+export function toChatMessage(message: RevisionView["messages"][number]): ChatMessage {
+  return {
+    ...message,
+    role: message.role as ChatMessage["role"],
+    createdAt: message.createdAt ? new Date(message.createdAt) : undefined,
+    attachments: message.attachments.map((a) => {
+      return {
+        id: a.document.id,
+        type: a.document.type,
+        name: a.document.name,
+        content: a.document.content,
+        attributes: a.document.attributes,
+      };
+    }),
+  };
 }
 
-export async function updateResponsePrompt(id: string) {
-  try {
-    console.time("updateResponsePrompt");
-    const response = await useDb().query.responseTable.findFirst({
-      where: eq(responseTable.id, id),
-    });
-    if (!response) {
-      return toast.error("Response not found");
-    }
-    // get first message
-    const message = await useDb().query.responseMessageTable.findFirst({
-      where: eq(responseMessageTable.responseId, id),
-    });
-    if (!message) {
-      return toast.error("Message not found");
-    }
-    const chat = await useDb().query.chatTable.findFirst({
-      where: eq(chatTable.id, response.chatId),
-    });
-    if (!chat) {
-      return toast.error("Chat not found");
-    }
-    // interpolate documents into prompt
-    const content = await interpolateDocuments(chat.prompt);
-    console.log("updated prompt", content);
-    await useDb()
-      .update(responseMessageTable)
-      .set({ content })
-      .where(eq(responseMessageTable.id, message.id));
-  } catch (e) {
-    if (e instanceof Error) {
-      toast.error(e.message);
-    }
-    console.error(e);
-  } finally {
-    console.timeEnd("updateResponsePrompt");
-  }
+export function getRevision(chatId: string, version: number | null) {
+  return useDb().query.revisionTable.findFirst({
+    where:
+      version !== null
+        ? and(eq(revisionTable.chatId, chatId), eq(revisionTable.version, version))
+        : eq(revisionTable.chatId, chatId),
+    with: {
+      messages: {
+        with: {
+          attachments: {
+            with: {
+              document: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: [desc(revisionTable.version)],
+  });
+}
+
+export function getLatestRevision(chatId: string) {
+  return useDb().query.revisionTable.findFirst({
+    where: eq(revisionTable.chatId, chatId),
+    with: {
+      messages: {
+        with: {
+          attachments: {
+            with: {
+              document: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: [desc(revisionTable.version)],
+  });
+}
+
+export function getModelKey(modelId: string) {
+  return useDb().query.modelTable.findFirst({
+    where: eq(modelTable.id, modelId),
+    with: {
+      key: {
+        with: {
+          service: {
+            columns: {
+              id: true,
+              name: true,
+            },
+            with: {
+              sdk: {
+                columns: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+// export async function createRevision(chatId: string) {
+//   const revisionId = nanoid(10);
+//   await useDb()
+//     .insert(revisionTable)
+//     .values({
+//       id: revisionId,
+//       version: sql`(SELECT COUNT(id) + 1 FROM ${revisionTable} WHERE ${eq(revisionTable.chatId, chatId)})`,
+//       chatId,
+//       error: null,
+//       createdAt: new Date().toISOString(),
+//     })
+//     .execute();
+//   return getLatestRevision(chatId);
+// }
+
+export async function updateChat(chatId: string, updates: Partial<Chat>) {
+  console.log("updateChat", chatId, updates);
+  const result = await useDb()
+    .update(chatTable)
+    .set({ ...updates })
+    .where(eq(chatTable.id, chatId))
+    .returning();
+  console.log(result);
+  await invalidateModel(chatTable, { id: chatId });
 }
 
 export async function interpolateDocuments(prompt: string) {
@@ -95,42 +170,92 @@ export async function interpolateDocuments(prompt: string) {
   return interpolatedPrompt;
 }
 
-export async function submitPrompt(chat: Chat, modelId: string | null) {
+export async function appendMessages(revisionId: string, messages: ChatMessage[]) {
   try {
-    if (!modelId) {
-      throw new Error("No model selected");
-    }
-    const model = await useDb().query.modelTable.findFirst({
-      where: eq(modelTable.id, modelId),
+    return await useDb().transaction(async (tx) => {
+      for (const message of messages) {
+        await tx
+          .insert(messageTable)
+          .values({
+            id: message.id,
+            revisionId,
+            role: message.role,
+            content: message.content,
+            index: sql`(SELECT COUNT(id) FROM ${messageTable} WHERE ${eq(messageTable.revisionId, revisionId)})`,
+          })
+          .execute();
+        for (const attachment of message.attachments) {
+          const documentId = attachment.id;
+          await tx
+            .insert(documentTable)
+            .values({
+              id: documentId,
+              type: attachment.type,
+              name: `Pasted ${new Date().toLocaleString()}`,
+              description: "",
+              content: attachment.content,
+            })
+            .execute();
+          await tx.insert(attachmentTable).values({
+            id: nanoid(10),
+            documentId,
+            messageId: message.id,
+          });
+        }
+      }
     });
-    if (!model) {
-      throw new Error("Selected model not found");
-    }
-    // const model = db.models.get(store.selected.modelId);
-    // interpolate documents into prompt
-    const content = await interpolateDocuments(chat.prompt);
-    console.log("content", content);
-    await useDb().transaction(async (tx) => {
-      const responseId = nanoid(10);
-      await tx.insert(responseTable).values({
-        id: responseId,
-        chatId: chat.id,
-        modelId: model.id,
-        error: null,
-      });
-      await tx.insert(responseMessageTable).values({
-        id: nanoid(),
-        index: 0,
-        responseId,
-        role: "user",
-        content,
-      });
-    });
-    await invalidate("view:responses");
   } catch (e) {
-    if (e instanceof Error) {
-      toast.error(e.message);
-    }
     console.error(e);
+    throw e;
   }
+}
+
+export async function createRevision(chatId: string, messages: ChatMessage[] = []) {
+  const revisionId = nanoid(10);
+  await useDb().transaction(async (tx) => {
+    await tx
+      .insert(revisionTable)
+      .values({
+        id: revisionId,
+        version: sql`(SELECT COUNT(id) + 1 FROM ${revisionTable} WHERE ${eq(revisionTable.chatId, chatId)})`,
+        chatId,
+        error: null,
+      })
+      .execute();
+    for (const message of messages) {
+      const newMessageId = nanoid(10);
+      await tx
+        .insert(messageTable)
+        .values({
+          id: newMessageId,
+          revisionId,
+          role: message.role,
+          content: message.content,
+          index: sql`(SELECT COUNT(id) FROM ${messageTable} WHERE ${eq(messageTable.revisionId, revisionId)})`,
+        })
+        .execute();
+      for (const attachment of message.attachments) {
+        await tx.insert(attachmentTable).values({
+          id: nanoid(10),
+          documentId: attachment.id,
+          messageId: newMessageId,
+        });
+      }
+    }
+  });
+  const revision = await useDb().query.revisionTable.findFirst({
+    where: eq(revisionTable.id, revisionId),
+    with: {
+      messages: {
+        with: {
+          attachments: {
+            with: {
+              document: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  return revision!;
 }

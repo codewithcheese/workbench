@@ -1,26 +1,16 @@
 <script lang="ts">
-  import { EditorView } from "@codemirror/view";
-  import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-  import { languages } from "@codemirror/language-data";
   import { nanoid } from "nanoid";
   import { goto } from "$app/navigation";
   import Form from "../Form.svelte";
   import { page } from "$app/stores";
   import { documentTable } from "@/database/schema";
   import { useDb } from "@/database/client";
+  import { route } from "$lib/route";
 
   let queryParams = $state($page.url.searchParams);
   let name = $state(queryParams.get("name") ?? "");
   let content = $state("");
   let description = $state("");
-
-  const extensions = [
-    EditorView.lineWrapping,
-    markdown({
-      base: markdownLanguage,
-      codeLanguages: languages,
-    }),
-  ];
 
   async function submit(e: any) {
     e.preventDefault();
@@ -32,7 +22,7 @@
         description,
         content,
       });
-    await goto(`/document`);
+    await goto(route(`/document`));
   }
 </script>
 

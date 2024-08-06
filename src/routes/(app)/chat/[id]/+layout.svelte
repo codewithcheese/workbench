@@ -1,30 +1,42 @@
 <script lang="ts">
   import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
   import { goto } from "$app/navigation";
-  import { store } from "$lib/store.svelte";
   import SelectModel from "./SelectModel.svelte";
   import { Button } from "@/components/ui/button";
   import { PlayIcon, SettingsIcon } from "lucide-svelte";
-  import { submitPrompt } from "./$data";
+  import { isTab, tabRouteId, updateChat } from "./$data";
+  import { Input } from "@/components/ui/input";
+  import { route } from "$lib/route";
+  import { toast } from "svelte-french-toast";
 
   let { data } = $props();
-  let services = $derived(data.services);
+  let keys = $derived(data.keys);
   let chat = $derived(data.chat);
+  let revision = $derived(data.revision);
 
-  function tabClick(value?: string) {
-    goto(`/chat/${chat.id}/${value}`);
+  async function tabClick(value?: string) {
+    if (!isTab(value)) {
+      toast.error(`Unexpected tab ${value}`);
+      return;
+    }
+    const query = revision ? { version: revision.version } : undefined;
+    if (value === "chat") {
+      await goto(route(`/chat/[id]`, { id: chat.id, $query: query }));
+    } else if (value === "revise" || value === "eval") {
+      await goto(route(`/chat/[id]/${value}`, { id: chat.id, $query: query }));
+    }
   }
 
   $inspect("chat layout", data);
 </script>
 
 <header
-  class="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background p-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:pt-2"
+  class="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 pt-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent"
 >
   <Tabs onValueChange={tabClick} value={data.tab}>
     <TabsList>
+      <TabsTrigger value="chat">Chat</TabsTrigger>
       <TabsTrigger value="revise">Revise</TabsTrigger>
-      <!--      <TabsTrigger value="chat">Chat</TabsTrigger>-->
       <!--      <TabsTrigger value="eval">Eval</TabsTrigger>-->
     </TabsList>
   </Tabs>
@@ -40,32 +52,14 @@
   </nav>
   <div class="relative ml-auto flex-1 md:grow-0">
     <div class="flex flex-row">
-      <SelectModel {services} />
-      <Button variant="ghost" onclick={() => goto(`/chat/${chat.id}/config`)}>
+      <SelectModel {keys} />
+      <Button variant="ghost" onclick={() => goto(route(`/settings`))}>
         <SettingsIcon size={16} />
       </Button>
     </div>
   </div>
-
-  {#if store.selected.modelId}
-    <Button onclick={() => submitPrompt(chat, store.selected.modelId)}>
-      <PlayIcon size={16} class="mr-2" />
-      Run
-      <div
-        class="w-13 pointer-events-none ml-1 hidden h-6 rounded-full bg-white bg-opacity-20 px-2 py-1 md:inline-flex"
-      >
-        <div class="pointer-events-none text-center text-xs font-light text-white">Ctrl + ⏎</div>
-      </div>
-    </Button>
-  {/if}
 </header>
 
-<div class="grid grid-cols-2 gap-3 overflow-y-auto px-4">
+<div class="flex flex-1 flex-col overflow-auto">
   <slot />
 </div>
-<!--{:else}-->
-<!--  <Splash>-->
-<!--    <p>Configure your AI accounts to start building.</p>-->
-<!--    <Button onclick={() => document.getElementById("model-config-trigger")?.click()}>Start</Button>-->
-<!--  </Splash>-->
-<!--{/if}-->
