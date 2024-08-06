@@ -7,6 +7,7 @@ import type {
   IdGenerator,
   JSONValue,
   Message as AIMessage,
+  Attachment as AIAttachment,
   ToolCallHandler,
 } from "@ai-sdk/ui-utils";
 import { callChatApi, processChatStream } from "@ai-sdk/ui-utils";
@@ -21,7 +22,7 @@ export type MessageAttachment = {
   type: string;
   name: string;
   content: string;
-  attributes: {};
+  attributes: Record<string, any>;
 };
 export type ChatMessage = AIMessage & {
   attachments: MessageAttachment[];
@@ -131,7 +132,7 @@ export type ChatOptions = {
    */
   sendExtraMessageFields?: boolean;
   /** Stream mode (default to "stream-data") */
-  streamMode?: "stream-data" | "text";
+  streamProtocol?: "data" | "text";
   /**
    Custom fetch implementation. You can use it as a middleware to intercept requests,
    or to provide a custom fetch implementation for e.g. testing.
@@ -153,7 +154,7 @@ const getStreamedResponse = async (
   previousMessages: ChatMessage[],
   abortControllerRef: AbortController | null,
   generateId: IdGenerator,
-  streamMode: "stream-data" | "text" | undefined,
+  streamProtocol: "data" | "text" | undefined,
   onFinish: ((message: ChatMessage) => void) | undefined,
   onResponse: ((response: Response) => void | Promise<void>) | undefined,
   sendExtraMessageFields: boolean | undefined,
@@ -162,10 +163,21 @@ const getStreamedResponse = async (
   const constructedMessagesPayload = sendExtraMessageFields
     ? chatRequest.messages
     : chatRequest.messages.map(
-        ({ role, content, name, data, annotations, function_call, tool_calls, tool_call_id }) => ({
+        ({
+          role,
+          content,
+          experimental_attachments,
+          name,
+          data,
+          annotations,
+          function_call,
+          tool_calls,
+          tool_call_id,
+        }) => ({
           role,
           content,
           ...(name !== undefined && { name }),
+          ...(experimental_attachments !== undefined && { experimental_attachments }),
           ...(data !== undefined && { data }),
           ...(annotations !== undefined && { annotations }),
           // outdated function/tool call handling (TODO deprecate):
@@ -174,6 +186,9 @@ const getStreamedResponse = async (
           ...(tool_calls !== undefined && { tool_calls }),
         }),
       );
+
+  console.log("chatRequest", chatRequest);
+  console.log("constructedMessagesPayload", constructedMessagesPayload);
 
   return await callChatApi({
     api,
@@ -195,7 +210,7 @@ const getStreamedResponse = async (
         tool_choice: chatRequest.tool_choice,
       }),
     },
-    streamMode,
+    streamProtocol,
     credentials: extraMetadata.credentials,
     headers: {
       ...extraMetadata.headers,
@@ -233,7 +248,7 @@ export class ChatService {
   private sendExtraMessageFields: boolean | undefined;
   private experimental_onFunctionCall: FunctionCallHandler | undefined;
   private experimental_onToolCall: ToolCallHandler | undefined;
-  private streamMode: "stream-data" | "text" | undefined;
+  private streamProtocol: "data" | "text" | undefined;
   private onLoading: (() => void) | undefined;
   private onAppend: (() => void) | undefined;
   private onRevision: (() => void) | undefined;
@@ -255,7 +270,7 @@ export class ChatService {
     sendExtraMessageFields,
     experimental_onFunctionCall,
     experimental_onToolCall,
-    streamMode,
+    streamProtocol,
     onLoading,
     onAppend,
     onRevision,
@@ -273,7 +288,7 @@ export class ChatService {
     this.sendExtraMessageFields = sendExtraMessageFields;
     this.experimental_onFunctionCall = experimental_onFunctionCall;
     this.experimental_onToolCall = experimental_onToolCall;
-    this.streamMode = streamMode;
+    this.streamProtocol = streamProtocol;
     this.onLoading = onLoading;
     this.onAppend = onAppend;
     this.onRevision = onRevision;
@@ -388,9 +403,13 @@ export class ChatService {
     // inline attachments into message content surrounded by tags
     const messages = this.messages.map((message) => {
       let content = message.content;
+      let experimental_attachments: AIAttachment[] | undefined = undefined;
       if (message.attachments) {
         const attachmentContent = message.attachments
-          .filter((attachment) => attachment.content.trim() !== "") // Exclude empty attachments
+          .filter(
+            (attachment) =>
+              !attachment.type.startsWith("image/") && attachment.content.trim() !== "",
+          ) // Exclude empty attachments
           .map((attachment) => {
             const escapedContent = attachment.content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
             const attributes = Object.entries(attachment.attributes)
@@ -402,8 +421,16 @@ export class ChatService {
         if (attachmentContent.length > 0) {
           content = `${attachmentContent}\n\n${content}`;
         }
+        experimental_attachments = message.attachments
+          .filter((attachment) => attachment.type.startsWith("image/"))
+          .map((attachment) => ({
+            name: attachment.name,
+            contentType: attachment.type,
+            url: attachment.content,
+          }));
+        console.log("experimental_attachments", experimental_attachments);
       }
-      return { ...message, content };
+      return { ...message, content, experimental_attachments };
     });
     return {
       messages,
@@ -467,7 +494,7 @@ export class ChatService {
             this.messages,
             this.abortController,
             this.generateId,
-            this.streamMode,
+            this.streamProtocol,
             this.handleOnFinish,
             () => {},
             this.sendExtraMessageFields,

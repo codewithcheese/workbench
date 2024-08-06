@@ -16,6 +16,8 @@
   import type { MessageAttachment } from "$lib/chat-service.svelte";
   import { nanoid } from "nanoid";
   import AttachmentControls from "./AttachmentControls.svelte";
+  import { compressImage } from "$lib/image";
+  import { toast } from "svelte-french-toast";
 
   type Props = {
     isLoading: boolean;
@@ -53,20 +55,63 @@
     }
   }
 
-  function handlePaste(event: ClipboardEvent) {
-    if (!event.clipboardData) {
-      return;
-    }
-    const content = event.clipboardData.getData("text/plain");
-    if (content.length > 1000) {
-      event.preventDefault();
-      attachments.push({
-        id: nanoid(10),
-        type: "pasted",
-        name: `Pasted ${new Date().toLocaleString()}`,
-        content,
-        attributes: {},
-      });
+  async function handlePaste(event: ClipboardEvent) {
+    try {
+      if (!event.clipboardData) {
+        return;
+      }
+      console.time("handlePaste");
+      const content = event.clipboardData.getData("text/plain");
+      if (content.length > 1000) {
+        event.preventDefault();
+        attachments.push({
+          id: nanoid(10),
+          type: "pasted",
+          name: `Pasted ${new Date().toLocaleString()}`,
+          content,
+          attributes: {},
+        });
+      }
+
+      // Handle image paste
+      const items = Array.from(event.clipboardData.items);
+      const imageItem = items.find((item) => item.type.indexOf("image") !== -1);
+
+      if (imageItem) {
+        event.preventDefault();
+        let blob = imageItem.getAsFile() as Blob;
+        if (blob) {
+          const originalSizeMB = blob.size / (1024 * 1024);
+          if (originalSizeMB > 10) {
+            return toast.error(`Image too large: ${originalSizeMB.toFixed(2)} MB. `);
+          }
+          console.log(`Original image size: ${originalSizeMB.toFixed(2)} MB`);
+          if (originalSizeMB > 0.5) {
+            blob = await compressImage(blob);
+            const compressedSizeMB = blob.size / (1024 * 1024);
+            toast.success(
+              `Large image compressed from ${originalSizeMB.toFixed(2)} MB to ${compressedSizeMB.toFixed(2)} MB`,
+            );
+          }
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const base64data = e.target?.result as string;
+            attachments.push({
+              id: nanoid(10),
+              type: blob.type,
+              name: `Image ${new Date().toLocaleString()}`,
+              content: base64data,
+              attributes: {
+                size: blob.size,
+                type: blob.type,
+              },
+            });
+          };
+          reader.readAsDataURL(blob);
+        }
+      }
+    } finally {
+      console.timeEnd("handlePaste");
     }
   }
 
@@ -97,7 +142,7 @@
         <AttachmentControls />
       {/if}
       <div class="flex items-end gap-2">
-        <Button class="hidden" variant="outline" size="icon" on:click={toggleUploadOptions}>
+        <Button variant="outline" size="icon" on:click={toggleUploadOptions}>
           <Plus class="h-4 w-4" />
         </Button>
         <Textarea

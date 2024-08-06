@@ -59,7 +59,7 @@
     "@ai-sdk/google-vertex": "^0.0.19",
     "@ai-sdk/mistral": "^0.0.26",
     "@ai-sdk/openai": "^0.0.10",
-    "@ai-sdk/ui-utils": "^0.0.9",
+    "@ai-sdk/ui-utils": "^0.0.24",
     "@fontsource-variable/inter": "^5.0.18",
     "@lexical/history": "^0.16.0",
     "@lexical/plain-text": "^0.16.0",

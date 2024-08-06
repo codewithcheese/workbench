@@ -1,4 +1,4 @@
-import { StreamingTextResponse, streamText } from "ai";
+import { convertToCoreMessages, StreamingTextResponse, streamText } from "ai";
 import type { RequestHandler } from "./$types";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
@@ -23,6 +23,8 @@ export const POST = (async ({ request }) => {
       status: 400,
     });
   }
+
+  console.log("chat request", messages, sdkId, apiKey, baseURL, modelName);
 
   let provider;
   switch (sdkId) {
@@ -53,7 +55,7 @@ export const POST = (async ({ request }) => {
   try {
     const result = await streamText({
       model: provider(modelName),
-      messages,
+      messages: convertToCoreMessages(messages),
     });
     return new StreamingTextResponse(result.toAIStream());
   } catch (e: unknown) {

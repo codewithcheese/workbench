@@ -1,7 +1,6 @@
 <script lang="ts">
   import { XIcon } from "lucide-svelte";
   import { Button } from "@/components/ui/button";
-  import { toTitleCase } from "$lib/string";
 
   type Props = {
     type: string;
@@ -12,7 +11,7 @@
 </script>
 
 <div
-  class="h-32 min-h-28 w-28 min-w-28 cursor-pointer overflow-hidden rounded-lg border border-gray-300 bg-white text-gray-700"
+  class="h-32 min-h-28 w-28 min-w-28 overflow-hidden rounded-lg border border-gray-300 bg-white text-gray-700"
 >
   <div class="relative h-full border-0">
     {#if onRemove}
@@ -26,13 +25,17 @@
     {/if}
     <div class="flex h-full flex-col gap-1 p-2">
       <div class="relative flex-1 overflow-hidden">
-        <p class="overflow-y-hidden break-words text-sm">{content}</p>
+        {#if type.startsWith("image/")}
+          <img src={content} alt="Pasted" class="w-full" />
+        {:else}
+          <p class="overflow-y-hidden break-words text-sm">{content}</p>
+        {/if}
         <div
           class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent"
         ></div>
       </div>
       <div class="name sticky bottom-0 text-sm font-semibold text-gray-700">
-        {toTitleCase(type)}
+        {type}
       </div>
     </div>
   </div>
