@@ -33,5 +33,6 @@ INSERT INTO aiService (id, name, aiSdkId, baseURL) VALUES
 ('groq', 'Groq', 'openai', 'https://api.groq.com/openai/v1'),
 ('perplexity', 'Perplexity', 'openai', 'https://api.perplexity.ai/'),
 ('fireworks', 'Fireworks', 'openai', 'https://api.fireworks.ai/inference/v1'),
+('nvidia', 'Nvidia', 'openai', 'https://integrate.api.nvidia.com/v1'),
 ('cohere', 'Cohere', 'cohere', NULL);
 
