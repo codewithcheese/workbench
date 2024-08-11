@@ -51,9 +51,9 @@
   },
   "type": "module",
   "dependencies": {
-    "@ai-sdk/azure": "^0.0.18",
     "@ai-sdk/amazon-bedrock": "^0.0.9",
     "@ai-sdk/anthropic": "^0.0.35",
+    "@ai-sdk/azure": "^0.0.18",
     "@ai-sdk/cohere": "^0.0.8",
     "@ai-sdk/google": "^0.0.30",
     "@ai-sdk/google-vertex": "^0.0.19",
@@ -70,7 +70,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
-    "drizzle-orm": "^0.30.10",
+    "drizzle-orm": "^0.33.0",
     "filepond": "^4.31.1",
     "formsnap": "^1.0.1",
     "highlight.js": "^11.7.0",
@@ -85,6 +85,7 @@
     "svelte-filepond": "^0.2.2",
     "svelte-french-toast": "^1.2.0",
     "tailwind-merge": "^2.3.0",
-    "tailwind-variants": "^0.2.1"
+    "tailwind-variants": "^0.2.1",
+    "unstructured-client": "^0.14.3"
   }
 }

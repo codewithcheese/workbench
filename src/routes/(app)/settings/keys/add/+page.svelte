@@ -14,6 +14,9 @@
     SelectItem,
     SelectTrigger,
     SelectValue,
+    SelectGroup,
+    SelectSeparator,
+    SelectLabel,
   } from "@/components/ui/select";
   import { setError, superForm } from "sveltekit-superforms";
   import { zodClient } from "sveltekit-superforms/adapters";
@@ -34,10 +37,29 @@
   import { cn } from "$lib/cn";
   import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
   import { toast } from "svelte-french-toast";
+  import { toTitleCase } from "$lib/string";
 
   let { data } = $props();
+  let servicesByType = $derived.by(() => {
+    return data.services.reduce<Record<string, any>>((acc, service) => {
+      if (!acc[service.sdk.type]) {
+        acc[service.sdk.type] = [];
+      }
+      acc[service.sdk.type].push(service);
+      return acc;
+    }, {});
+  });
 
-  console.log("data", data);
+  function humanSdkType(type: string) {
+    switch (type) {
+      case "model":
+        return "Model Providers";
+      case "document":
+        return "Document Processors";
+      default:
+        return toTitleCase(type);
+    }
+  }
 
   const formHandle = superForm(data.form, {
     SPA: true,
@@ -56,31 +78,43 @@
           setError(form, "serviceId", `Service for ${form.data.serviceId} not found`);
           return;
         }
-        // fetch models
-        const resp = await fetchModels(
-          form.data.apiKey,
-          form.data.baseURL,
-          service.sdk.id,
-          service.id,
-        );
-        if (!resp.ok) {
-          // if failed to fetch models, ask user to update API key
-          setError(form, "apiKey", resp.statusText);
-          return;
-        }
-        // create account and update models
         const keyId = nanoid(10);
-        await useDb().transaction(async (tx) => {
-          await tx.insert(keyTable).values({
+        if (service.sdk.type === "model") {
+          // fetch models
+          const resp = await fetchModels(
+            form.data.apiKey,
+            form.data.baseURL,
+            service.sdk.id,
+            service.id,
+          );
+          if (!resp.ok) {
+            // if failed to fetch models, ask user to update API key
+            setError(form, "apiKey", resp.statusText);
+            return;
+          }
+          // create account and update models
+          await useDb().transaction(async (tx) => {
+            await tx.insert(keyTable).values({
+              id: keyId,
+              name: form.data.name,
+              serviceId: form.data.serviceId,
+              baseURL: form.data.baseURL,
+              apiKey: form.data.apiKey,
+            });
+            const models = (await resp.json()) as any[];
+            await refreshModels(tx, keyId, models);
+          });
+        } else if (service.sdk.type === "document") {
+          await useDb().insert(keyTable).values({
             id: keyId,
             name: form.data.name,
             serviceId: form.data.serviceId,
             baseURL: form.data.baseURL,
             apiKey: form.data.apiKey,
           });
-          const models = (await resp.json()) as any[];
-          await refreshModels(tx, keyId, models);
-        });
+        } else {
+          throw new Error(`Unsupported SDK type: ${service.sdk.type}`);
+        }
         toast.success("Key added");
         await goto(route(`/settings/keys/[id]`, { id: keyId }));
       } catch (e) {
@@ -122,12 +156,18 @@
                 <SelectValue placeholder="Select a service..." />
               </SelectTrigger>
               <SelectContent>
-                {#each data.services as service (service.id)}
-                  {#if service.sdk.supported}
-                    <SelectItem image="/icons/{service.id}-16x16.png" value={service.id}>
-                      {service.name}
-                    </SelectItem>
-                  {/if}
+                {#each Object.entries(servicesByType) as [type, services]}
+                  <SelectGroup>
+                    <SelectLabel class=" pl-2">{humanSdkType(type)}</SelectLabel>
+                    {#each services as service (service.id)}
+                      {#if service.sdk.supported}
+                        <SelectItem image="/icons/{service.id}-16x16.png" value={service.id}>
+                          {service.name}
+                        </SelectItem>
+                      {/if}
+                    {/each}
+                    <SelectSeparator />
+                  </SelectGroup>
                 {/each}
               </SelectContent>
             </Select>

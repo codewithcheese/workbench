@@ -11,9 +11,8 @@ export async function load({ params, depends }) {
     with: {
       models: true,
       service: {
-        columns: {
-          id: true,
-          name: true,
+        with: {
+          sdk: true,
         },
       },
     },

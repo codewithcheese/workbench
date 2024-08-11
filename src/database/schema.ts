@@ -113,6 +113,9 @@ export const sdkTable = sqliteTable(
   {
     id: text("id").primaryKey(),
     slug: text("slug").notNull(),
+    type: text("type", { enum: ["model", "document"] })
+      .notNull()
+      .default("model"),
     name: text("name").notNull(),
     supported: int("supported").notNull().default(1),
   },

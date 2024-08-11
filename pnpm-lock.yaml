@@ -66,8 +66,8 @@ importers:
         specifier: ^16.4.5
         version: 16.4.5
       drizzle-orm:
-        specifier: ^0.30.10
-        version: 0.30.10(@cloudflare/workers-types@4.20240502.0)(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3)
+        specifier: ^0.33.0
+        version: 0.33.0(@cloudflare/workers-types@4.20240502.0)(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3)
       filepond:
         specifier: ^4.31.1
         version: 4.31.1
@@ -100,7 +100,7 @@ importers:
         version: 5.0.7
       sqlocal:
         specifier: ^0.9.0
-        version: 0.9.0(drizzle-orm@0.30.10(@cloudflare/workers-types@4.20240502.0)(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3))(kysely@0.27.3)
+        version: 0.9.0(drizzle-orm@0.33.0(@cloudflare/workers-types@4.20240502.0)(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3))(kysely@0.27.3)
       svelte-filepond:
         specifier: ^0.2.2
         version: 0.2.2(filepond@4.31.1)
@@ -113,6 +113,9 @@ importers:
       tailwind-variants:
         specifier: ^0.2.1
         version: 0.2.1(tailwindcss@3.4.3)
+      unstructured-client:
+        specifier: ^0.14.3
+        version: 0.14.3(zod@3.23.8)
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20240502.0
@@ -1272,6 +1275,12 @@ packages:
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
     engines: {node: '>=8.0.0'}
 
+  '@pdf-lib/standard-fonts@1.0.0':
+    resolution: {integrity: sha512-hU30BK9IUN/su0Mn9VdlVKsWBS6GyhVfqjwl1FjZN4TxP6cCw0jP2w7V3Hf5uX7M0AZJ16vey9yE0ny7Sa59ZA==}
+
+  '@pdf-lib/upng@1.0.1':
+    resolution: {integrity: sha512-dQK2FUMQtowVP00mtIksrlZhdFXQZPC+taih1q4CvPZ5vqdxR/LKBaFg0oAfzd1GlHZXXSPdQfzQnt+ViGvEIQ==}
+
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
@@ -2377,8 +2386,8 @@ packages:
     resolution: {integrity: sha512-U87IhZyCt/9d0ZT/Na3KFJVY31tSxtTx/n9UMcWFpW/5c2Ede39xiCG5efNV/0iimsv97UIRtDI0ldLBW5lbcg==}
     hasBin: true
 
-  drizzle-orm@0.30.10:
-    resolution: {integrity: sha512-IRy/QmMWw9lAQHpwbUh1b8fcn27S/a9zMIzqea1WNOxK9/4EB8gIo+FZWLiPXzl2n9ixGSv8BhsLZiOppWEwBw==}
+  drizzle-orm@0.33.0:
+    resolution: {integrity: sha512-SHy72R2Rdkz0LEq0PSG/IdvnT3nGiWuRk+2tXZQ90GVq/XQhpCzu/EFT3V2rox+w8MlkBQxifF8pCStNYnERfA==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=3'
@@ -2388,6 +2397,8 @@ packages:
       '@op-engineering/op-sqlite': '>=2'
       '@opentelemetry/api': ^1.4.1
       '@planetscale/database': '>=1'
+      '@prisma/client': '*'
+      '@tidbcloud/serverless': '*'
       '@types/better-sqlite3': '*'
       '@types/pg': '*'
       '@types/react': '>=18'
@@ -2402,6 +2413,7 @@ packages:
       mysql2: '>=2'
       pg: '>=8'
       postgres: '>=3'
+      prisma: '*'
       react: '>=18'
       sql.js: '>=1'
       sqlite3: '>=5'
@@ -2421,6 +2433,10 @@ packages:
       '@opentelemetry/api':
         optional: true
       '@planetscale/database':
+        optional: true
+      '@prisma/client':
+        optional: true
+      '@tidbcloud/serverless':
         optional: true
       '@types/better-sqlite3':
         optional: true
@@ -2449,6 +2465,8 @@ packages:
       pg:
         optional: true
       postgres:
+        optional: true
+      prisma:
         optional: true
       react:
         optional: true
@@ -3373,6 +3391,9 @@ packages:
     resolution: {integrity: sha512-5NPgf87AT2STgwa2ntRMr45jTKrYBGkVU36yT0ig/n/GMAa3oPqhZfIQ2kMEimReg0+t9kZViDVZ83qfVUlckg==}
     engines: {node: '>= 14'}
 
+  pako@1.0.11:
+    resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
+
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
     engines: {node: '>=6'}
@@ -3407,6 +3428,9 @@ packages:
 
   pathval@1.1.1:
     resolution: {integrity: sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==}
+
+  pdf-lib@1.17.1:
+    resolution: {integrity: sha512-V/mpyJAoTsN4cnP31vc0wfNA1+p20evqqnap0KLoRUN0Yk/p3wN52DOEsL4oBFcLdb76hlpKPtzJIgo67j/XLw==}
 
   pend@1.2.0:
     resolution: {integrity: sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg==}
@@ -4157,6 +4181,9 @@ packages:
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
 
+  tslib@1.14.1:
+    resolution: {integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==}
+
   tslib@2.4.0:
     resolution: {integrity: sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==}
 
@@ -4214,6 +4241,11 @@ packages:
   universalify@2.0.1:
     resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
     engines: {node: '>= 10.0.0'}
+
+  unstructured-client@0.14.3:
+    resolution: {integrity: sha512-+QEkwNm0GtLGs3TdbaG3ES1upR5ygzM8Jtm3epqNlz1cLREruI/jl342jGRwg75N9jkrMWsye3GHgZcN4TpfCw==}
+    peerDependencies:
+      zod: '>= 3'
 
   unzipper@0.11.6:
     resolution: {integrity: sha512-anERl79akvqLbAxfjIFe4hK0wsi0fH4uGLwNEl4QEnG+KKs3QQeApYgOS/f6vH2EdACUlZg35psmd/3xL2duFQ==}
@@ -5636,6 +5668,14 @@ snapshots:
 
   '@opentelemetry/api@1.9.0': {}
 
+  '@pdf-lib/standard-fonts@1.0.0':
+    dependencies:
+      pako: 1.0.11
+
+  '@pdf-lib/upng@1.0.1':
+    dependencies:
+      pako: 1.0.11
+
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
@@ -6515,8 +6555,7 @@ snapshots:
       tslib: 2.6.2
     optional: true
 
-  async@3.2.5:
-    optional: true
+  async@3.2.5: {}
 
   asynckit@0.4.0: {}
 
@@ -6954,7 +6993,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.30.10(@cloudflare/workers-types@4.20240502.0)(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3):
+  drizzle-orm@0.33.0(@cloudflare/workers-types@4.20240502.0)(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3):
     optionalDependencies:
       '@cloudflare/workers-types': 4.20240502.0
       '@opentelemetry/api': 1.9.0
@@ -8046,6 +8085,8 @@ snapshots:
       netmask: 2.0.2
     optional: true
 
+  pako@1.0.11: {}
+
   parent-module@1.0.1:
     dependencies:
       callsites: 3.1.0
@@ -8072,6 +8113,13 @@ snapshots:
   pathe@1.1.2: {}
 
   pathval@1.1.1: {}
+
+  pdf-lib@1.17.1:
+    dependencies:
+      '@pdf-lib/standard-fonts': 1.0.0
+      '@pdf-lib/upng': 1.0.1
+      pako: 1.0.11
+      tslib: 1.14.1
 
   pend@1.2.0:
     optional: true
@@ -8542,13 +8590,13 @@ snapshots:
   sql.js@1.10.3:
     optional: true
 
-  sqlocal@0.9.0(drizzle-orm@0.30.10(@cloudflare/workers-types@4.20240502.0)(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3))(kysely@0.27.3):
+  sqlocal@0.9.0(drizzle-orm@0.33.0(@cloudflare/workers-types@4.20240502.0)(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3))(kysely@0.27.3):
     dependencies:
       '@sqlite.org/sqlite-wasm': 3.45.3-build1
       coincident: 1.2.3
       nanoid: 5.0.7
     optionalDependencies:
-      drizzle-orm: 0.30.10(@cloudflare/workers-types@4.20240502.0)(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3)
+      drizzle-orm: 0.33.0(@cloudflare/workers-types@4.20240502.0)(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.11)(@types/sql.js@1.4.9)(better-sqlite3@10.0.0)(kysely@0.27.3)(react@18.3.1)(sql.js@1.10.3)
       kysely: 0.27.3
     transitivePeerDependencies:
       - bufferutil
@@ -8890,6 +8938,8 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
+  tslib@1.14.1: {}
+
   tslib@2.4.0:
     optional: true
 
@@ -8933,6 +8983,12 @@ snapshots:
 
   universalify@2.0.1:
     optional: true
+
+  unstructured-client@0.14.3(zod@3.23.8):
+    dependencies:
+      async: 3.2.5
+      pdf-lib: 1.17.1
+      zod: 3.23.8
 
   unzipper@0.11.6:
     dependencies:

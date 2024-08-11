@@ -1,23 +1,24 @@
 <script lang="ts">
-  import { Clipboard } from "lucide-svelte";
+  import { Clipboard, HardDriveUpload } from "lucide-svelte";
   import { Button } from "@/components/ui/button/index.js";
 
   type Props = {
-    onPaste?: () => void;
+    onUploadClick?: () => void;
+    onPasteClick?: () => void;
   };
-  let { onPaste = () => {} }: Props = $props();
+  let { onUploadClick = () => {}, onPasteClick = () => {} }: Props = $props();
 </script>
 
-<div class="flex items-center justify-start gap-2 pb-1">
-  <!--  <Button variant="outline" size="sm" on:click={() => handleUpload("Browse")}>-->
-  <!--    <HardDriveUpload class="mr-2 h-4 w-4" />-->
-  <!--    Browse-->
-  <!--  </Button>-->
+<div class="flex items-center justify-start gap-2">
+  <Button variant="outline" size="sm" on:click={onUploadClick}>
+    <HardDriveUpload class="mr-2 h-4 w-4" />
+    Upload
+  </Button>
   <!--  <Button variant="outline" size="sm" on:click={() => handleUpload("Drive")}>-->
   <!--    <CloudUpload class="mr-2 h-4 w-4" />-->
   <!--    Drive-->
   <!--  </Button>-->
-  <Button variant="outline" size="sm" on:click={() => onPaste()}>
+  <Button variant="outline" size="sm" on:click={onPasteClick}>
     <Clipboard class="mr-2 h-4 w-4" />
     Paste
   </Button>

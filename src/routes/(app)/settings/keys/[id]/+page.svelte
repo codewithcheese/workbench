@@ -70,25 +70,31 @@
           setError(form, "serviceId", `Service for ${form.data.serviceId} not found`);
           return;
         }
-        // fetch models
-        const resp = await fetchModels(
-          form.data.apiKey,
-          form.data.baseURL,
-          service.sdk.id,
-          service.id,
-        );
-        if (!resp.ok) {
-          // if failed to fetch models, ask user to update API key
-          setError(form, "apiKey", resp.statusText);
-          return;
+        if (service.sdk.type === "model") {
+          // fetch models
+          const resp = await fetchModels(
+            form.data.apiKey,
+            form.data.baseURL,
+            service.sdk.id,
+            service.id,
+          );
+          if (!resp.ok) {
+            // if failed to fetch models, ask user to update API key
+            setError(form, "apiKey", resp.statusText);
+            return;
+          }
+          // update account and update models
+          const keyId = data.key.id;
+          await useDb().transaction(async (tx) => {
+            await tx.update(keyTable).set(form.data).where(eq(keyTable.id, keyId));
+            const models = (await resp.json()) as any[];
+            await refreshModels(tx, keyId, models);
+          });
+        } else if (service.sdk.type === "document") {
+          await useDb().update(keyTable).set(form.data).where(eq(keyTable.id, data.key.id));
+        } else {
+          throw new Error(`Unsupported SDK type: ${service.sdk.type}`);
         }
-        // update account and update models
-        const keyId = data.key.id;
-        await useDb().transaction(async (tx) => {
-          await tx.update(keyTable).set(form.data).where(eq(keyTable.id, keyId));
-          const models = (await resp.json()) as any[];
-          await refreshModels(tx, keyId, models);
-        });
         await invalidateModel(keyTable, data.key);
         toast.success("Key updated");
         return form;
@@ -199,65 +205,67 @@
     </CardFooter>
   </Card>
 </form>
-<Card>
-  <CardHeader class="pb-0">
-    <div class="flex flex-row items-center justify-between">
-      <div>
-        <CardTitle>{data.key.service.name} models</CardTitle>
-        <CardDescription>Show or hide models displayed in the chat interface.</CardDescription>
+{#if data.key.service.sdk.type === "model"}
+  <Card>
+    <CardHeader class="pb-0">
+      <div class="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>{data.key.service.name} models</CardTitle>
+          <CardDescription>Show or hide models displayed in the chat interface.</CardDescription>
+        </div>
+        <Button variant="outline" onclick={handleRefreshModels}>
+          <RefreshCwIcon class={cn("mr-2 h-4 w-4", false && "loading-icon")} />
+          Refresh Models
+        </Button>
       </div>
-      <Button variant="outline" onclick={handleRefreshModels}>
-        <RefreshCwIcon class={cn("mr-2 h-4 w-4", false && "loading-icon")} />
-        Refresh Models
-      </Button>
-    </div>
-    <div class="flex justify-end gap-1">
-      <Button
-        class="p-2 text-sm underline"
-        variant="ghost"
-        onclick={async () => {
-          await toggleAllVisible(data.key, 1);
-        }}
-      >
-        Show All
-      </Button>
-      <Button
-        class="p-2 text-sm underline"
-        variant="ghost"
-        onclick={async () => {
-          await toggleAllVisible(data.key, 0);
-        }}
-      >
-        Hide All
-      </Button>
-    </div>
-  </CardHeader>
+      <div class="flex justify-end gap-1">
+        <Button
+          class="p-2 text-sm underline"
+          variant="ghost"
+          onclick={async () => {
+            await toggleAllVisible(data.key, 1);
+          }}
+        >
+          Show All
+        </Button>
+        <Button
+          class="p-2 text-sm underline"
+          variant="ghost"
+          onclick={async () => {
+            await toggleAllVisible(data.key, 0);
+          }}
+        >
+          Hide All
+        </Button>
+      </div>
+    </CardHeader>
 
-  <CardContent>
-    {#if data.key.models.length > 0}
-      <div class="w-full">
-        <Table>
-          <TableBody>
-            {#each data.key.models as model (model.id)}
-              <TableRow
-                class={cn("cursor-pointer", model.visible === 1 ? "" : "opacity-50")}
-                onclick={() => toggleVisible(data.key, model)}
-              >
-                <TableCell class="p-1 pl-4 font-normal">{model.name}</TableCell>
-                <TableCell class="p-1">
-                  <Toggle aria-label="Toggle Model Visibility" />
-                </TableCell>
-                <TableCell class="p-1">
-                  <EyeIcon class="h-4 w-4" />
-                </TableCell>
-              </TableRow>
-            {/each}
-          </TableBody>
-        </Table>
-      </div>
-    {/if}
-  </CardContent>
-</Card>
+    <CardContent>
+      {#if data.key.models.length > 0}
+        <div class="w-full">
+          <Table>
+            <TableBody>
+              {#each data.key.models as model (model.id)}
+                <TableRow
+                  class={cn("cursor-pointer", model.visible === 1 ? "" : "opacity-50")}
+                  onclick={() => toggleVisible(data.key, model)}
+                >
+                  <TableCell class="p-1 pl-4 font-normal">{model.name}</TableCell>
+                  <TableCell class="p-1">
+                    <Toggle aria-label="Toggle Model Visibility" />
+                  </TableCell>
+                  <TableCell class="p-1">
+                    <EyeIcon class="h-4 w-4" />
+                  </TableCell>
+                </TableRow>
+              {/each}
+            </TableBody>
+          </Table>
+        </div>
+      {/if}
+    </CardContent>
+  </Card>
+{/if}
 <Card>
   <CardHeader>
     <div class="flex flex-row items-center justify-between">

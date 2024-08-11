@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { type MessageAttachment, ChatService } from "$lib/chat-service.svelte.js";
+  import { ChatService, type MessageAttachment } from "$lib/chat-service.svelte.js";
   import { toast } from "svelte-french-toast";
   import MessageInput from "./MessageInput.svelte";
   import { store } from "$lib/store.svelte";
@@ -10,7 +10,7 @@
     type RevisionView,
     toChatMessage,
   } from "./$data";
-  import type { Chat, Message, Revision } from "@/database";
+  import type { Chat, Revision } from "@/database";
   import MessageCard from "./MessageCard.svelte";
   import ChatTitlebar from "./ChatTitlebar.svelte";
   import { nanoid } from "nanoid";

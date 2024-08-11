@@ -1,13 +1,15 @@
 <script lang="ts">
-  import { XIcon } from "lucide-svelte";
+  import { BanIcon, XIcon } from "lucide-svelte";
   import { Button } from "@/components/ui/button";
+  import RobotLoader from "@/components/RobotLoader.svelte";
+  import type { Attachment } from "$lib/attachment-service.svelte";
+  import { humanType } from "$lib/util/mime";
 
   type Props = {
-    type: string;
-    content: string;
+    attachment: Attachment;
     onRemove?: () => void;
   };
-  let { type, content, onRemove }: Props = $props();
+  let { attachment, onRemove }: Props = $props();
 </script>
 
 <div
@@ -25,17 +27,23 @@
     {/if}
     <div class="flex h-full flex-col gap-1 p-2">
       <div class="relative flex-1 overflow-hidden">
-        {#if type.startsWith("image/")}
-          <img src={content} alt="Pasted" class="w-full" />
+        {#if attachment.loading}
+          <RobotLoader />
+        {:else if attachment.error}
+          <div class="flex h-full w-full items-center justify-center">
+            <p class="text-sm text-red-500">{attachment.error.message}</p>
+          </div>
+        {:else if attachment.type.startsWith("image/")}
+          <img src={attachment.content} alt="Pasted" class="w-full" />
         {:else}
-          <p class="overflow-y-hidden break-words text-sm">{content}</p>
+          <p class="overflow-y-hidden break-all text-sm">{attachment.content}</p>
         {/if}
         <div
           class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent"
         ></div>
       </div>
       <div class="name sticky bottom-0 text-sm font-semibold text-gray-700">
-        {type}
+        {humanType(attachment.type)}
       </div>
     </div>
   </div>

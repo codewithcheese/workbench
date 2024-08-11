@@ -6,6 +6,7 @@ import { zod } from "sveltekit-superforms/adapters";
 export async function load({ depends, route }) {
   const form = await superValidate(zod(formSchema));
   const services = await loadServices();
+  console.log("services", services);
   registerModel(serviceTable, services, depends);
   depends("view:services");
   return {
