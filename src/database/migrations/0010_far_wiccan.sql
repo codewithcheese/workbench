@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX `slug_unique` ON `aiSdk` (`slug`);

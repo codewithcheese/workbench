@@ -3,6 +3,7 @@ import {
   createTableRelationsHelpers,
   extractTablesRelationalConfig,
   getTableName,
+  getTableUniqueName,
   type Table,
 } from "drizzle-orm";
 import { invalidate } from "$app/navigation";
@@ -20,9 +21,8 @@ export function registerModel(table: Table, view: Model | Model[], depends: Depe
       const table = relationalConfig.tables[relationalConfig.tableNamesMap[tableName]];
       for (const key of Object.keys(table.relations)) {
         if (record[key]) {
-          const referencedTableName = table.relations[key].referencedTableName;
           register(
-            referencedTableName,
+            getTableUniqueName(table.relations[key].referencedTable),
             Array.isArray(record[key]) ? record[key] : [record[key]],
             depends,
           );
@@ -31,7 +31,7 @@ export function registerModel(table: Table, view: Model | Model[], depends: Depe
     }
   }
 
-  const tableName = getTableName(table);
+  const tableName = getTableUniqueName(table);
   register(tableName, Array.isArray(view) ? view : [view], depends);
 }
 
