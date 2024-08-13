@@ -36,5 +36,5 @@ export function registerModel(table: Table, view: Model | Model[], depends: Depe
 }
 
 export function invalidateModel(table: Table, model: Model) {
-  return invalidate(`model:${getTableName(table)}:${model.id}`);
+  return invalidate(`model:${getTableUniqueName(table)}:${model.id}`);
 }
