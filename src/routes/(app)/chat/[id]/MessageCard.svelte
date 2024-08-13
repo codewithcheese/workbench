@@ -53,8 +53,7 @@
   <div class="mb-1 flex flex-row flex-wrap gap-2">
     {#each message.attachments as attachment, index (index)}
       <Attachment
-        type={attachment.type}
-        content={attachment.content}
+        attachment={{ ...attachment, loading: false, error: undefined }}
         onRemove={onRemoveAttachment != null ? onRemoveAttachment.bind(null, index) : undefined}
       />
     {/each}

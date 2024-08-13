@@ -11,12 +11,12 @@ export const POST = (async ({ request }) => {
   let { messages, sdkId, apiKey, baseURL, modelName } = (await request.json()) as {
     messages: any[];
     sdkId: string;
-    baseURL: string;
+    baseURL: string | undefined;
     apiKey: string;
     modelName: string;
   };
 
-  baseURL = baseURL ?? undefined;
+  baseURL = baseURL || undefined;
 
   if (!sdkId || !modelName) {
     return new Response(`Malformed request`, {

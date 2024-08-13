@@ -1,21 +1,18 @@
-import { SQLocalDrizzle } from "sqlocal/drizzle";
-import { drizzle, SqliteRemoteDatabase } from "drizzle-orm/sqlite-proxy";
+import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
+import { PGlite } from "@electric-sql/pglite";
 import * as schema from "./schema";
-import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 
-export const SQLITE_FILENAME = "workbench.db";
+let db: PgliteDatabase<typeof schema> | undefined = undefined;
 
-let db: SqliteRemoteDatabase<typeof schema> | undefined = undefined;
-
-export function useDb(): BaseSQLiteDatabase<any, any, typeof schema> {
+export function useDb(): PgliteDatabase<typeof schema> {
   if (!db) {
-    const { driver, batchDriver } = new SQLocalDrizzle(SQLITE_FILENAME);
-    db = drizzle(driver, batchDriver, { schema });
+    const client = new PGlite("idb://workbench-data");
+    db = drizzle(client, { schema });
   }
   return db;
 }
 
-export function useDbFile() {
-  const { getDatabaseFile, overwriteDatabaseFile } = new SQLocalDrizzle(SQLITE_FILENAME);
-  return { getDatabaseFile, overwriteDatabaseFile };
-}
+// export function useDbFile() {
+//   const { getDatabaseFile, overwriteDatabaseFile } = new SQLocalDrizzle(SQLITE_FILENAME);
+//   return { getDatabaseFile, overwriteDatabaseFile };
+// }

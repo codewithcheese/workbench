@@ -29,7 +29,6 @@ async function runMigrations() {
     const { runMigrations } = await import("@/database/migrator");
     console.log("Migrating database");
     await runMigrations();
-    await useDb().run(sql.raw("PRAGMA foreign_keys=on;"));
     console.log("Migration complete");
     migrated = true;
   } catch (err) {

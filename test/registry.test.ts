@@ -49,10 +49,10 @@ describe("cache", () => {
     });
     expect(dependencies).toEqual(
       new Set([
-        "model:chat:id-chat",
-        "model:revision:id-revision",
-        "model:message:id-message",
-        "model:message:id-message2",
+        "model:public.chat:id-chat",
+        "model:public.revision:id-revision",
+        "model:public.message:id-message",
+        "model:public.message:id-message2",
       ]),
     );
   });

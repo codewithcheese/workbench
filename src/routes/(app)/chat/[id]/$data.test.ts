@@ -1,32 +1,35 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   appendMessages,
   createRevision,
+  getKeys,
   getLatestRevision,
   getModelKey,
   getRevision,
   interpolateDocuments,
   isTab,
-  getKeys,
   tabRouteId,
   updateChat,
 } from "./$data";
-import Database from "better-sqlite3";
-import { type BetterSQLite3Database, drizzle } from "drizzle-orm/better-sqlite3";
+import type { PgliteDatabase } from "drizzle-orm/pglite";
+import { drizzle } from "drizzle-orm/pglite";
 import * as schema from "@/database/schema";
 import { runMigrations } from "@/database/migrator";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { ChatMessage } from "$lib/chat-service.svelte";
+import { PGlite } from "@electric-sql/pglite";
+import { sql } from "drizzle-orm/sql";
 
-let sqlite: Database.Database;
-let db: BetterSQLite3Database<typeof schema>;
+let pglite: PGlite;
+let db: PgliteDatabase<typeof schema>;
+
+beforeAll(async () => {
+  pglite = new PGlite();
+  db = drizzle(pglite, { schema });
+});
 
 beforeEach(async () => {
-  // Set up database
-  sqlite = new Database(":memory:");
-  db = drizzle(sqlite, { schema });
-
   // Set up mocks
   vi.mock("$app/navigation", () => ({
     invalidate: vi.fn(),
@@ -124,8 +127,26 @@ beforeEach(async () => {
   ]);
 });
 
-afterEach(() => {
-  sqlite.close();
+afterEach(async () => {
+  // pglite is slowish to start for each test
+  // instead drop all the tables
+  await db.execute(sql`DO $$ 
+    DECLARE 
+        r RECORD;
+    BEGIN
+        -- Disable all triggers
+        EXECUTE 'SET session_replication_role = replica';
+        
+        -- Drop all tables in the current schema
+        FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP
+            EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
+        END LOOP;
+        
+        -- Re-enable triggers
+        EXECUTE 'SET session_replication_role = DEFAULT';
+    END $$;
+    `);
+
   vi.clearAllMocks();
 });
 
@@ -214,11 +235,12 @@ describe("getModelService", () => {
 
 describe("createRevision", () => {
   it("should create a new revision", async () => {
+    vi.mocked(nanoid).mockReturnValueOnce("created-revision-id");
     const newRevision = await createRevision("chat1");
     expect(newRevision).toMatchObject({
       chatId: "chat1",
       version: 3,
-      id: "mocked-nanoid",
+      id: "created-revision-id",
     });
   });
 });
@@ -252,7 +274,7 @@ describe("appendMessage", () => {
 describe("newRevision", () => {
   it("should create a new revision with messages", async () => {
     vi.mocked(nanoid)
-      .mockReturnValueOnce("mocked-nanoid")
+      .mockReturnValueOnce("revision-with-messages-id")
       .mockReturnValueOnce("message-1")
       .mockReturnValueOnce("message-2");
     const messages: ChatMessage[] = [
@@ -264,11 +286,11 @@ describe("newRevision", () => {
     expect(revision).toMatchObject({
       chatId: "chat1",
       version: 3,
-      id: "mocked-nanoid",
+      id: "revision-with-messages-id",
     });
 
     const newMessages = await db.query.messageTable.findMany({
-      where: eq(schema.messageTable.revisionId, "mocked-nanoid"),
+      where: eq(schema.messageTable.revisionId, "revision-with-messages-id"),
     });
     expect(newMessages).toHaveLength(2);
     expect(newMessages[0]).toMatchObject({
