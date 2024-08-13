@@ -51,12 +51,13 @@ async function applyMigration(db: PgliteDatabase<any>, idx: number, tag: string)
         }
 
         await tx.execute(sql`INSERT INTO migrations (name) VALUES (${tag})`);
-      });
 
-      if (tag in seed) {
-        // @ts-expect-error
-        await seed[tag]();
-      }
+        const num = tag.split("_")[0];
+        if (num in seed) {
+          // @ts-expect-error
+          await seed[num](tx);
+        }
+      });
     } catch (e) {
       console.error(e);
       throw e;

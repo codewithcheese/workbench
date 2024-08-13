@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS "service" (
 	"id" text PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
 	"sdk_id" text NOT NULL,
-	"base_url" text NOT NULL,
+	"base_url" text,
 	"created_at" text DEFAULT CURRENT_TIMESTAMP
 );
 --> statement-breakpoint

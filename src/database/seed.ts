@@ -1,70 +1,41 @@
-import type { PgliteDatabase } from "drizzle-orm/pglite";
-import { newChat } from "../routes/(app)/$data";
-import { sdkTable, serviceTable } from "@/database/schema";
-import { useDb } from "@/database/client";
+import { sql } from "drizzle-orm";
+import { nanoid } from "nanoid";
+import { PgTransaction } from "drizzle-orm/pg-core";
 
 export const seed = {
-  "0000_superb_jocasta": async (db: PgliteDatabase<any>) => {
-    const sdks = [
-      { id: "openai", slug: "openai", name: "OpenAI", type: "model", supported: 1 },
-      { id: "azure", slug: "azure", name: "Azure", type: "model", supported: 0 },
-      { id: "anthropic", slug: "anthropic", name: "Anthropic", type: "model", supported: 1 },
-      { id: "amazon", slug: "amazon", name: "Amazon Bedrock", type: "model", supported: 0 },
-      {
-        id: "google-gen-ai",
-        slug: "google-gen-ai",
-        name: "Google Generative AI",
-        type: "model",
-        supported: 1,
-      },
-      {
-        id: "google-vertex",
-        slug: "google-vertex",
-        name: "Google Vertex AI",
-        type: "model",
-        supported: 0,
-      },
-      { id: "mistral", slug: "mistral", name: "Mistral", type: "model", supported: 1 },
-      { id: "cohere", slug: "cohere", name: "Cohere", type: "model", supported: 1 },
-    ];
+  "0000": async (tx: PgTransaction<any>) => {
+    await tx.execute(sql`INSERT INTO sdk (id, slug, name, type, supported) VALUES
+      ('openai', 'openai', 'OpenAI', 'model', 1),
+      ('azure', 'azure', 'Azure', 'model', 0),
+      ('anthropic', 'anthropic', 'Anthropic', 'model', 1),
+      ('amazon', 'amazon', 'Amazon Bedrock', 'model', 0),
+      ('google-gen-ai', 'google-gen-ai', 'Google Generative AI', 'model', 1),
+      ('google-vertex', 'google-vertex', 'Google Vertex AI', 'model', 0),
+      ('mistral', 'mistral', 'Mistral', 'model', 1),
+      ('cohere', 'cohere', 'Cohere', 'model', 1),
+      ('unstructured', 'unstructured', 'Unstructured', 'document', 1);
+      `);
 
-    await useDb().insert(sdkTable).values(sdks).onConflictDoNothing();
+    await tx.execute(sql`INSERT INTO service (id, name, sdk_id, base_url) VALUES
+      ('openai', 'OpenAI', 'openai', NULL),
+      ('azure', 'Azure OpenAI', 'azure', NULL),
+      ('anthropic', 'Anthropic', 'anthropic', NULL),
+      ('amazon-bedrock', 'Amazon Bedrock', 'amazon', NULL),
+      ('google-gen-ai', 'Google Generative AI', 'google-gen-ai', NULL),
+      ('google-vertex', 'Google Vertex AI', 'google-vertex', NULL),
+      ('mistral', 'Mistral', 'mistral', NULL),
+      ('groq', 'Groq', 'openai', 'https://api.groq.com/openai/v1'),
+      ('perplexity', 'Perplexity', 'openai', 'https://api.perplexity.ai/'),
+      ('fireworks', 'Fireworks', 'openai', 'https://api.fireworks.ai/inference/v1'),
+      ('nvidia', 'Nvidia', 'openai', 'https://integrate.api.nvidia.com/v1'),
+      ('cohere', 'Cohere', 'cohere', NULL),
+      ('unstructured', 'Unstructured', 'unstructured', NULL);
+      `);
 
-    console.log("AI SDKs inserted");
-
-    // Insert AI Services
-    const services = [
-      { id: "openai", name: "OpenAI", sdkId: "openai", baseURL: "" },
-      { id: "azure", name: "Azure OpenAI", sdkId: "azure", baseURL: "" },
-      { id: "anthropic", name: "Anthropic", sdkId: "anthropic", baseURL: "" },
-      { id: "amazon-bedrock", name: "Amazon Bedrock", sdkId: "amazon", baseURL: "" },
-      { id: "google-gen-ai", name: "Google Generative AI", sdkId: "google-gen-ai", baseURL: "" },
-      { id: "google-vertex", name: "Google Vertex AI", sdkId: "google-vertex", baseURL: "" },
-      { id: "mistral", name: "Mistral", sdkId: "mistral", baseURL: "" },
-      { id: "groq", name: "Groq", sdkId: "openai", baseURL: "https://api.groq.com/openai/v1" },
-      {
-        id: "perplexity",
-        name: "Perplexity",
-        sdkId: "openai",
-        baseURL: "https://api.perplexity.ai/",
-      },
-      {
-        id: "fireworks",
-        name: "Fireworks",
-        sdkId: "openai",
-        baseURL: "https://api.fireworks.ai/inference/v1",
-      },
-      {
-        id: "nvidia",
-        name: "Nvidia",
-        sdkId: "openai",
-        baseURL: "https://integrate.api.nvidia.com/v1",
-      },
-      { id: "cohere", name: "Cohere", sdkId: "cohere", baseURL: "" },
-    ];
-
-    await useDb().insert(serviceTable).values(services).onConflictDoNothing();
-
-    return newChat();
+    const chatId = nanoid(10);
+    await tx.execute(sql`INSERT INTO chat (id, name, prompt) VALUES
+      (${chatId}, 'Untitled', '');`);
+    await tx.execute(sql`INSERT INTO revision (id, version, chat_id) VALUES
+      (${nanoid(10)}, 1, ${chatId});`);
   },
 };

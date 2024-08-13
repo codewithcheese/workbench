@@ -97,7 +97,7 @@ export const serviceTable = pgTable("service", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   sdkId: text("sdk_id").notNull(),
-  baseURL: text("base_url").notNull(),
+  baseURL: text("base_url"),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
