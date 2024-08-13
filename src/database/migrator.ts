@@ -16,7 +16,6 @@ export async function runMigrations(skipSeed = false) {
 
   const haveMigrationsTable = result.rows[0]?.exists ?? false;
 
-  let shouldSeed = false;
   if (!haveMigrationsTable) {
     await db.execute(sql`CREATE TABLE migrations (name text PRIMARY KEY NOT NULL);`);
   }
