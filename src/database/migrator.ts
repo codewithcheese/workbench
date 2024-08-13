@@ -22,16 +22,11 @@ export async function runMigrations(skipSeed = false) {
   }
 
   for (const entry of journal.entries) {
-    await applyMigration(db, entry.idx, entry.tag);
+    await applyMigration(db, entry.tag, skipSeed);
   }
-
-  // if (shouldSeed && !skipSeed) {
-  //   await seed();
-  // }
-  // console.log("Migrations applied");
 }
 
-async function applyMigration(db: PgliteDatabase<any>, idx: number, tag: string) {
+async function applyMigration(db: PgliteDatabase<any>, tag: string, skipSeed: boolean) {
   // check if tag is already applied
   const result = await db.execute<{ name: string }>(
     sql`SELECT name FROM migrations WHERE name = ${tag}`,
@@ -53,7 +48,7 @@ async function applyMigration(db: PgliteDatabase<any>, idx: number, tag: string)
         await tx.execute(sql`INSERT INTO migrations (name) VALUES (${tag})`);
 
         const num = tag.split("_")[0];
-        if (num in seed) {
+        if (num in seed && !skipSeed) {
           // @ts-expect-error
           await seed[num](tx);
         }

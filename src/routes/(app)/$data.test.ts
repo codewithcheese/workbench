@@ -1,34 +1,34 @@
-import { afterEach, beforeEach, describe, expect, it, vi, onTestFailed } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { duplicateChat, newChat, removeChat } from "./$data";
-import Database from "better-sqlite3";
-import { type BetterSQLite3Database, drizzle } from "drizzle-orm/better-sqlite3";
+import { drizzle } from "drizzle-orm/pglite";
 import { nanoid } from "nanoid";
 import * as schema from "@/database/schema";
-import { chatTable, revisionTable, messageTable } from "@/database/schema";
+import { chatTable, messageTable, revisionTable } from "@/database/schema";
 import { runMigrations } from "@/database/migrator";
 import { eq } from "drizzle-orm";
 import { invalidate } from "$app/navigation";
 import { sql } from "drizzle-orm/sql";
 import { useDb } from "@/database";
+import { PGlite } from "@electric-sql/pglite";
+import type { PgliteDatabase } from "drizzle-orm/pglite";
 
 describe("(app)/$data", () => {
   vi.mock("@/database/client");
   vi.mock("$app/navigation");
   vi.mock("nanoid");
 
-  let sqlite: Database.Database;
-  let db: BetterSQLite3Database<typeof schema>;
+  let pglite: PGlite;
+  let db: PgliteDatabase<typeof schema>;
+
+  beforeAll(async () => {
+    pglite = new PGlite();
+    db = drizzle(pglite, { schema });
+  });
 
   beforeEach(async () => {
-    // Create an in-memory SQLite database
-    sqlite = new Database(":memory:");
-    db = drizzle(sqlite, { schema });
-
     vi.mocked(useDb).mockReturnValue(db);
 
-    db.run(sql.raw("PRAGMA foreign_keys=off;"));
     await runMigrations(true);
-    db.run(sql.raw("PRAGMA foreign_keys=on;"));
 
     await db.delete(schema.messageTable);
     await db.delete(schema.revisionTable);
@@ -43,17 +43,15 @@ describe("(app)/$data", () => {
       .values([
         { id: "service1", name: "Test Service", sdkId: "sdk1", baseURL: "https://api.test.com" },
       ]);
-    await db
-      .insert(schema.keyTable)
-      .values([
-        {
-          id: "key1",
-          name: "Test Key",
-          serviceId: "service1",
-          baseURL: "https://api.test.com",
-          apiKey: "test-api-key",
-        },
-      ]);
+    await db.insert(schema.keyTable).values([
+      {
+        id: "key1",
+        name: "Test Key",
+        serviceId: "service1",
+        baseURL: "https://api.test.com",
+        apiKey: "test-api-key",
+      },
+    ]);
     await db
       .insert(schema.modelTable)
       .values([{ id: "model1", keyId: "key1", name: "Test Model", visible: 1 }]);
@@ -87,8 +85,25 @@ describe("(app)/$data", () => {
     ]);
   });
 
-  afterEach(() => {
-    sqlite.close();
+  afterEach(async () => {
+    // pglite is slowish to start for each test
+    // instead drop all the tables
+    await db.execute(sql`DO $$ 
+    DECLARE 
+        r RECORD;
+    BEGIN
+        -- Disable all triggers
+        EXECUTE 'SET session_replication_role = replica';
+        
+        -- Drop all tables in the current schema
+        FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP
+            EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
+        END LOOP;
+        
+        -- Re-enable triggers
+        EXECUTE 'SET session_replication_role = DEFAULT';
+    END $$;
+    `);
     vi.resetAllMocks();
   });
 
