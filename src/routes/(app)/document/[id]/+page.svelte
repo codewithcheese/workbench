@@ -5,6 +5,7 @@
   import { eq } from "drizzle-orm";
   import { toast } from "svelte-french-toast";
   import { useDb } from "@/database/client";
+  import { route } from "$lib/route";
 
   let { data } = $props();
   let document = $derived(data.document);
@@ -20,7 +21,7 @@
           content: document.content,
         })
         .where(eq(documentTable.id, document.id));
-      await goto(`/document`);
+      await goto(route(`/document`));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Unknown error");
     }

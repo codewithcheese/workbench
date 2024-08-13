@@ -10,19 +10,23 @@
   import { toast } from "svelte-french-toast";
   import { useDb } from "@/database/client";
   import { invalidateModel } from "@/database";
+  import { route } from "$lib/route";
 
   let { data } = $props();
 
-  let confirmDelete: Document | null = $state(null);
+  let documentToDelete: Document | null = $state(null);
 
-  async function deleteDocument(document: Document) {
+  async function deleteDocument() {
+    if (!documentToDelete) {
+      return;
+    }
     try {
-      await useDb().delete(documentTable).where(eq(documentTable.id, document.id));
-      await invalidateModel(documentTable, document);
+      await useDb().delete(documentTable).where(eq(documentTable.id, documentToDelete.id));
+      await invalidateModel(documentTable, documentToDelete);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Unknown error");
     }
-    confirmDelete = null;
+    documentToDelete = null;
   }
 </script>
 
@@ -54,7 +58,7 @@
             <Table.Cell
               onclick={() => {
                 console.log("name clicked", document.name);
-                goto(`/document/${document.id}`);
+                goto(route(`/document/[id]`, { id: document.id }));
               }}
               class="p-2 "
             >
@@ -63,7 +67,7 @@
             <Table.Cell
               onclick={() => {
                 console.log("description clicked", document.description);
-                goto(`/document/${document.id}`);
+                goto(route(`/document/[id]`, { id: document.id }));
               }}
               class="p-2 "
             >
@@ -72,7 +76,7 @@
             <Table.Cell class="p-2">
               <Button
                 onclick={() => {
-                  confirmDelete = document;
+                  documentToDelete = document;
                 }}
                 variant="ghost"
                 class="p-1 px-4 text-sm opacity-0 group-hover:opacity-100"
@@ -86,14 +90,16 @@
     </Table.Root>
   {/if}
 </main>
-{#if confirmDelete}
+{#if documentToDelete}
   <DeleteDialog
-    name={confirmDelete.name}
+    open={documentToDelete !== null}
+    name={documentToDelete.name}
     type="document"
-    onConfirm={() => confirmDelete && deleteDocument(confirmDelete)}
-    onCancel={() => {
-      console.log("cancel");
-      confirmDelete = null;
+    onConfirm={deleteDocument}
+    onOpenChange={(open) => {
+      if (!open) {
+        documentToDelete = null;
+      }
     }}
   />
 {/if}

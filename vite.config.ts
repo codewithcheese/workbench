@@ -16,7 +16,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    exclude: ["sqlocal"],
+    exclude: ["sqlocal", "@electric-sql/pglite"],
   },
   plugins: [
     sveltekit(),

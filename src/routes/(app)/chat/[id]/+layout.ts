@@ -1,31 +1,44 @@
 import { eq } from "drizzle-orm";
-import { chatTable, registerModel, serviceTable, useDb } from "@/database";
+import { chatTable, keyTable, registerModel, revisionTable, useDb } from "@/database";
 import { error } from "@sveltejs/kit";
-import { loadServices } from "./$data";
+import { getKeys, getRevision, type Tab } from "./$data";
+import { match } from "$lib/route";
 
 export async function load({ route, url, params, depends }) {
   // evaluate tab using route id
-  let tab;
-  if (route.id.includes(`[id]/eval`)) {
+  let tab: Tab;
+  if (match(`/chat/[id]/eval`, route.id)) {
+    console.log("tab is eval", route.id);
     tab = "eval";
-    // } else if (route.id.includes(`[id]/eval`)) {
-    //   tab = "chat";
-  } else if (route.id.includes(`[id]/revise`)) {
+  } else if (match(`/chat/[id]/revise`, route.id)) {
+    console.log("tab is revise", route.id);
     tab = "revise";
+  } else {
+    console.log("tab is chat", route.id);
+    tab = "chat";
   }
 
   const chat = await useDb().query.chatTable.findFirst({
     where: eq(chatTable.id, params.id),
+    with: {
+      revisions: true,
+    },
   });
   if (!chat) {
     return error(404, `Chat ${params.id} not found`);
   }
   registerModel(chatTable, chat, depends);
 
-  const services = await loadServices();
-  registerModel(serviceTable, services, depends);
+  const keys = await getKeys();
+  registerModel(keyTable, keys, depends);
 
+  const version = Number(url.searchParams.get("version")) || null;
+  const revision = await getRevision(params.id, version);
+  if (!revision) {
+    return error(404, `Revision ${version} not found`);
+  }
+  registerModel(revisionTable, revision, depends);
+  depends("view:messages");
   depends("view:chat");
-
-  return { chat, services, tab };
+  return { chat, keys, tab, revision, version };
 }
